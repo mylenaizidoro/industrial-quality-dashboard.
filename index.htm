@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Industrial Quality Dashboard - Linha Boreal</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <style>
+        body { background-color: #f1f5f9; color: #1e293b; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+        .header { max-width: 1100px; margin: auto; text-align: center; }
+        .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
+        .kpi-card { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .kpi-card div { font-size: 1.8rem; font-weight: 700; color: #0284c7; }
+        .chart-box { background: white; border-radius: 16px; padding: 20px; border: 1px solid #e2e8f0; max-width: 600px; margin: auto; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>QUALIDADE INDUSTRIAL - COPLAC</h1>
+        <div id="kpi-summary" class="kpi-row"></div>
+    </div>
+    <div class="chart-box">
+        <canvas id="chartPizza"></canvas>
+    </div>
+
+<script>
+    // IMPORTANTE: Substitua pelo link CSV da sua planilha de apontamentos
+    const urlPlanilha = "COLE_AQUI_O_LINK_DO_SEU_GOOGLE_SHEETS_CSV";
+
+    function processarDados(dados) {
+        let totalV = 0, totalD = 0;
+        dados.forEach(linha => {
+            totalV += parseFloat(linha.TotalPeçasVerificadas) || 0;
+            totalD += parseFloat(linha.TotalPeçasComDefeito) || 0;
+        });
+        const ok = totalV - totalD;
+        const taxa = ((totalD / totalV) * 100).toFixed(1);
+
+        document.getElementById('kpi-summary').innerHTML = `
+            <div class="kpi-card"><small>VERIFICADAS</small><div>${totalV}</div></div>
+            <div class="kpi-card"><small>PEÇAS OK</small><div>${ok}</div></div>
+            <div class="kpi-card" style="color:#ef4444"><small>DEFEITOS</small><div>${totalD}</div></div>
+            <div class="kpi-card"><small>TAXA REFREGO</small><div>${taxa}%</div></div>`;
+
+        new Chart(document.getElementById('chartPizza'), {
+            type: 'pie',
+            data: { labels: ['OK', 'Defeito'], datasets: [{ data: [ok, totalD], backgroundColor: ['#10b981', '#ef4444'] }] }
+        });
+    }
+
+    Papa.parse(urlPlanilha, { download: true, header: true, complete: r => processarDados(r.data) });
+</script>
+</body>
+</html>
