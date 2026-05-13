@@ -2,53 +2,117 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Industrial Quality Dashboard - Linha Boreal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qualidade Industrial - Coplac</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <style>
-        body { background-color: #f1f5f9; color: #1e293b; font-family: 'Segoe UI', sans-serif; padding: 20px; }
-        .header { max-width: 1100px; margin: auto; text-align: center; }
-        .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
-        .kpi-card { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .kpi-card div { font-size: 1.8rem; font-weight: 700; color: #0284c7; }
-        .chart-box { background: white; border-radius: 16px; padding: 20px; border: 1px solid #e2e8f0; max-width: 600px; margin: auto; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #2c3e50; text-transform: uppercase; letter-spacing: 2px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: #ecf0f1; padding: 20px; border-radius: 8px; text-align: center; border-left: 5px solid #3498db; }
+        .stat-card h3 { margin: 0; font-size: 14px; color: #7f8c8d; }
+        .stat-card p { margin: 10px 0 0; font-size: 24px; font-weight: bold; color: #2c3e50; }
+        .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        @media (max-width: 768px) { .charts-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>QUALIDADE INDUSTRIAL - COPLAC</h1>
-        <div id="kpi-summary" class="kpi-row"></div>
+
+<div class="container">
+    <h1>Qualidade Industrial - COPLAC</h1>
+    
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>Total de Peças</h3>
+            <p id="totalPecas">Carregando...</p>
+        </div>
+        <div class="stat-card" style="border-left-color: #e74c3c;">
+            <h3>Total de Defeitos</h3>
+            <p id="totalDefeitos">Carregando...</p>
+        </div>
+        <div class="stat-card" style="border-left-color: #f1c40f;">
+            <h3>% de Refugo</h3>
+            <p id="taxaRefugo">Carregando...</p>
+        </div>
     </div>
-    <div class="chart-box">
-        <canvas id="chartPizza"></canvas>
+
+    <div class="charts-grid">
+        <canvas id="chartDefeitos"></canvas>
+        <canvas id="chartInspetores"></canvas>
     </div>
+</div>
 
 <script>
-    // IMPORTANTE: Substitua pelo link CSV da sua planilha de apontamentos
-    const urlPlanilha = "COLE_AQUI_O_LINK_DO_SEU_GOOGLE_SHEETS_CSV";
+    // Link CSV gerado na imagem image_3951b9.png
+    const urlPlanilha = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT7auqmo6fOoCEkoeoZ70TVM4ljEPsBlPfKBebWUbdWpb0URnI-ttwP2AlUNG4yHW7GLqkyLXXTo1Pm/pub?output=csv";
 
-    function processarDados(dados) {
-        let totalV = 0, totalD = 0;
-        dados.forEach(linha => {
-            totalV += parseFloat(linha.TotalPeçasVerificadas) || 0;
-            totalD += parseFloat(linha.TotalPeçasComDefeito) || 0;
-        });
-        const ok = totalV - totalD;
-        const taxa = ((totalD / totalV) * 100).toFixed(1);
+    async function carregarDados() {
+        try {
+            const response = await fetch(urlPlanilha);
+            const data = await response.text();
+            const linhas = data.split('\n').slice(1); // Pula o cabeçalho
 
-        document.getElementById('kpi-summary').innerHTML = `
-            <div class="kpi-card"><small>VERIFICADAS</small><div>${totalV}</div></div>
-            <div class="kpi-card"><small>PEÇAS OK</small><div>${ok}</div></div>
-            <div class="kpi-card" style="color:#ef4444"><small>DEFEITOS</small><div>${totalD}</div></div>
-            <div class="kpi-card"><small>TAXA REFREGO</small><div>${taxa}%</div></div>`;
+            let totalPecas = 0;
+            let totalDefeitos = 0;
+            let dadosInspetores = {};
 
-        new Chart(document.getElementById('chartPizza'), {
-            type: 'pie',
-            data: { labels: ['OK', 'Defeito'], datasets: [{ data: [ok, totalD], backgroundColor: ['#10b981', '#ef4444'] }] }
-        });
+            linhas.forEach(linha => {
+                const colunas = linha.split(',');
+                if (colunas.length > 1) {
+                    const inspetor = colunas[1]; // nomeInspetor
+                    const defeito = parseInt(colunas[6]) || 0; // Defeitos
+                    const produzida = 1; // Cada linha é uma peça
+
+                    totalPecas += produzida;
+                    totalDefeitos += defeito;
+
+                    if (inspetor) {
+                        dadosInspetores[inspetor] = (dadosInspetores[inspetor] || 0) + 1;
+                    }
+                }
+            });
+
+            // Atualiza os Cards
+            document.getElementById('totalPecas').innerText = totalPecas.toLocaleString();
+            document.getElementById('totalDefeitos').innerText = totalDefeitos.toLocaleString();
+            const refugo = ((totalDefeitos / totalPecas) * 100).toFixed(2);
+            document.getElementById('taxaRefugo').innerText = refugo + "%";
+
+            // Gráfico de Defeitos (Pizza)
+            new Chart(document.getElementById('chartDefeitos'), {
+                type: 'pie',
+                data: {
+                    labels: ['Aprovadas', 'Defeitos'],
+                    datasets: [{
+                        data: [totalPecas - totalDefeitos, totalDefeitos],
+                        backgroundColor: ['#2ecc71', '#e74c3c']
+                    }]
+                },
+                options: { plugins: { title: { display: true, text: 'Proporção de Qualidade' } } }
+            });
+
+            // Gráfico de Inspetores (Barras)
+            new Chart(document.getElementById('chartInspetores'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(dadosInspetores),
+                    datasets: [{
+                        label: 'Peças Verificadas',
+                        data: Object.values(dadosInspetores),
+                        backgroundColor: '#3498db'
+                    }]
+                },
+                options: { plugins: { title: { display: true, text: 'Desempenho por Inspetor' } } }
+            });
+
+        } catch (error) {
+            console.error("Erro ao carregar dados:", error);
+        }
     }
 
-    Papa.parse(urlPlanilha, { download: true, header: true, complete: r => processarDados(r.data) });
+    carregarDados();
 </script>
+
 </body>
 </html>
