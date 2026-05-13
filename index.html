@@ -3,127 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Qualidade Industrial - Coplac</title>
+    <title>Dashboard Qualidade - Coplac</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
-        .container { max-width: 1200px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #2c3e50; margin-bottom: 30px; text-transform: uppercase; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 40px; }
-        .stat-card { background: #fff; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid #ddd; border-top: 6px solid #3498db; }
-        .stat-card h3 { margin: 0; color: #7f8c8d; font-size: 14px; }
-        .stat-card p { margin: 10px 0 0; font-size: 22px; font-weight: bold; color: #2c3e50; }
-        .charts-container { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
-        @media (max-width: 850px) { .charts-container { grid-template-columns: 1fr; } }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; padding: 20px; }
+        .dashboard-card { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); max-width: 1100px; margin: auto; }
+        .header { margin-bottom: 20px; }
+        .header h1 { color: #1a2a3a; font-size: 24px; margin: 0; }
+        .header p { color: #7f8c8d; font-size: 14px; margin: 5px 0 0; }
+        .main-layout { display: grid; grid-template-columns: 1fr 300px; gap: 30px; align-items: center; }
+        .detalhamento { border-left: 4px solid #3498db; padding-left: 20px; background: #f8fbff; padding: 20px; border-radius: 0 10px 10px 0; }
+        .detalhamento h3 { color: #3498db; font-size: 14px; text-transform: uppercase; margin-top: 0; }
+        .detalhamento p { font-size: 13px; color: #555; line-height: 1.6; }
+        canvas { width: 100% !important; height: 400px !important; }
+        @media (max-width: 850px) { .main-layout { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>QUALIDADE INDUSTRIAL - COPLAC</h1>
-    
-    <div class="stats-grid">
-        <div class="stat-card">
-            <h3>Peças Verificadas</h3>
-            <p id="totalPecas">0</p>
-        </div>
-        <div class="stat-card" style="border-top-color: #e74c3c;">
-            <h3>Total de Defeitos</h3>
-            <p id="totalDefeitos">0</p>
-        </div>
-        <div class="stat-card" style="border-top-color: #f1c40f;">
-            <h3>% de Refugo</h3>
-            <p id="taxaRefugo">0%</p>
-        </div>
-        <!-- NOVO INDICADOR PEDIDO -->
-        <div class="stat-card" style="border-top-color: #9b59b6;">
-            <h3>Lote mais Lançado</h3>
-            <p id="loteMaisLancado">---</p>
-        </div>
+<div class="dashboard-card">
+    <div class="header">
+        <h1>PRODUÇÃO POR LOTE - COPLAC</h1>
+        <p>Grupo Coplac | Performance</p>
     </div>
 
-    <div class="charts-container">
-        <canvas id="chartPizza"></canvas>
-        <canvas id="chartLotes"></canvas>
+    <div class="main-layout">
+        <div class="chart-area">
+            <canvas id="chartPerformance"></canvas>
+        </div>
+
+        <div class="detalhamento">
+            <h3>Detalhamento</h3>
+            <p><strong>Lote mais Lançado:</strong> <span id="topLote">---</span></p>
+            <p><strong>Total de Peças:</strong> <span id="totalPecas">---</span></p>
+            <p>Frequência de lançamentos por lote identificada na linha de produção Renault.</p>
+        </div>
     </div>
 </div>
 
 <script>
     const urlCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT7auqmo6fOoCEkoeoZ70TVM4ljEPsBlPfKBebWUbdWpb0URnI-ttwP2AlUNG4yHW7GLqkyLXXTo1Pm/pub?output=csv";
 
-    async function processarDados() {
+    async function carregarGrafico() {
         const response = await fetch(urlCSV);
         const text = await response.text();
-        const linhas = text.split('\n').slice(1); 
+        const linhas = text.split('\n').slice(1);
 
-        let somaPecas = 0;
-        let somaDefeitos = 0;
         let contagemLotes = {};
+        let total = 0;
 
         linhas.forEach(linha => {
             const col = linha.split(',');
-            if (col.length > 4) {
-                const lote = col[3]?.trim(); // Coluna D da imagem image_38e4e1.png
-                const defeitosNaLinha = parseInt(col[6]) || 0; 
-
-                somaPecas++;
-                somaDefeitos += defeitosNaLinha;
-
+            if (col.length > 3) {
+                const lote = col[3]?.trim();
                 if (lote) {
                     contagemLotes[lote] = (contagemLotes[lote] || 0) + 1;
+                    total++;
                 }
             }
         });
 
-        // Lógica para encontrar o Lote mais lançado
-        let topLote = "---";
-        let maxLancamentos = 0;
-        for (const lote in contagemLotes) {
-            if (contagemLotes[lote] > maxLancamentos) {
-                maxLancamentos = contagemLotes[lote];
-                topLote = lote;
-            }
-        }
+        const labels = Object.keys(contagemLotes).slice(0, 12);
+        const dados = Object.values(contagemLotes).slice(0, 12);
+        
+        // Lógica de cores baseada na imagem image_38dd95.png
+        const cores = dados.map(v => v > 50 ? '#e74c3c' : '#2ecc71');
 
-        // Atualizar Cards
-        document.getElementById('totalPecas').innerText = somaPecas.toLocaleString();
-        document.getElementById('totalDefeitos').innerText = somaDefeitos.toLocaleString();
-        const percentual = somaPecas > 0 ? ((somaDefeitos / somaPecas) * 100).toFixed(2) : 0;
-        document.getElementById('taxaRefugo').innerText = percentual + "%";
-        document.getElementById('loteMaisLancado').innerText = topLote;
+        document.getElementById('totalPecas').innerText = total.toLocaleString();
+        const topLote = Object.keys(contagemLotes).reduce((a, b) => contagemLotes[a] > contagemLotes[b] ? a : b);
+        document.getElementById('topLote').innerText = topLote;
 
-        // Gráfico Pizza (Qualidade)
-        new Chart(document.getElementById('chartPizza'), {
-            type: 'pie',
-            data: {
-                labels: ['OK', 'Defeitos'],
-                datasets: [{
-                    data: [somaPecas - somaDefeitos, somaDefeitos],
-                    backgroundColor: ['#2ecc71', '#e74c3c']
-                }]
-            },
-            options: { plugins: { title: { display: true, text: 'Proporção Qualidade Geral' } } }
-        });
-
-        // Gráfico de Barras (Ranking de Lotes)
-        const labelsLotes = Object.keys(contagemLotes).slice(0, 5); // Top 5 lotes
-        const valoresLotes = Object.values(contagemLotes).slice(0, 5);
-
-        new Chart(document.getElementById('chartLotes'), {
+        new Chart(document.getElementById('chartPerformance'), {
             type: 'bar',
             data: {
-                labels: labelsLotes,
+                labels: labels,
                 datasets: [{
-                    label: 'Quantidade de Lançamentos',
-                    data: valoresLotes,
-                    backgroundColor: '#9b59b6'
+                    label: 'Realizado',
+                    data: dados,
+                    backgroundColor: cores,
+                    borderRadius: 5,
+                    barPercentage: 0.6
                 }]
             },
-            options: { plugins: { title: { display: true, text: 'Top Lotes Produzidos' } } }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#eee' } },
+                    x: { grid: { display: false } }
+                }
+            }
         });
     }
 
-    processarDados();
+    carregarGrafico();
 </script>
+
 </body>
 </html>
