@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestão de Qualidade Curitiba - Coplac</title>
+    <!-- Bibliotecas Necessárias -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <style>
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -25,12 +27,7 @@
         .main-title { font-size: 28px; font-weight: 800; text-transform: uppercase; margin: 0; }
         .sub-title { font-size: 14px; color: #555; margin-top: 5px; }
 
-        /* Layout em lista (um embaixo do outro) */
-        .charts-list { 
-            display: flex;
-            flex-direction: column;
-            gap: 40px; 
-        }
+        .charts-list { display: flex; flex-direction: column; gap: 40px; }
 
         .chart-card { 
             background: #fff; 
@@ -38,7 +35,7 @@
             border-radius: 10px; 
             border: 1px solid #edf2f7;
             display: grid;
-            grid-template-columns: 1fr 250px; /* Gráfico largo e comentário estreito */
+            grid-template-columns: 1fr 250px; 
             gap: 20px;
         }
 
@@ -46,13 +43,12 @@
             font-weight: 700; 
             color: #334155; 
             font-size: 18px; 
-            margin-bottom: 15px; 
-            grid-column: span 2; /* Título ocupa a largura toda */
+            margin-bottom: 25px; 
+            grid-column: span 2; 
         }
 
-        .chart-container { position: relative; height: 300px; }
+        .chart-container { position: relative; height: 320px; }
 
-        /* Estilo do comentário lateral solicitado */
         .comentario-lateral {
             background-color: #fff5f5;
             border-left: 4px solid #e53e3e;
@@ -104,6 +100,9 @@
 </div>
 
 <script>
+    // Registrar o plugin de labels para aparecer os valores em cima
+    Chart.register(ChartDataLabels);
+
     const urlCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT7auqmo6fOoCEkoeoZ70TVM4ljEPsBlPfKBebWUbdWpb0URnI-ttwP2AlUNG4yHW7GLqkyLXXTo1Pm/pub?output=csv";
 
     async function atualizarDashboard() {
@@ -117,19 +116,14 @@
 
             linhas.forEach(linha => {
                 let col = linha.includes(';') ? linha.split(';') : linha.split(',');
-                
                 if (col.length > 6) {
-                    // Lotes (Coluna D)
                     const lote = col[3]?.trim();
                     if (lote && lote.length > 5) {
                         contagemLotes[lote] = (contagemLotes[lote] || 0) + 1;
                     }
-
-                    // Defeitos (Coluna G)
                     const defeitoRaw = col[6]?.trim(); 
                     if (defeitoRaw && defeitoRaw !== "0" && defeitoRaw.toLowerCase() !== "nenhum item") {
-                        const lista = defeitoRaw.split(',');
-                        lista.forEach(d => {
+                        defeitoRaw.split(',').forEach(d => {
                             const dLimpo = d.trim();
                             if (dLimpo) contagemDefeitos[dLimpo] = (contagemDefeitos[dLimpo] || 0) + 1;
                         });
@@ -149,19 +143,45 @@
     function renderChart(id, labels, data, color) {
         const ctx = document.getElementById(id).getContext('2d');
         if (window[id + 'Chart']) window[id + 'Chart'].destroy();
+        
         window[id + 'Chart'] = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: labels,
-                datasets: [{ data: data, backgroundColor: color, borderRadius: 5 }]
+                datasets: [{ 
+                    data: data, 
+                    backgroundColor: color, 
+                    borderRadius: 5,
+                    // Garante que o valor apareça em cima da barra
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        offset: 4,
+                        color: '#1a2a3a',
+                        font: { weight: 'bold', size: 12 }
+                    }
+                }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                plugins: { 
+                    legend: { display: false },
+                    // Configuração global do plugin de labels
+                    datalabels: {
+                        display: true
+                    }
+                },
+                layout: {
+                    padding: { top: 25 } // Espaço extra para o número não cortar
+                },
                 scales: { 
-                    y: { beginAtZero: true, ticks: { stepSize: 1 } },
-                    x: { ticks: { font: { weight: 'bold' } } }
+                    y: { 
+                        beginAtZero: true, 
+                        ticks: { stepSize: 1 },
+                        grid: { display: false }
+                    },
+                    x: { ticks: { font: { weight: 'bold' } }, grid: { display: false } }
                 }
             }
         });
