@@ -2,71 +2,22 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestão de Qualidade Curitiba - Coplac</title>
-    <!-- Bibliotecas -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <style>
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: #f4f7f9; 
-            margin: 0; 
-            padding: 20px; 
-            color: #1a2a3a;
-        }
-        .dashboard-container { 
-            max-width: 1100px; 
-            margin: auto; 
-            background: white; 
-            border-radius: 15px; 
-            padding: 30px; 
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08); 
-        }
-        .header-section { margin-bottom: 30px; text-align: left; border-bottom: 2px solid #edf2f7; padding-bottom: 15px; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f9; margin: 0; padding: 20px; }
+        .dashboard-container { max-width: 1100px; margin: auto; background: white; border-radius: 15px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .header-section { margin-bottom: 30px; border-bottom: 2px solid #edf2f7; padding-bottom: 15px; }
         .main-title { font-size: 28px; font-weight: 800; text-transform: uppercase; margin: 0; }
-        .sub-title { font-size: 14px; color: #555; margin-top: 5px; }
-
         .charts-list { display: flex; flex-direction: column; gap: 30px; }
-
-        .chart-card { 
-            background: #fff; 
-            padding: 20px; 
-            border-radius: 10px; 
-            border: 1px solid #edf2f7;
-            display: grid;
-            grid-template-columns: 1fr 280px; 
-            gap: 20px;
-        }
-
-        .chart-title { 
-            font-weight: 700; 
-            color: #334155; 
-            font-size: 18px; 
-            margin-bottom: 25px; 
-            grid-column: span 2; 
-            text-transform: uppercase;
-        }
-
-        .chart-container { position: relative; height: 300px; }
-
-        .comentario-lateral {
-            padding: 15px;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            font-weight: 500;
-            border-radius: 8px;
-        }
-
+        .chart-card { background: #fff; padding: 20px; border-radius: 10px; border: 1px solid #edf2f7; display: grid; grid-template-columns: 1fr 280px; gap: 20px; }
+        .chart-title { font-weight: 700; color: #334155; font-size: 18px; margin-bottom: 25px; grid-column: span 2; }
+        .chart-container { position: relative; height: 320px; }
+        .comentario-lateral { padding: 15px; font-size: 14px; display: flex; align-items: center; font-weight: 500; border-radius: 8px; }
         .comentario-blue { background-color: #f0f7ff; border-left: 4px solid #0081c9; color: #1e4e8c; }
         .comentario-red { background-color: #fff5f5; border-left: 4px solid #e53e3e; color: #742a2a; }
         .comentario-green { background-color: #f0fff4; border-left: 4px solid #2f855a; color: #22543d; }
-
-        @media (max-width: 850px) {
-            .chart-card { grid-template-columns: 1fr; }
-            .chart-title { grid-column: span 1; }
-        }
     </style>
 </head>
 <body>
@@ -74,47 +25,53 @@
 <div class="dashboard-container">
     <div class="header-section">
         <h1 class="main-title">GESTÃO DE QUALIDADE CURITIBA</h1>
-        <div class="sub-title">Grupo Coplac | Performance</div>
     </div>
 
     <div class="charts-list">
-        <!-- 1. Quantidade por Lote -->
         <div class="chart-card">
             <h2 class="chart-title">QUANTIDADE APONTADA POR LOTE</h2>
-            <div class="chart-container">
-                <canvas id="chartLotes"></canvas>
-            </div>
-            <div class="comentario-lateral comentario-blue">
-                Frequência de registros por lote conforme apontamentos da planilha (Coluna D).
-            </div>
+            <div class="chart-container"><canvas id="chartLotes"></canvas></div>
+            <div class="comentario-lateral comentario-blue">Frequência de registros por lote.</div>
         </div>
 
-        <!-- 2. Defeitos -->
         <div class="chart-card">
             <h2 class="chart-title">DEFEITOS</h2>
-            <div class="chart-container">
-                <canvas id="chartDefeitos"></canvas>
-            </div>
-            <div class="comentario-lateral comentario-red">
-                Defeitos encontrados nas peças FIREWALL (Coluna G).
-            </div>
+            <div class="chart-container"><canvas id="chartDefeitos"></canvas></div>
+            <div class="comentario-lateral comentario-red">Defeitos encontrados nas peças FIREWALL.</div>
         </div>
 
-        <!-- 3. Total de Peças Verificadas -->
         <div class="chart-card">
             <h2 class="chart-title">TOTAL DE PEÇAS VERIFICADAS</h2>
-            <div class="chart-container">
-                <canvas id="chartPecas"></canvas>
-            </div>
-            <div class="comentario-lateral comentario-green">
-                Volume total de peças inspecionadas por lote (Soma da Coluna F).
-            </div>
+            <div class="chart-container"><canvas id="chartPecas"></canvas></div>
+            <div class="comentario-lateral comentario-green">Volume total de peças inspecionadas.</div>
         </div>
     </div>
 </div>
 
 <script>
     Chart.register(ChartDataLabels);
+
+    const decodificadorDefeitos = {
+        "X7": "BLANK PERDIDO", "U3": "DEFORMAÇÃO DE BORDAS", "U4": "DEFORMAÇÃO DE SUPERFÍCIE", "15": "FALTA DE COBERTURA DE TNT",
+        "H2": "LINHA FRAGILIZAÇÃO DUPLA", "H1": "LINHA FRAGILIZAÇÃO SEM VINCO", "A9": "MATÉRIA-PRIMA COM RALEIRA", "S1": "PEÇA COM BURACOS",
+        "P7": "PEÇA COM EXCESSO DE MDI", "E0": "PEÇA COM RUGAS", "A3": "PEÇA DEFORMADA", "A5": "PEÇA DELAMINANDO",
+        "A8": "PEÇA FALTANDO PEDAÇO", "T1": "PEÇA MAL ESTRUTURADA", "B2": "PEÇA MAL MOLDADA", "85": "PEÇA MOLE",
+        "B4": "PEÇA QUEBRADA", "D6": "PEÇA QUEIMADA", "J3": "PEÇA ROMPIDA / RASGADA", "C3": "PEÇA SUJA",
+        "B1": "RECORTE PARASOL FECHADO", "18": "TNT DESCOLANDO", "75": "FALTA DE ADERÊNCIA DO TECIDO", "81": "FALTA DE COBERTURA DE TECIDO",
+        "X1": "LADO DO TECIDO INVERTIDO", "Z2": "PEÇA COM MARCAS", "K2": "TECIDO COM BOLHAS", "J6": "TECIDO COM BRILHO EXCESSIVO",
+        "J7": "TECIDO COM CASCA DE LARANJA", "K1": "TECIDO COM MANCHAS", "J4": "TECIDO COM RUGAS", "K5": "TECIDO COM SUJEIRA",
+        "G2": "TECIDO DANIFICADO", "J5": "TECIDO QUEIMADO", "59": "CORTE IRREGULAR", "K6": "ETIQUETA PÇ ERRO LEITURA QR-CODE",
+        "76": "ETIQUETA PÇ FALTANTE", "F5": "ETIQUETA PEÇA CÓDIGO ERRADO", "D8": "FURO OBSTRUÍDO", "A2": "PEÇA COM REBARBA",
+        "D9": "PEÇA COM REFILE INCORRETO", "B0": "PEÇA FORA DE DIMENSIONAL", "F3": "PEÇA MAL CORTADA", "B3": "PEÇA MOLHADA FORA DA REGIÃO DE CORTE",
+        "17": "TECIDO DESCOLADO NAS BORDAS", "K9": "TECIDO COM RESÍDUOS DE COLA", "N9": "COMPONENTE COM EXCESSO DE COLA", "N3": "FRAME COM CLIP DESLOCADO",
+        "N8": "FRAME COM EXCESSO DE COLA", "M0": "FRAME DESCOLADO ELEFANTINHO", "L7": "FRAME DESCOLADO MOLDURA", "L1": "FRAME INVERTIDO",
+        "N5": "FRAME QUEBRADO", "N4": "FRAME SEM CLIP", "N6": "MOLDURA LUMINÁRIA DESCOLADA", "O6": "MOLDURA LUMINÁRIA FALTANTE",
+        "L2": "MOLDURA LUMINÁRIA INVERTIDA", "N7": "RETAINER DESCOLADO", "O5": "RETAINER DESLOCADO", "P3": "RETAINER FALTANTE",
+        "L6": "RETAINER INVERTIDO", "P4": "RETAINER QUEBRADO", "O7": "RETAINER SEM CLIP", "P5": "TECIDO COM RESÍDUOS DE COLA",
+        "92": "EMBALAGEM COM ETIQUETA TROCADA", "64": "EMBALAGEM DANIFICADA", "69": "EMBALAGEM MOLHADA", "F6": "EMBALAGEM SEM FILME PLÁSTICO",
+        "70": "EMBALAGEM SUJA", "63": "EXCESSO DE PEÇAS NA EMBALAGEM", "67": "FALTA DE PEÇAS NA EMBALAGEM", "F7": "IDENTIFICAÇÃO INCORRETA DA EMBALAGEM",
+        "C6": "PEÇAS ACOMODADAS INCORRETAMENTE", "ZZ": "INUSUAL", "F4": "PEÇA CONTAMINADA POR AGENTES EXTERNOS", "P6": "PEÇA REPROVADA NO ENSAIO DE DEFLEXÃO"
+    };
 
     const urlCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT7auqmo6fOoCEkoeoZ70TVM4ljEPsBlPfKBebWUbdWpb0URnI-ttwP2AlUNG4yHW7GLqkyLXXTo1Pm/pub?output=csv";
 
@@ -124,84 +81,56 @@
             const data = await response.text();
             const linhas = data.split('\n').slice(1);
 
-            let contagemLotes = {};
-            let contagemDefeitos = {};
-            let somaPecasPorLote = {};
+            let contagemLotes = {}, contagemDefeitos = {}, somaPecasPorLote = {};
 
             linhas.forEach(linha => {
                 let col = linha.includes(';') ? linha.split(';') : linha.split(',');
                 if (col.length > 6) {
                     const lote = col[3]?.trim();
-                    const pecasVerificadas = parseInt(col[5]?.trim()) || 0; // Coluna F
-
+                    const pecas = parseInt(col[5]?.trim()) || 0;
                     if (lote && lote.length > 5) {
-                        // 1. Frequência de Apontamentos
                         contagemLotes[lote] = (contagemLotes[lote] || 0) + 1;
-                        
-                        // 3. Soma de Peças Verificadas por Lote
-                        somaPecasPorLote[lote] = (somaPecasPorLote[lote] || 0) + pecasVerificadas;
+                        somaPecasPorLote[lote] = (somaPecasPorLote[lote] || 0) + pecas;
                     }
-
-                    // 2. Defeitos
-                    const defeitoRaw = col[6]?.trim(); 
+                    const defeitoRaw = col[6]?.trim();
                     if (defeitoRaw && defeitoRaw !== "0" && defeitoRaw.toLowerCase() !== "nenhum item") {
                         defeitoRaw.split(',').forEach(d => {
                             const dLimpo = d.trim();
-                            if (dLimpo) contagemDefeitos[dLimpo] = (contagemDefeitos[dLimpo] || 0) + 1;
+                            if (dLimpo) {
+                                const nome = decodificadorDefeitos[dLimpo] || dLimpo;
+                                contagemDefeitos[nome] = (contagemDefeitos[nome] || 0) + 1;
+                            }
                         });
                     }
                 }
             });
 
-            // Ordenação para os gráficos
-            const lotesOrd = Object.entries(contagemLotes).sort((a,b) => b[1]-a[1]).slice(0, 10);
-            const defeitosOrd = Object.entries(contagemDefeitos).sort((a,b) => b[1]-a[1]).slice(0, 10);
-            const somaPecasOrd = Object.entries(somaPecasPorLote).sort((a,b) => b[1]-a[1]).slice(0, 10);
+            const renderData = (obj) => Object.entries(obj).sort((a,b) => b[1]-a[1]).slice(0, 8);
+            
+            renderChart('chartLotes', renderData(contagemLotes), '#0081c9');
+            renderChart('chartDefeitos', renderData(contagemDefeitos), '#e53e3e');
+            renderChart('chartPecas', renderData(somaPecasPorLote), '#2f855a');
 
-            renderChart('chartLotes', lotesOrd.map(i => i[0]), lotesOrd.map(i => i[1]), '#0081c9');
-            renderChart('chartDefeitos', defeitosOrd.map(i => i[0]), defeitosOrd.map(i => i[1]), '#e53e3e');
-            renderChart('chartPecas', somaPecasOrd.map(i => i[0]), somaPecasOrd.map(i => i[1]), '#2f855a');
-
-        } catch (e) { console.error("Erro ao carregar dados:", e); }
+        } catch (e) { console.error(e); }
     }
 
-    function renderChart(id, labels, data, color) {
+    function renderChart(id, dataArr, color) {
         const ctx = document.getElementById(id).getContext('2d');
         if (window[id + 'Chart']) window[id + 'Chart'].destroy();
-        
         window[id + 'Chart'] = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: labels,
-                datasets: [{ 
-                    data: data, 
-                    backgroundColor: color, 
-                    borderRadius: 5,
-                    datalabels: {
-                        anchor: 'end',
-                        align: 'top',
-                        offset: 4,
-                        color: '#1a2a3a',
-                        font: { weight: 'bold', size: 11 }
-                    }
-                }]
+                labels: dataArr.map(i => i[0]),
+                datasets: [{ data: dataArr.map(i => i[1]), backgroundColor: color, borderRadius: 5 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { 
-                    legend: { display: false },
-                    datalabels: { display: true }
-                },
-                layout: { padding: { top: 30 } },
-                scales: { 
-                    y: { beginAtZero: true, grid: { display: false }, ticks: { display: false } },
-                    x: { ticks: { font: { weight: 'bold', size: 10 } }, grid: { display: false } }
-                }
+                indexAxis: id === 'chartDefeitos' ? 'y' : 'x', // Defeitos em barra horizontal para ler melhor os nomes longos
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false }, datalabels: { display: true, anchor: 'end', align: 'end', font: { weight: 'bold' } } },
+                scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } }
             }
         });
     }
-
     atualizarDashboard();
     setInterval(atualizarDashboard, 300000);
 </script>
