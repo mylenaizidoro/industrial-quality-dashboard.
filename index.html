@@ -6,7 +6,6 @@
     <title>Gestão de Qualidade Curitiba - Coplac</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* Estilo baseado no padrão Turnover/Absenteísmo */
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background-color: #f4f7f9; 
@@ -14,7 +13,6 @@
             padding: 20px; 
             color: #1a2a3a;
         }
-
         .dashboard-container { 
             max-width: 1200px; 
             margin: auto; 
@@ -23,232 +21,153 @@
             padding: 30px; 
             box-shadow: 0 4px 20px rgba(0,0,0,0.08); 
         }
+        .header-section { margin-bottom: 30px; text-align: left; }
+        .main-title { font-size: 28px; font-weight: 800; text-transform: uppercase; margin: 0; }
+        .sub-title { font-size: 14px; color: #555; margin-top: 5px; }
 
-        /* Cabeçalho conforme image_38703c.png */
-        .header-section {
-            margin-bottom: 30px;
-            text-align: left;
-        }
-
-        .main-title { 
-            font-size: 28px; 
-            font-weight: 800; 
-            color: #1a2a3a; 
-            margin: 0;
-            text-transform: uppercase;
-            letter-spacing: -0.5px;
-        }
-
-        .sub-title {
-            font-size: 14px;
-            color: #555;
-            margin-top: 5px;
-            font-weight: 400;
-        }
-
-        /* Barra de Ações conforme image_3883fe.png */
-        .button-bar { 
-            display: flex; 
-            flex-wrap: wrap; 
-            justify-content: flex-start; 
-            gap: 10px; 
-            margin-bottom: 35px; 
-        }
-
-        .btn { 
-            padding: 10px 20px; 
-            border-radius: 8px; 
-            border: none; 
-            font-weight: bold; 
-            color: white; 
-            cursor: pointer; 
-            font-size: 14px; 
-            transition: 0.2s;
-        }
-
+        .button-bar { display: flex; gap: 10px; margin-bottom: 35px; flex-wrap: wrap; }
+        .btn { padding: 10px 20px; border-radius: 8px; border: none; font-weight: bold; color: white; cursor: pointer; font-size: 14px; }
         .btn-blue { background-color: #0081c9; }
-        .btn-white { background-color: white; color: #555; border: 1px solid #ddd; }
         .btn-purple { background-color: #8e54e9; }
         .btn-dark { background-color: #1a202c; }
-        .btn:hover { opacity: 0.8; }
 
-        .content-layout { 
+        /* Layout em duas colunas para os gráficos */
+        .charts-grid { 
             display: grid; 
-            grid-template-columns: 1fr 320px; 
-            gap: 30px; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 25px; 
+            margin-bottom: 30px;
         }
+        .chart-card { background: #fff; padding: 15px; border-radius: 10px; border: 1px solid #edf2f7; }
+        .chart-title { font-weight: 700; color: #334155; font-size: 16px; margin-bottom: 15px; text-align: center; }
+        .chart-container { position: relative; height: 350px; }
 
-        /* Título do Gráfico solicitado */
-        .chart-title {
-            font-weight: 700;
-            color: #334155;
-            font-size: 18px;
-            margin-bottom: 20px;
-        }
-
-        .chart-container { 
-            position: relative; 
-            height: 400px; 
-            width: 100%; 
-        }
-
-        /* Lateral de Detalhamento */
         .detalhamento-box { 
-            border-left: 5px solid #0081c9; 
             background: #f8f9fa; 
-            padding: 25px; 
-            border-radius: 0 12px 12px 0; 
-            height: fit-content; 
+            padding: 20px; 
+            border-radius: 12px; 
+            border-left: 5px solid #8e54e9;
         }
+        .detalhamento-box span { font-weight: bold; color: #0a192f; }
 
-        .detalhamento-box h3 { 
-            color: #0081c9; 
-            font-size: 14px; 
-            text-transform: uppercase; 
-            margin-top: 0; 
-            letter-spacing: 1px; 
-        }
-
-        .detalhamento-box p { font-size: 15px; margin: 15px 0; color: #444; }
-        .detalhamento-box span { font-weight: bold; color: #0a192f; font-size: 18px; }
-
-        @media (max-width: 900px) { 
-            .content-layout { grid-template-columns: 1fr; } 
-        }
+        @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
 <div class="dashboard-container">
-    <!-- Cabeçalho Institucional -->
     <div class="header-section">
         <h1 class="main-title">GESTÃO DE QUALIDADE CURITIBA</h1>
         <div class="sub-title">Grupo Coplac | Performance</div>
     </div>
 
-    <!-- Filtros e Ações -->
     <div class="button-bar">
-        <button class="btn btn-blue">Ver Todos</button>
-        <button class="btn btn-white">2025</button>
-        <button class="btn btn-white">2026</button>
-        <button class="btn btn-white">Todos os Turnos</button>
+        <button class="btn btn-blue">Atualizar Dados</button>
         <button class="btn btn-purple">✉ Enviar Indicadores</button>
         <button class="btn btn-dark">Exportar PDF</button>
     </div>
 
-    <div class="content-layout">
-        <!-- Seção do Gráfico -->
-        <div class="chart-section">
+    <div class="charts-grid">
+        <!-- Gráfico de Lotes -->
+        <div class="chart-card">
             <h2 class="chart-title">Quantidade apontada por lote</h2>
             <div class="chart-container">
                 <canvas id="chartLotes"></canvas>
             </div>
         </div>
 
-        <!-- Painel Lateral de Dados -->
-        <div class="detalhamento-box">
-            <h3>Resumo de Performance</h3>
-            <p>Lote mais Lançado: <br><span id="destaqueLote">...</span></p>
-            <p>Total de Apontamentos: <br><span id="destaqueTotal">0</span></p>
-            <p>Status do Sistema: <br><span style="color: #2ecc71; font-size: 14px;">● Conectado</span></p>
-            <hr style="border: 0; border-top: 1px solid #ddd; margin: 20px 0;">
-            <p style="font-size: 11px; color: #888; line-height: 1.4;">
-                Este gráfico soma a quantidade de vezes que cada código de lote aparece na planilha de apontamentos (Coluna D).
-            </p>
+        <!-- Gráfico de Defeitos -->
+        <div class="chart-card">
+            <h2 class="chart-title">Principais Defeitos Detectados</h2>
+            <div class="chart-container">
+                <canvas id="chartDefeitos"></canvas>
+            </div>
         </div>
+    </div>
+
+    <div class="detalhamento-box">
+        <p>Lote mais crítico: <span id="destaqueLote">...</span> | 
+           Defeito mais frequente: <span id="destaqueDefeito" style="color:#e53e3e;">...</span> | 
+           Total de registros: <span id="destaqueTotal">0</span></p>
     </div>
 </div>
 
 <script>
-    // Link da sua planilha Coplac (CSV)
     const urlCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT7auqmo6fOoCEkoeoZ70TVM4ljEPsBlPfKBebWUbdWpb0URnI-ttwP2AlUNG4yHW7GLqkyLXXTo1Pm/pub?output=csv";
 
     async function atualizarDashboard() {
         try {
             const response = await fetch(urlCSV);
             const data = await response.text();
-            
-            // Pula o cabeçalho e processa as linhas
             const linhas = data.split('\n').slice(1);
 
-            let contagemFrequencia = {};
+            let contagemLotes = {};
+            let contagemDefeitos = {};
             let totalGeral = 0;
 
             linhas.forEach(linha => {
-                // Suporte para separadores ',' ou ';'
                 let col = linha.includes(';') ? linha.split(';') : linha.split(',');
                 
-                if (col.length > 3) {
-                    const lote = col[3]?.trim(); // Coluna D (Lote)
-                    
-                    // Validação: Ignora ruídos e foca em códigos de lote reais
+                if (col.length > 6) {
+                    // Lógica para Lotes (Coluna D)
+                    const lote = col[3]?.trim();
                     if (lote && lote.length > 5) {
-                        contagemFrequencia[lote] = (contagemFrequencia[lote] || 0) + 1;
+                        contagemLotes[lote] = (contagemLotes[lote] || 0) + 1;
                         totalGeral++;
                     }
-                }
-            });
 
-            // Ordenação: Lote com mais apontamentos primeiro
-            const ordenados = Object.entries(contagemFrequencia)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 10); 
-
-            const labels = ordenados.map(item => item[0]);
-            const valores = ordenados.map(item => item[1]);
-
-            // Atualiza o painel de detalhamento
-            document.getElementById('destaqueTotal').innerText = totalGeral.toLocaleString();
-            if (ordenados.length > 0) {
-                document.getElementById('destaqueLote').innerText = ordenados[0][0];
-            }
-
-            const ctx = document.getElementById('chartLotes').getContext('2d');
-            
-            // Evita sobreposição de gráficos ao atualizar
-            if (window.meuGrafico) { window.meuGrafico.destroy(); }
-
-            window.meuGrafico = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Vezes que apareceu',
-                        data: valores,
-                        backgroundColor: '#0081c9',
-                        hoverBackgroundColor: '#8e54e9',
-                        borderRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        y: { 
-                            beginAtZero: true, 
-                            ticks: { color: '#64748b', font: { family: 'Segoe UI' } },
-                            grid: { borderDash: [5, 5], color: '#e2e8f0' }
-                        },
-                        x: { 
-                            ticks: { color: '#64748b', font: { family: 'Segoe UI', weight: 'bold' } },
-                            grid: { display: false } 
-                        }
+                    // Lógica para Defeitos (Coluna G conforme image_2049b1.png)
+                    const defeitoRaw = col[6]?.trim(); 
+                    if (defeitoRaw && defeitoRaw !== "0" && defeitoRaw.toLowerCase() !== "nenhum item") {
+                        // Trata casos como "F5,17" separando-os
+                        const listaDefeitos = defeitoRaw.split(',');
+                        listaDefeitos.forEach(d => {
+                            const dLimpo = d.trim();
+                            if (dLimpo) {
+                                contagemDefeitos[dLimpo] = (contagemDefeitos[dLimpo] || 0) + 1;
+                            }
+                        });
                     }
                 }
             });
 
-        } catch (error) {
-            console.error("Erro na leitura dos dados da Coplac:", error);
-        }
+            // Preparar dados de Lotes
+            const lotesOrd = Object.entries(contagemLotes).sort((a,b) => b[1]-a[1]).slice(0, 8);
+            // Preparar dados de Defeitos
+            const defeitosOrd = Object.entries(contagemDefeitos).sort((a,b) => b[1]-a[1]).slice(0, 8);
+
+            document.getElementById('destaqueTotal').innerText = totalGeral;
+            if (lotesOrd[0]) document.getElementById('destaqueLote').innerText = lotesOrd[0][0];
+            if (defeitosOrd[0]) document.getElementById('destaqueDefeito').innerText = defeitosOrd[0][0];
+
+            // Renderizar Gráfico de Lotes
+            renderChart('chartLotes', lotesOrd.map(i => i[0]), lotesOrd.map(i => i[1]), '#0081c9', 'Apontamentos');
+            // Renderizar Gráfico de Defeitos
+            renderChart('chartDefeitos', defeitosOrd.map(i => i[0]), defeitosOrd.map(i => i[1]), '#e53e3e', 'Ocorrências');
+
+        } catch (e) { console.error(e); }
     }
 
-    // Executa ao carregar e define intervalo de atualização
-    atualizarDashboard();
-    setInterval(atualizarDashboard, 300000); // 5 minutos
-</script>
+    function renderChart(id, labels, data, color, labelName) {
+        const ctx = document.getElementById(id).getContext('2d');
+        if (window[id + 'Chart']) window[id + 'Chart'].destroy();
+        window[id + 'Chart'] = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{ label: labelName, data: data, backgroundColor: color, borderRadius: 5 }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    }
 
+    atualizarDashboard();
+    setInterval(atualizarDashboard, 300000);
+</script>
 </body>
 </html>
