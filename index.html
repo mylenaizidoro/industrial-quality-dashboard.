@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Industrial | Mylena Izidoro</title>
+    <title>Dashboard de Qualidade Industrial | Mylena Izidoro</title>
     
-    <!-- Bibliotecas Necessárias -->
+    <!-- Bibliotecas de Gráficos e Processamento de Dados -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     
     <style>
         :root {
-            --primary-color: #e74c3c; /* Vermelho Alerta */
-            --secondary-color: #3498db; /* Azul Técnico */
+            --primary-color: #e74c3c; /* Vermelho para o PPM */
+            --secondary-color: #3498db; /* Azul para os Produtos */
             --bg-color: #f4f7f6;
             --text-dark: #2c3e50;
         }
@@ -24,10 +24,7 @@
             padding: 20px; 
         }
 
-        .container {
-            max-width: 1000px;
-            margin: auto;
-        }
+        .container { max-width: 1000px; margin: auto; }
 
         .dashboard-card { 
             background: white; 
@@ -48,11 +45,7 @@
         h2 { margin: 0; color: var(--text-dark); font-size: 1.4rem; }
         p.subtitle { color: #7f8c8d; margin-top: 5px; font-size: 0.85rem; }
 
-        .stats-summary {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
+        .stats-summary { display: flex; gap: 15px; margin-bottom: 20px; }
 
         .stat-badge {
             background: #f8f9fa;
@@ -68,20 +61,20 @@
 <body>
 
     <div class="container">
-        <!-- GRÁFICO 1: PPM (TENDÊNCIA) -->
+        <!-- GRÁFICO 1: TENDÊNCIA DE PPM -->
         <div class="dashboard-card">
             <div class="header">
                 <h2>KPI: PPM Retorno PIC x Faturamento</h2>
-                <p class="subtitle">Análise de Tendência e Meta de Qualidade Automotiva</p>
+                <p class="subtitle">Indicador de Qualidade e Meta Industrial</p>
             </div>
             <div class="stats-summary">
                 <div class="stat-badge">META: 3.000 PPM</div>
-                <div class="stat-badge" style="color: #27ae60;">SISTEMA: ONLINE</div>
+                <div class="stat-badge" style="color: #27ae60;">STATUS: CONECTADO</div>
             </div>
             <canvas id="ppmChart"></canvas>
         </div>
 
-        <!-- GRÁFICO 2: DEVOLUÇÕES POR PRODUTO (VOLUME) -->
+        <!-- GRÁFICO 2: VOLUME POR PRODUTO -->
         <div class="dashboard-card">
             <div class="header blue">
                 <h2>Volume de Devoluções por Produto</h2>
@@ -92,7 +85,7 @@
     </div>
 
     <script>
-        // Link CSV configurado a partir da sua publicação na web
+        // Link CSV do seu Google Sheets (conforme image_850858.png)
         const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT7auqmo6fOoCEkoeoZ70TVM4ljEPsBlPfKBebWUbdWpb0URnI-ttwP2AlUNG4yHW7GLqkyLXXTo1Pm/pub?output=csv';
 
         async function initDashboard() {
@@ -101,24 +94,24 @@
                 header: true,
                 complete: function(results) {
                     const data = results.data;
-                    const rowsRaw = results.data.map(row => Object.values(row)); // Para ler linhas específicas como a do PPM
+                    const rowsRaw = results.data.map(row => Object.values(row));
 
-                    // 1. Processamento para o Gráfico de PPM (Baseado na sua planilha image_855ab1.png)
-                    const labelsEixoX = rowsRaw[28]?.slice(1, 8) || []; // Datas
+                    // 1. Lógica do Gráfico de PPM (Tendência Diária)
+                    // Linha 28: DIARIO | Linha 29: PPM (conforme image_855ab1.png)
+                    const labelsPPM = rowsRaw[28]?.slice(1, 8) || [];
                     const valoresPPM = rowsRaw[29]?.slice(1, 8).map(v => parseFloat(v.replace('.', '').replace(',', '.')) || 0) || [];
+                    renderPpmChart(labelsPPM, valoresPPM);
 
-                    renderPpmChart(labelsEixoX, valoresPPM);
-
-                    // 2. Processamento para Devoluções por Produto
+                    // 2. Lógica do Gráfico de Produtos (Soma por Código)
+                    // Coluna B: Produto | Coluna D: Quant. (conforme image_840ffe.png e image_840fbd.png)
                     const contagemProdutos = {};
                     data.forEach(row => {
-                        const prod = row['Produto'] || row['Descrição']; // Tenta ler o nome do produto
+                        const prod = row['Produto']; 
                         const quant = parseFloat(row['Quant.']) || 0;
                         if(prod && quant > 0) {
                             contagemProdutos[prod] = (contagemProdutos[prod] || 0) + quant;
                         }
                     });
-
                     renderProductChart(Object.keys(contagemProdutos), Object.values(contagemProdutos));
                 }
             });
@@ -161,8 +154,9 @@
                     }]
                 },
                 options: {
-                    indexAxis: 'y', // Barras horizontais para ler melhor os nomes dos produtos
-                    responsive: true
+                    indexAxis: 'y', // Barras horizontais conforme image_841078.png
+                    responsive: true,
+                    scales: { x: { beginAtZero: true } }
                 }
             });
         }
