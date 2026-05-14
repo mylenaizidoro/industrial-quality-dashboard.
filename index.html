@@ -3,72 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard de Qualidade | Mylena Izidoro</title>
+    <title>Dashboard Industrial | Mylena</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Plugin para mostrar valores nos gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <style>
-        :root { 
-            --primary: #e74c3c; --secondary: #3498db; --accent: #27ae60; 
-            --dark: #2c3e50; --bg: #f4f7f6;
-        }
+        :root { --primary: #e74c3c; --secondary: #3498db; --dark: #2c3e50; --bg: #f4f7f6; }
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); padding: 20px; margin: 0; }
         .container { max-width: 1200px; margin: auto; }
         .dashboard-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 8px 16px rgba(0,0,0,0.08); margin-bottom: 25px; }
         .header { border-bottom: 3px solid var(--secondary); margin-bottom: 15px; padding-bottom: 8px; }
         h2 { margin: 0; color: var(--dark); font-size: 1.1rem; text-transform: uppercase; }
-        .ppm-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; }
-        .ppm-table td { border: 1px solid #ddd; padding: 10px; text-align: center; font-weight: bold; }
+        .ppm-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: center; }
+        .ppm-table td { border: 1px solid #ddd; padding: 10px; font-weight: bold; }
         .row-label { background: #f8f9fa; text-align: left !important; width: 150px; }
-        .bg-ppm { background: #FF9800; }
-        .bg-meta { background: #4CAF50; color: white; }
-        .bg-faturamento { background: #00BCD4; }
-        .bg-devolucao { background: #F44336; color: white; }
-        .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        @media (max-width: 900px) { .grid-layout { grid-template-columns: 1fr; } }
+        .bg-ppm { background: #FF9800; } .bg-meta { background: #4CAF50; color: white; }
+        .bg-faturamento { background: #00BCD4; } .bg-devolucao { background: #F44336; color: white; }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Tabela PPM -->
+        <!-- Tabela PPM Diário -->
         <div class="dashboard-card" style="overflow-x: auto;">
             <div class="header" style="border-bottom-color: #FF9800;"><h2>PPM RETORNO PIC X FATURAMENTO DIÁRIO</h2></div>
             <table class="ppm-table" id="ppmTable"></table>
         </div>
 
-        <!-- Gráfico de Defeitos por Produto -->
-        <div class="dashboard-card">
-            <div class="header" style="border-bottom-color: #8e44ad;"><h2>Defeitos por Part Number (Com Valores)</h2></div>
-            <canvas id="defectByProductChart" height="100"></canvas>
-        </div>
-
-        <div class="grid-layout">
-            <div class="dashboard-card">
-                <div class="header"><h2>Volume Total de Devoluções</h2></div>
-                <canvas id="productChart"></canvas>
-            </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <!-- Ranking de Motivos (Correção da imagem image_77d233.png) -->
             <div class="dashboard-card">
                 <div class="header" style="border-bottom-color: var(--primary);"><h2>Ranking de Motivos</h2></div>
                 <canvas id="motivoChart"></canvas>
+            </div>
+
+            <!-- Gráfico de Produtos -->
+            <div class="dashboard-card">
+                <div class="header"><h2>Volume Total de Devoluções</h2></div>
+                <canvas id="productChart"></canvas>
             </div>
         </div>
     </div>
 
     <script>
-        // Registrar o plugin globalmente para todos os gráficos
         Chart.register(ChartDataLabels);
-
         const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT7auqmo6fOoCEkoeoZ70TVM4ljEPsBlPfKBebWUbdWpb0URnI-ttwP2AlUNG4yHW7GLqkyLXXTo1Pm/pub?gid=536102353&single=true&output=csv';
-
-        // Configuração padrão para os labels
-        const labelOptions = {
-            anchor: 'end',
-            align: 'top',
-            formatter: Math.round,
-            font: { weight: 'bold', size: 10 },
-            color: '#2c3e50'
-        };
 
         async function initDashboard() {
             Papa.parse(sheetUrl, {
@@ -76,36 +54,51 @@
                 complete: function(results) {
                     const rows = results.data;
                     const dailyData = {};
-                    const prodData = {};
-                    const defectLabels = new Set();
                     const motivosRank = {};
+                    const prodCount = {};
 
+                    // Começamos em i=1 para pular o cabeçalho "Desc. Motivo"
                     for(let i = 1; i < rows.length; i++) {
                         const data = rows[i][0];
                         const prod = rows[i][1];
                         const fat = parseFloat(rows[i][2]) || 0;
                         const dev = parseFloat(rows[i][3]) || 0;
-                        const defect = rows[i][10];
+                        const motivo = rows[i][10]; // Coluna K
 
-                        if(data) {
-                            if(!dailyData[data]) dailyData[data] = { fat: 0, dev: 0 };
-                            dailyData[data].fat += fat; dailyData[data].dev += dev;
+                        // Filtro para ignorar linhas de cabeçalho ou vazias
+                        if (motivo && motivo !== "Desc. Motivo" && dev > 0) {
+                            motivosRank[motivo] = (motivosRank[motivo] || 0) + dev;
+                            prodCount[prod] = (prodCount[prod] || 0) + dev;
                         }
 
-                        if(prod && dev > 0) {
-                            if(!prodData[prod]) prodData[prod] = { total: 0, defects: {} };
-                            prodData[prod].total += dev;
-                            if(defect) {
-                                prodData[prod].defects[defect] = (prodData[prod].defects[defect] || 0) + dev;
-                                defectLabels.add(defect);
-                                motivosRank[defect] = (motivosRank[defect] || 0) + dev;
-                            }
+                        if(data && !isNaN(fat)) {
+                            if(!dailyData[data]) dailyData[data] = { fat: 0, dev: 0 };
+                            dailyData[data].fat += fat; dailyData[data].dev += dev;
                         }
                     }
 
                     renderPPMTable(dailyData);
-                    renderProductCharts(prodData, Array.from(defectLabels));
-                    renderMotivoChart(motivosRank);
+                    renderMotivos(motivosRank);
+                    renderProducts(prodCount);
+                }
+            });
+        }
+
+        function renderMotivos(dados) {
+            const labels = Object.keys(dados).sort((a,b) => dados[b] - dados[a]);
+            new Chart(document.getElementById('motivoChart'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{ data: labels.map(l => dados[l]), backgroundColor: '#e74c3c' }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: { anchor: 'end', align: 'right', color: '#2c3e50', font: { weight: 'bold' } }
+                    },
+                    scales: { x: { beginAtZero: true, grid: { display: false } } }
                 }
             });
         }
@@ -113,73 +106,20 @@
         function renderPPMTable(dailyData) {
             const table = document.getElementById('ppmTable');
             const dates = Object.keys(dailyData).slice(-7);
-            const meta = 3000;
-
             let html = `<tr><td class="row-label">DIÁRIO</td>` + dates.map(d => `<td>${d}</td>`).join('') + `</tr>`;
-            html += `<tr class="bg-ppm"><td class="row-label">PPM</td>` + dates.map(d => {
-                const ppm = dailyData[d].fat > 0 ? ((dailyData[d].dev / dailyData[d].fat) * 1000000).toFixed(0) : 0;
-                return `<td>${ppm}</td>`;
-            }).join('') + `</tr>`;
-            html += `<tr class="bg-meta"><td class="row-label">META</td>` + dates.map(() => `<td>${meta}</td>`).join('') + `</tr>`;
+            html += `<tr class="bg-ppm"><td class="row-label">PPM</td>` + dates.map(d => `<td>${((dailyData[d].dev / dailyData[d].fat) * 1000000 || 0).toFixed(0)}</td>`).join('') + `</tr>`;
+            html += `<tr class="bg-meta"><td class="row-label">META</td>` + dates.map(() => `<td>3000</td>`).join('') + `</tr>`;
             html += `<tr class="bg-faturamento"><td class="row-label">FATURAMENTO</td>` + dates.map(d => `<td>${dailyData[d].fat}</td>`).join('') + `</tr>`;
             html += `<tr class="bg-devolucao"><td class="row-label">DEVOLUÇÃO PIC</td>` + dates.map(d => `<td>${dailyData[d].dev}</td>`).join('') + `</tr>`;
             table.innerHTML = html;
         }
 
-        function renderProductCharts(prodData, labels) {
-            const prods = Object.keys(prodData).sort((a,b) => prodData[b].total - prodData[a].total).slice(0, 6);
-            
-            // Gráfico Total
+        function renderProducts(dados) {
+            const labels = Object.keys(dados).slice(0, 5);
             new Chart(document.getElementById('productChart'), {
                 type: 'bar',
-                data: {
-                    labels: prods,
-                    datasets: [{ label: 'Qtd', data: prods.map(p => prodData[p].total), backgroundColor: '#3498db' }]
-                },
-                options: { plugins: { datalabels: labelOptions } }
-            });
-
-            // Gráfico Empilhado
-            const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6', '#e67e22'];
-            const datasets = labels.slice(0, 5).map((defect, i) => ({
-                label: defect,
-                data: prods.map(p => prodData[p].defects[defect] || 0),
-                backgroundColor: colors[i]
-            }));
-
-            new Chart(document.getElementById('defectByProductChart'), {
-                type: 'bar',
-                data: { labels: prods, datasets: datasets },
-                options: { 
-                    scales: { x: { stacked: true }, y: { stacked: true } },
-                    plugins: { 
-                        datalabels: { 
-                            ...labelOptions, 
-                            align: 'center', 
-                            anchor: 'center',
-                            color: 'white',
-                            display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0 // Oculta se for zero
-                        } 
-                    } 
-                }
-            });
-        }
-
-        function renderMotivoChart(motivosRank) {
-            const labels = Object.keys(motivosRank).sort((a,b) => motivosRank[b] - motivosRank[a]).slice(0, 8);
-            new Chart(document.getElementById('motivoChart'), {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{ data: labels.map(l => motivosRank[l]), backgroundColor: '#e74c3c' }]
-                },
-                options: { 
-                    indexAxis: 'y', 
-                    plugins: { 
-                        legend: { display: false },
-                        datalabels: { ...labelOptions, align: 'right', anchor: 'end' }
-                    } 
-                }
+                data: { labels: labels, datasets: [{ data: labels.map(l => dados[l]), backgroundColor: '#3498db' }] },
+                options: { plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'top', font: { weight: 'bold' } } } }
             });
         }
 
