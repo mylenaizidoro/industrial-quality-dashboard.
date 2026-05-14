@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard de Qualidade Industrial | Mylena Izidoro</title>
+    <title>Dashboard Industrial | Mylena Izidoro</title>
     
     <!-- Bibliotecas Necessárias -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -11,9 +11,10 @@
     
     <style>
         :root {
-            --primary-color: #e74c3c; /* Vermelho Alerta (Padrão Industrial) */
-            --secondary-color: #2c3e50;
+            --primary-color: #e74c3c; /* Vermelho Alerta */
+            --secondary-color: #3498db; /* Azul Técnico */
             --bg-color: #f4f7f6;
+            --text-dark: #2c3e50;
         }
 
         body { 
@@ -21,137 +22,151 @@
             background-color: var(--bg-color); 
             margin: 0; 
             padding: 20px; 
-            display: flex;
-            justify-content: center;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
         }
 
         .dashboard-card { 
             background: white; 
             border-radius: 12px; 
-            padding: 30px; 
+            padding: 25px; 
             box-shadow: 0 8px 16px rgba(0,0,0,0.1); 
-            width: 100%;
-            max-width: 1000px; 
+            margin-bottom: 30px;
         }
 
         .header {
             border-bottom: 3px solid var(--primary-color);
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             padding-bottom: 10px;
         }
 
-        h2 { margin: 0; color: var(--secondary-color); font-size: 1.5rem; }
-        p.subtitle { color: #7f8c8d; margin-top: 5px; font-size: 0.9rem; }
+        .header.blue { border-bottom-color: var(--secondary-color); }
 
-        .stats-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
+        h2 { margin: 0; color: var(--text-dark); font-size: 1.4rem; }
+        p.subtitle { color: #7f8c8d; margin-top: 5px; font-size: 0.85rem; }
+
+        .stats-summary {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
         }
 
-        .stat-box {
-            background: #fdfdfd;
-            border: 1px solid #eee;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
+        .stat-badge {
+            background: #f8f9fa;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #555;
+            border: 1px solid #ddd;
         }
-
-        .stat-value { font-weight: bold; font-size: 1.2rem; color: var(--primary-color); }
-        .stat-label { font-size: 0.8rem; color: #95a5a6; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
-    <div class="dashboard-card">
-        <div class="header">
-            <h2>KPI: PPM Retorno PIC x Faturamento Diário</h2>
-            <p class="subtitle">Monitoramento de Qualidade Industrial - Rastreabilidade Automotiva</p>
+    <div class="container">
+        <!-- GRÁFICO 1: PPM (TENDÊNCIA) -->
+        <div class="dashboard-card">
+            <div class="header">
+                <h2>KPI: PPM Retorno PIC x Faturamento</h2>
+                <p class="subtitle">Análise de Tendência e Meta de Qualidade Automotiva</p>
+            </div>
+            <div class="stats-summary">
+                <div class="stat-badge">META: 3.000 PPM</div>
+                <div class="stat-badge" style="color: #27ae60;">SISTEMA: ONLINE</div>
+            </div>
+            <canvas id="ppmChart"></canvas>
         </div>
 
-        <div class="stats-container">
-            <div class="stat-box">
-                <div class="stat-label">Meta PPM</div>
-                <div class="stat-value">3.000</div>
+        <!-- GRÁFICO 2: DEVOLUÇÕES POR PRODUTO (VOLUME) -->
+        <div class="dashboard-card">
+            <div class="header blue">
+                <h2>Volume de Devoluções por Produto</h2>
+                <p class="subtitle">Rastreabilidade por Part Number (PN) e Código de Peça</p>
             </div>
-            <div class="stat-box">
-                <div class="stat-label">Status do Sistema</div>
-                <div class="stat-value" style="color: #27ae60;">Online</div>
-            </div>
+            <canvas id="productChart"></canvas>
         </div>
-
-        <!-- Área do Gráfico -->
-        <canvas id="picChart"></canvas>
     </div>
 
     <script>
-        // Link CSV configurado conforme image_850858.png
+        // Link CSV configurado a partir da sua publicação na web
         const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT7auqmo6fOoCEkoeoZ70TVM4ljEPsBlPfKBebWUbdWpb0URnI-ttwP2AlUNG4yHW7GLqkyLXXTo1Pm/pub?output=csv';
 
         async function initDashboard() {
             Papa.parse(sheetUrl, {
                 download: true,
+                header: true,
                 complete: function(results) {
-                    const rows = results.data;
-                    
-                    // Lógica baseada na estrutura da image_855ab1.png:
-                    // Linha 28: DIARIO (Datas)
-                    // Linha 29: PPM
-                    const datas = rows[28].slice(1, 8); // Ajustado para pegar as datas das colunas B a H
-                    const valoresPPM = rows[29].slice(1, 8).map(v => {
-                        // Limpeza de string para número (remove pontos e converte vírgula)
-                        return parseFloat(v.replace('.', '').replace(',', '.')) || 0;
+                    const data = results.data;
+                    const rowsRaw = results.data.map(row => Object.values(row)); // Para ler linhas específicas como a do PPM
+
+                    // 1. Processamento para o Gráfico de PPM (Baseado na sua planilha image_855ab1.png)
+                    const labelsEixoX = rowsRaw[28]?.slice(1, 8) || []; // Datas
+                    const valoresPPM = rowsRaw[29]?.slice(1, 8).map(v => parseFloat(v.replace('.', '').replace(',', '.')) || 0) || [];
+
+                    renderPpmChart(labelsEixoX, valoresPPM);
+
+                    // 2. Processamento para Devoluções por Produto
+                    const contagemProdutos = {};
+                    data.forEach(row => {
+                        const prod = row['Produto'] || row['Descrição']; // Tenta ler o nome do produto
+                        const quant = parseFloat(row['Quant.']) || 0;
+                        if(prod && quant > 0) {
+                            contagemProdutos[prod] = (contagemProdutos[prod] || 0) + quant;
+                        }
                     });
 
-                    renderChart(datas, valoresPPM);
+                    renderProductChart(Object.keys(contagemProdutos), Object.values(contagemProdutos));
                 }
             });
         }
 
-        function renderChart(labels, values) {
-            const ctx = document.getElementById('picChart').getContext('2d');
-            
-            new Chart(ctx, {
+        function renderPpmChart(labels, values) {
+            new Chart(document.getElementById('ppmChart'), {
                 type: 'line',
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'PPM Diário',
+                        label: 'PPM Real',
                         data: values,
                         borderColor: '#e74c3c',
                         backgroundColor: 'rgba(231, 76, 60, 0.1)',
-                        borderWidth: 3,
-                        pointBackgroundColor: '#e74c3c',
                         fill: true,
                         tension: 0.4
-                    },
-                    {
+                    }, {
                         label: 'Meta (3000)',
                         data: Array(labels.length).fill(3000),
                         borderColor: '#27ae60',
-                        borderDash: [10, 5],
-                        borderWidth: 2,
+                        borderDash: [5, 5],
                         pointRadius: 0,
                         fill: false
                     }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'top' }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: { display: true, text: 'Partes Por Milhão (PPM)' }
-                        }
-                    }
                 }
             });
         }
 
-        // Inicia o carregamento
+        function renderProductChart(labels, values) {
+            new Chart(document.getElementById('productChart'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Quantidade Devolvida',
+                        data: values,
+                        backgroundColor: '#3498db',
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // Barras horizontais para ler melhor os nomes dos produtos
+                    responsive: true
+                }
+            });
+        }
+
         initDashboard();
     </script>
 </body>
