@@ -3,52 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Industrial | Mylena Izidoro</title>
+    <title>Dashboard de Qualidade | Mylena Izidoro</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Script essencial para os valores aparecerem -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <style>
         :root { --primary: #e74c3c; --secondary: #3498db; --dark: #2c3e50; --bg: #f4f7f6; }
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); padding: 20px; margin: 0; }
         .container { max-width: 1200px; margin: auto; }
-        .dashboard-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 8px 16px rgba(0,0,0,0.08); margin-bottom: 25px; }
-        .header { border-bottom: 3px solid var(--secondary); margin-bottom: 15px; padding-bottom: 8px; }
-        h2 { margin: 0; color: var(--dark); font-size: 1.1rem; text-transform: uppercase; }
-        .ppm-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: center; }
-        .ppm-table td { border: 1px solid #ddd; padding: 10px; font-weight: bold; }
-        .row-label { background: #f8f9fa; text-align: left !important; width: 150px; }
-        .bg-ppm { background: #FF9800; } 
+        .dashboard-card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 8px 16px rgba(0,0,0,0.08); margin-bottom: 25px; }
+        .header { border-bottom: 3px solid var(--secondary); margin-bottom: 20px; padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        h2 { margin: 0; color: var(--dark); font-size: 1.2rem; text-transform: uppercase; }
+        .meta-tag { font-weight: bold; color: #555; }
+        
+        /* Estilo da Tabela PPM conforme image_77c61c.png */
+        .ppm-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: center; margin-top: 10px; }
+        .ppm-table td { border: 1px solid #ccc; padding: 10px; font-weight: bold; }
+        .row-label { background: #f8f9fa; text-align: left !important; width: 160px; border-right: 2px solid #ddd !important; }
+        .bg-ppm { background: #FF9800; color: black; }
         .bg-meta { background: #4CAF50; color: white; }
-        .bg-faturamento { background: #00BCD4; } 
+        .bg-faturamento { background: #00BCD4; color: black; }
         .bg-devolucao { background: #F44336; color: white; }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Tabela PPM Diário (Estilo Excel) -->
+        
+        <!-- 1. Tabela de Dados (Topo da image_77c61c.png) -->
         <div class="dashboard-card" style="overflow-x: auto;">
-            <div class="header" style="border-bottom-color: #FF9800;"><h2>PPM RETORNO PIC X FATURAMENTO DIÁRIO</h2></div>
+            <div class="header" style="border-bottom-color: #FF9800;">
+                <h2>PPM RETORNO PIC X FATURAMENTO DIÁRIO</h2>
+            </div>
             <table class="ppm-table" id="ppmTable"></table>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            <!-- Ranking de Motivos - COM VALORES CORRIGIDOS -->
-            <div class="dashboard-card">
-                <div class="header" style="border-bottom-color: var(--primary);"><h2>Ranking de Motivos</h2></div>
-                <canvas id="motivoChart"></canvas>
+        <!-- 2. Gráfico Principal de PPM (Conforme image_77c61c.png) -->
+        <div class="dashboard-card">
+            <div class="header" style="border-bottom-color: #e74c3c;">
+                <h2>PPM RETORNO PIC X FATURAMENTO DIÁRIO</h2>
+                <span class="meta-tag">META: <= 3.000</span>
             </div>
+            <canvas id="ppmMainChart" height="100"></canvas>
+        </div>
 
-            <!-- Volume por Produto -->
-            <div class="dashboard-card">
-                <div class="header"><h2>Volume Total de Devoluções</h2></div>
-                <canvas id="productChart"></canvas>
+        <!-- 3. Ranking de Motivos -->
+        <div class="dashboard-card">
+            <div class="header">
+                <h2>Ranking de Motivos (Volume de Devoluções)</h2>
             </div>
+            <canvas id="motivoChart" height="80"></canvas>
         </div>
     </div>
 
     <script>
-        // 1. ATIVAÇÃO OBRIGATÓRIA DOS VALORES
         Chart.register(ChartDataLabels);
 
         const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT7auqmo6fOoCEkoeoZ70TVM4ljEPsBlPfKBebWUbdWpb0URnI-ttwP2AlUNG4yHW7GLqkyLXXTo1Pm/pub?gid=536102353&single=true&output=csv';
@@ -60,99 +67,105 @@
                     const rows = results.data;
                     const dailyData = {};
                     const motivosRank = {};
-                    const prodCount = {};
 
-                    // Loop começando em 1 para pular o título da coluna
+                    // Processamento ignorando cabeçalhos
                     for(let i = 1; i < rows.length; i++) {
-                        const data = rows[i][0];       // Coluna A
-                        const prod = rows[i][1];       // Coluna B
-                        const fat = parseFloat(rows[i][2]) || 0; // Coluna C
-                        const dev = parseFloat(rows[i][3]) || 0; // Coluna D (QUANTIDADE REAL)
-                        const motivo = rows[i][10];    // Coluna K
-
-                        // Filtro: só processa se houver motivo real e quantidade maior que zero
-                        if (motivo && motivo !== "Desc. Motivo" && dev > 0) {
-                            motivosRank[motivo] = (motivosRank[motivo] || 0) + dev;
-                            prodCount[prod] = (prodCount[prod] || 0) + dev;
-                        }
+                        const data = rows[i][0];       // Coluna A: Data
+                        const fat = parseFloat(rows[i][2]) || 0; // Coluna C: Faturamento
+                        const dev = parseFloat(rows[i][3]) || 0; // Coluna D: Devolução
+                        const motivo = rows[i][10];    // Coluna K: Motivo
 
                         if(data && !isNaN(fat)) {
                             if(!dailyData[data]) dailyData[data] = { fat: 0, dev: 0 };
                             dailyData[data].fat += fat;
                             dailyData[data].dev += dev;
                         }
+
+                        if(motivo && motivo !== "Desc. Motivo" && dev > 0) {
+                            motivosRank[motivo] = (motivosRank[motivo] || 0) + dev;
+                        }
                     }
 
-                    renderPPMTable(dailyData);
+                    const dates = Object.keys(dailyData).slice(-7); // Últimos 7 dias
+                    renderPPMTable(dailyData, dates);
+                    renderPPMChart(dailyData, dates);
                     renderMotivos(motivosRank);
-                    renderProducts(prodCount);
+                }
+            });
+        }
+
+        function renderPPMTable(dailyData, dates) {
+            const table = document.getElementById('ppmTable');
+            const meta = 3000;
+
+            let html = `<tr><td class="row-label">DIÁRIO</td>` + dates.map(d => `<td>${d}</td>`).join('') + `</tr>`;
+            
+            // PPM
+            html += `<tr class="bg-ppm"><td class="row-label">PPM</td>` + dates.map(d => {
+                const ppm = dailyData[d].fat > 0 ? ((dailyData[d].dev / dailyData[d].fat) * 1000000) : 0;
+                return `<td>${Math.round(ppm).toLocaleString('pt-BR')}</td>`;
+            }).join('') + `</tr>`;
+
+            // META
+            html += `<tr class="bg-meta"><td class="row-label">META</td>` + dates.map(() => `<td>${meta}</td>`).join('') + `</tr>`;
+
+            // FATURAMENTO
+            html += `<tr class="bg-faturamento"><td class="row-label">FATURAMENTO</td>` + dates.map(d => `<td>${dailyData[d].fat}</td>`).join('') + `</tr>`;
+
+            // DEVOLUÇÃO
+            html += `<tr class="bg-devolucao"><td class="row-label">DEVOLUÇÃO PIC</td>` + dates.map(d => `<td>${dailyData[d].dev}</td>`).join('') + `</tr>`;
+
+            table.innerHTML = html;
+        }
+
+        function renderPPMChart(dailyData, dates) {
+            const ppmValues = dates.map(d => {
+                return dailyData[d].fat > 0 ? Math.round((dailyData[d].dev / dailyData[d].fat) * 1000000) : 0;
+            });
+
+            new Chart(document.getElementById('ppmMainChart'), {
+                type: 'bar',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'PPM',
+                        data: ppmValues,
+                        backgroundColor: '#FF0000', // Vermelho conforme image_77c61c.png
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: {
+                            anchor: 'end', align: 'top',
+                            font: { weight: 'bold', size: 12 },
+                            formatter: (val) => val.toLocaleString('pt-BR')
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, max: 20000, ticks: { stepSize: 5000 } },
+                        x: { grid: { display: false } }
+                    }
                 }
             });
         }
 
         function renderMotivos(dados) {
-            const labels = Object.keys(dados).sort((a,b) => dados[b] - dados[a]).slice(0, 10);
+            const labels = Object.keys(dados).sort((a,b) => dados[b] - dados[a]).slice(0, 8);
             new Chart(document.getElementById('motivoChart'), {
                 type: 'bar',
                 data: {
                     labels: labels,
-                    datasets: [{ 
-                        data: labels.map(l => dados[l]), 
-                        backgroundColor: '#e74c3c',
-                        borderRadius: 5
-                    }]
+                    datasets: [{ data: labels.map(l => dados[l]), backgroundColor: '#e74c3c' }]
                 },
                 options: {
                     indexAxis: 'y',
                     plugins: {
                         legend: { display: false },
-                        // CONFIGURAÇÃO DOS NÚMEROS NO GRÁFICO
-                        datalabels: {
-                            anchor: 'end',
-                            align: 'right',
-                            color: '#2c3e50',
-                            font: { weight: 'bold', size: 12 },
-                            formatter: (value) => value // Mostra o número real somado
-                        }
+                        datalabels: { anchor: 'end', align: 'right', font: { weight: 'bold' } }
                     },
-                    scales: { 
-                        x: { beginAtZero: true, grid: { display: false } },
-                        y: { ticks: { font: { size: 10 } } }
-                    }
-                }
-            });
-        }
-
-        function renderPPMTable(dailyData) {
-            const table = document.getElementById('ppmTable');
-            const dates = Object.keys(dailyData).slice(-7);
-            let html = `<tr><td class="row-label">DIÁRIO</td>` + dates.map(d => `<td>${d}</td>`).join('') + `</tr>`;
-            
-            // Linha PPM com cálculo real
-            html += `<tr class="bg-ppm"><td class="row-label">PPM</td>` + dates.map(d => {
-                const valorPPM = dailyData[d].fat > 0 ? ((dailyData[d].dev / dailyData[d].fat) * 1000000).toFixed(0) : 0;
-                return `<td>${valorPPM}</td>`;
-            }).join('') + `</tr>`;
-
-            html += `<tr class="bg-meta"><td class="row-label">META</td>` + dates.map(() => `<td>3000</td>`).join('') + `</tr>`;
-            html += `<tr class="bg-faturamento"><td class="row-label">FATURAMENTO</td>` + dates.map(d => `<td>${dailyData[d].fat}</td>`).join('') + `</tr>`;
-            html += `<tr class="bg-devolucao"><td class="row-label">DEVOLUÇÃO PIC</td>` + dates.map(d => `<td>${dailyData[d].dev}</td>`).join('') + `</tr>`;
-            table.innerHTML = html;
-        }
-
-        function renderProducts(dados) {
-            const labels = Object.keys(dados).sort((a,b) => dados[b] - dados[a]).slice(0, 5);
-            new Chart(document.getElementById('productChart'), {
-                type: 'bar',
-                data: { 
-                    labels: labels, 
-                    datasets: [{ data: labels.map(l => dados[l]), backgroundColor: '#3498db' }] 
-                },
-                options: { 
-                    plugins: { 
-                        legend: { display: false }, 
-                        datalabels: { anchor: 'end', align: 'top', font: { weight: 'bold' } } 
-                    } 
+                    scales: { x: { beginAtZero: true } }
                 }
             });
         }
