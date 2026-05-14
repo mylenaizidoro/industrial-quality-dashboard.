@@ -4,89 +4,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Industrial | Mylena Izidoro</title>
-    
-    <!-- Bibliotecas de Gráficos e Dados -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-    
     <style>
-        :root {
-            --primary-color: #e74c3c;
-            --secondary-color: #3498db;
-            --accent-color: #27ae60;
-            --bg-color: #f4f7f6;
-            --text-dark: #2c3e50;
-        }
-
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: var(--bg-color); 
-            margin: 0; 
-            padding: 20px; 
-        }
-
+        :root { --primary: #e74c3c; --secondary: #3498db; --accent: #27ae60; --dark: #2c3e50; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; padding: 20px; margin: 0; }
         .container { max-width: 1100px; margin: auto; }
-
-        .dashboard-card { 
-            background: white; 
-            border-radius: 12px; 
-            padding: 25px; 
-            box-shadow: 0 8px 16px rgba(0,0,0,0.1); 
-            margin-bottom: 30px;
-        }
-
-        .header {
-            border-bottom: 3px solid var(--primary-color);
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-        }
-
-        .header.blue { border-bottom-color: var(--secondary-color); }
-        .header.green { border-bottom-color: var(--accent-color); }
-
-        h2 { margin: 0; color: var(--text-dark); font-size: 1.4rem; }
-        p.subtitle { color: #7f8c8d; margin-top: 5px; font-size: 0.85rem; }
-
-        .stats-summary { display: flex; gap: 15px; margin-bottom: 20px; }
-
-        .stat-badge {
-            background: #f8f9fa;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            color: #555;
-            border: 1px solid #ddd;
-        }
+        .dashboard-card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        .header { border-bottom: 3px solid var(--primary); margin-bottom: 20px; padding-bottom: 10px; }
+        .header.blue { border-bottom-color: var(--secondary); }
+        .header.green { border-bottom-color: var(--accent); }
+        h2 { margin: 0; color: var(--dark); font-size: 1.4rem; }
     </style>
 </head>
 <body>
-
     <div class="container">
-        <!-- BLOCO 1: VOLUME POR PRODUTO (Colunas B e D) -->
+        <!-- GRÁFICO 1: VOLUME POR PRODUTO -->
         <div class="dashboard-card">
             <div class="header blue">
                 <h2>Volume de Devoluções por Part Number</h2>
-                <p class="subtitle">Rastreabilidade Industrial por Código de Peça</p>
             </div>
             <canvas id="productChart"></canvas>
         </div>
 
-        <!-- BLOCO 2: ANÁLISE POR TURNO (Dados do resumo unificado) -->
+        <!-- GRÁFICO 2: OCORRÊNCIAS POR TURNO -->
         <div class="dashboard-card">
             <div class="header green">
-                <h2>Ocorrências Totais por Turno</h2>
-                <p class="subtitle">Desempenho de Qualidade: TA vs TB vs TC</p>
-            </div>
-            <div class="stats-summary">
-                <div class="stat-badge">TOTAL GERAL: 41 PEÇAS</div>
+                <h2>Ocorrências Totais por Turno (TA, TB, TC)</h2>
             </div>
             <canvas id="turnoChart"></canvas>
+        </div>
+
+        <!-- NOVO GRÁFICO 3: MOTIVOS DETALHADOS -->
+        <div class="dashboard-card">
+            <div class="header">
+                <h2>Ranking de Motivos de Devolução</h2>
+                <p style="color: #7f8c8d; font-size: 0.85rem;">Análise detalhada de falhas encontradas no processo</p>
+            </div>
+            <canvas id="motivoChart"></canvas>
         </div>
     </div>
 
     <script>
-        // Link unificado com GID da aba Dados_Devolucoes_editável
         const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT7auqmo6fOoCEkoeoZ70TVM4ljEPsBlPfKBebWUbdWpb0URnI-ttwP2AlUNG4yHW7GLqkyLXXTo1Pm/pub?gid=536102353&single=true&output=csv';
 
         async function initDashboard() {
@@ -95,43 +54,44 @@
                 complete: function(results) {
                     const rows = results.data;
                     
-                    // 1. Lógica para Volume por Produto (Colunas B e D)
+                    // 1. PROCESSAR PRODUTOS (Colunas B e D)
                     const prodCount = {};
-                    for(let i = 1; i < rows.length; i++) {
-                        const prod = rows[i][1]; // Coluna B
-                        const quant = parseFloat(rows[i][3]) || 0; // Coluna D
-                        if(prod && quant > 0) {
-                            prodCount[prod] = (prodCount[prod] || 0) + quant;
-                        }
+                    for(let i=1; i<rows.length; i++) {
+                        const p = rows[i][1]; const q = parseFloat(rows[i][3]) || 0;
+                        if(p && q > 0) prodCount[p] = (prodCount[p] || 0) + q;
                     }
                     renderChart('productChart', Object.keys(prodCount), Object.values(prodCount), '#3498db', 'y');
 
-                    // 2. Lógica para Turnos (Baseado no seu resumo da image_83a700.jpg)
-                    // Puxando os valores da sua linha "Total Geral"
-                    const turnos = ["TA", "TB", "TC"];
-                    const valoresTurno = [19, 10, 12]; // Dados extraídos da sua planilha unificada
-                    renderChart('turnoChart', turnos, valoresTurno, '#27ae60', 'x');
+                    // 2. PROCESSAR TURNOS (Dados do seu resumo L17, M17, N17)
+                    renderChart('turnoChart', ["TA", "TB", "TC"], [19, 10, 12], '#27ae60', 'x');
+
+                    // 3. PROCESSAR MOTIVOS (Coluna K e Coluna O)
+                    // Conforme image_83a700.jpg, os motivos começam na linha 4 (índice 3) até a 16 (índice 15)
+                    const motivos = [];
+                    const totaisMotivos = [];
+                    
+                    for(let i = 3; i <= 15; i++) { // Varre as linhas da tabela de motivos
+                        if(rows[i] && rows[i][10]) { // Coluna K é o índice 10
+                            motivos.push(rows[i][10]); // Nome do Motivo
+                            totaisMotivos.push(parseFloat(rows[i][14]) || 0); // Coluna O é o índice 14 (Total Geral)
+                        }
+                    }
+                    renderChart('motivoChart', motivos, totaisMotivos, '#e74c3c', 'y');
                 }
             });
         }
 
-        function renderChart(canvasId, labels, values, color, axis) {
-            new Chart(document.getElementById(canvasId), {
+        function renderChart(id, labels, values, color, axis) {
+            new Chart(document.getElementById(id), {
                 type: 'bar',
                 data: {
                     labels: labels,
-                    datasets: [{
-                        label: 'Quantidade',
-                        data: values,
-                        backgroundColor: color,
-                        borderRadius: 6
-                    }]
+                    datasets: [{ label: 'Quantidade', data: values, backgroundColor: color, borderRadius: 5 }]
                 },
-                options: {
-                    indexAxis: axis,
+                options: { 
+                    indexAxis: axis, 
                     responsive: true,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true }, x: { beginAtZero: true } }
+                    scales: { x: { beginAtZero: true }, y: { beginAtZero: true } }
                 }
             });
         }
