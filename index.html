@@ -16,16 +16,19 @@
         select { padding: 10px; border-radius: 8px; border: 1px solid #cbd5e0; font-weight: 600; cursor: pointer; }
 
         /* Cartões KPI */
-        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .kpi-card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: center; border-bottom: 4px solid #3182ce; }
-        .kpi-value { font-size: 28px; font-weight: 800; color: #2d3748; display: block; }
-        .kpi-label { font-size: 12px; text-transform: uppercase; color: #718096; font-weight: 700; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .kpi-card { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-bottom: 4px solid #3182ce; position: relative; }
+        .kpi-value { font-size: 28px; font-weight: 800; color: #2d3748; display: block; margin-top: 5px; }
+        .kpi-label { font-size: 11px; text-transform: uppercase; color: #718096; font-weight: 700; }
+        .kpi-desc { font-size: 10px; color: #a0aec0; font-style: italic; margin-top: 4px; display: block; line-height: 1.2; }
 
         /* Layout Gráficos */
         .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .chart-card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); min-height: 350px; }
+        .chart-card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); min-height: 380px; }
         .chart-full { grid-column: span 2; }
-        .chart-title { font-size: 15px; font-weight: 700; color: #4a5568; margin-bottom: 20px; text-transform: uppercase; border-left: 4px solid #3182ce; padding-left: 10px; }
+        .chart-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
+        .chart-title { font-size: 15px; font-weight: 700; color: #4a5568; text-transform: uppercase; border-left: 4px solid #3182ce; padding-left: 10px; margin: 0; }
+        .calc-info { font-size: 11px; color: #718096; background: #edf2f7; padding: 6px 10px; border-radius: 6px; max-width: 200px; text-align: right; line-height: 1.3; }
         
         .chart-container { position: relative; height: 280px; }
     </style>
@@ -42,42 +45,55 @@
         </div>
     </div>
 
-    <!-- Indicadores Rápidos (KPIs) -->
+    <!-- Indicadores Rápidos com Descrições de Cálculo -->
     <div class="kpi-grid">
         <div class="kpi-card" style="border-color: #3182ce;">
             <span class="kpi-label">Total Verificado</span>
             <span id="kpiTotal" class="kpi-value">0</span>
+            <span class="kpi-desc">Soma total das quantidades informadas na Coluna F da planilha original.</span>
         </div>
         <div class="kpi-card" style="border-color: #e53e3e;">
-            <span class="kpi-label">Total Defeitos</span>
+            <span class="kpi-label">Volume de Defeitos</span>
             <span id="kpiDefeitos" class="kpi-value">0</span>
+            <span class="kpi-desc">Contagem total de códigos de falha registrados (Coluna G).</span>
         </div>
         <div class="kpi-card" style="border-color: #38a169;">
             <span class="kpi-label">Índice de Eficiência</span>
             <span id="kpiEficiencia" class="kpi-value">0%</span>
+            <span class="kpi-desc">Cálculo: ((Total Verificado - Volume de Defeitos) / Total Verificado) * 100.</span>
         </div>
         <div class="kpi-card" style="border-color: #805ad5;">
-            <span class="kpi-label">Top Inspetor</span>
+            <span class="kpi-label">Líder de Inspeção</span>
             <span id="kpiTopInspetor" class="kpi-value" style="font-size: 18px;">-</span>
+            <span class="kpi-desc">Identifica o colaborador com maior volume de registros no período (Coluna B).</span>
         </div>
     </div>
 
     <div class="charts-grid">
         <!-- Evolução Diária -->
         <div class="chart-card chart-full">
-            <h2 class="chart-title">Evolução Diária de Defeitos</h2>
+            <div class="chart-header">
+                <h2 class="chart-title">Evolução Diária de Ocorrências</h2>
+                <div class="calc-info">Agrupamento de falhas por data extraída da Coluna A (DataHora).</div>
+            </div>
             <div class="chart-container"><canvas id="chartEvolucao"></canvas></div>
         </div>
 
         <!-- Ranking Inspetores -->
         <div class="chart-card">
-            <h2 class="chart-title">Produtividade por Inspetor</h2>
+            <div class="chart-header">
+                <h2 class="chart-title">Produtividade por Inspetor</h2>
+                <div class="calc-info">Ranking baseado na contagem de linhas por nome de inspetor.</div>
+            </div>
             <div class="chart-container"><canvas id="chartInspetores"></canvas></div>
         </div>
 
         <!-- Defeitos por Tipo -->
         <div class="chart-card">
-            <h2 class="chart-title">Principais Tipos de Defeito</h2>
+            <div class="chart-header">
+                <h2 class="chart-title">Análise de Falhas (Pareto)</h2>
+                <div class="calc-info">Tradução de códigos para nomes técnicos. Ex: 17 = Tecido Descolado.</div>
+            </div>
             <div class="chart-container"><canvas id="chartDefeitos"></canvas></div>
         </div>
     </div>
@@ -89,10 +105,11 @@
     const dic = {
         "17": "TECIDO DESCOLADO NAS BORDAS", "K9": "TECIDO COM RESÍDUOS DE COLA", "L7": "FRAME DESCOLADO MOLDURA", 
         "P5": "TECIDO COM RESÍDUOS DE COLA", "X7": "BLANK PERDIDO", "U3": "DEFORMAÇÃO DE BORDAS", "U4": "DEFORMAÇÃO DE SUPERFÍCIE",
-        "A3": "PEÇA DEFORMADA", "B4": "PEÇA QUEBRADA", "D6": "PEÇA QUEIMADA", "C3": "PEÇA SUJA", "A2": "PEÇA COM REBARBA"
+        "A3": "PEÇA DEFORMADA", "B4": "PEÇA QUEBRADA", "D6": "PEÇA QUEIMADA", "C3": "PEÇA SUJA", "A2": "PEÇA COM REBARBA",
+        "L6": "RETAINER INVERTIDO", "P4": "RETAINER QUEBRADO", "O7": "RETAINER SEM CLIP"
     };
 
-    const mesesNome = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+    const mesesNome = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
     let rawRows = [];
 
     async function loadCSV() {
@@ -132,7 +149,8 @@
             if (cols.length < 7) return;
 
             const dataCompleta = cols[0]?.replace(/"/g, '').trim();
-            const diaMes = dataCompleta.split(' ')[0]; // Ex: 01/04/2026
+            if(!dataCompleta) return;
+            const diaMes = dataCompleta.split(' ')[0];
             const mesIndex = parseInt(diaMes.split('/')[1]) - 1;
 
             if (filtroMes !== "todos" && mesIndex != filtroMes) return;
@@ -157,21 +175,26 @@
             }
         });
 
-        // Atualizar KPIs
+        // Atualizar KPIs com os cálculos solicitados
         document.getElementById('kpiTotal').textContent = totalPecas.toLocaleString();
         document.getElementById('kpiDefeitos').textContent = totalDefeitosCount.toLocaleString();
+        
+        // Cálculo de Eficiência (Métrica de Qualidade Industrial)
         const efici = totalPecas > 0 ? (((totalPecas - totalDefeitosCount) / totalPecas) * 100).toFixed(1) : 0;
         document.getElementById('kpiEficiencia').textContent = efici + "%";
         
-        const topInsp = Object.entries(inspetores).sort((a,b) => b[1]-a[1])[0];
-        document.getElementById('kpiTopInspetor').textContent = topInsp ? topInsp[0] : "-";
+        const sortedInsp = Object.entries(inspetores).sort((a,b) => b[1]-a[1]);
+        document.getElementById('kpiTopInspetor').textContent = sortedInsp[0] ? sortedInsp[0][0] : "-";
 
-        // Renderização
-        render('chartInspetores', Object.entries(inspetores).sort((a,b) => b[1]-a[1]).slice(0, 5), '#805ad5', 'y');
+        // Renderização dos Gráficos
+        render('chartInspetores', sortedInsp.slice(0, 5), '#805ad5', 'y');
         render('chartDefeitos', Object.entries(tiposDefeitos).sort((a,b) => b[1]-a[1]).slice(0, 5), '#e53e3e', 'y');
         
-        // Gráfico de Linha (Evolução)
-        const labelsEvo = Object.keys(evolucaoDiaria).sort();
+        const labelsEvo = Object.keys(evolucaoDiaria).sort((a,b) => {
+            const dateA = a.split('/').reverse().join('');
+            const dateB = b.split('/').reverse().join('');
+            return dateA.localeCompare(dateB);
+        });
         renderLine('chartEvolucao', labelsEvo, labelsEvo.map(l => evolucaoDiaria[l]));
     }
 
@@ -188,7 +211,7 @@
                 indexAxis: axis,
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false }, datalabels: { display: true, anchor: 'end', align: 'end' } },
+                plugins: { legend: { display: false }, datalabels: { display: true, anchor: 'end', align: 'end', font: { weight: 'bold' } } },
                 scales: { x: { grid: { display: false } }, y: { grid: { display: false }, beginAtZero: true } }
             }
         });
@@ -201,13 +224,13 @@
             type: 'line',
             data: {
                 labels: labels,
-                datasets: [{ label: 'Qtd Defeitos', data: data, borderColor: '#3182ce', tension: 0.3, fill: true, backgroundColor: 'rgba(49, 130, 206, 0.1)' }]
+                datasets: [{ label: 'Defeitos', data: data, borderColor: '#3182ce', tension: 0.3, fill: true, backgroundColor: 'rgba(49, 130, 206, 0.1)', pointRadius: 4 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true } }
+                plugins: { legend: { display: false }, datalabels: { display: false } },
+                scales: { y: { beginAtZero: true, grid: { color: '#edf2f7' } }, x: { grid: { display: false } } }
             }
         });
     }
