@@ -6,95 +6,97 @@
     <title>Qualidade Coplac - Gestão Avançada</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <!-- Biblioteca para gerar PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; color: #333; }
         .container { max-width: 1300px; margin: auto; }
         
-        /* Cabeçalho e Filtros */
         .header { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .main-title { font-size: 22px; font-weight: 800; color: #1a365d; margin: 0; }
-        select { padding: 10px; border-radius: 8px; border: 1px solid #cbd5e0; font-weight: 600; cursor: pointer; }
+        
+        .controls { display: flex; gap: 10px; align-items: center; }
+        select, .btn-export { padding: 10px; border-radius: 8px; border: 1px solid #cbd5e0; font-weight: 600; cursor: pointer; }
+        .btn-export { background-color: #3182ce; color: white; border: none; transition: 0.3s; }
+        .btn-export:hover { background-color: #2c5282; }
 
-        /* Cartões KPI */
-        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .kpi-card { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-bottom: 4px solid #3182ce; position: relative; }
-        .kpi-value { font-size: 28px; font-weight: 800; color: #2d3748; display: block; margin-top: 5px; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .kpi-card { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-bottom: 4px solid #3182ce; }
+        .kpi-value { font-size: 26px; font-weight: 800; color: #2d3748; display: block; margin-top: 5px; }
         .kpi-label { font-size: 11px; text-transform: uppercase; color: #718096; font-weight: 700; }
-        .kpi-desc { font-size: 10px; color: #a0aec0; font-style: italic; margin-top: 4px; display: block; line-height: 1.2; }
+        .kpi-desc { font-size: 10px; color: #a0aec0; font-style: italic; display: block; margin-top: 4px; }
 
-        /* Layout Gráficos */
         .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .chart-card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); min-height: 380px; }
         .chart-full { grid-column: span 2; }
-        .chart-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
+        .chart-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
         .chart-title { font-size: 15px; font-weight: 700; color: #4a5568; text-transform: uppercase; border-left: 4px solid #3182ce; padding-left: 10px; margin: 0; }
-        .calc-info { font-size: 11px; color: #718096; background: #edf2f7; padding: 6px 10px; border-radius: 6px; max-width: 200px; text-align: right; line-height: 1.3; }
-        
+        .calc-info { font-size: 10px; color: #718096; background: #edf2f7; padding: 5px 8px; border-radius: 4px; }
         .chart-container { position: relative; height: 280px; }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div class="container" id="dashboard-content">
     <div class="header">
-        <h1 class="main-title">CONTROLE DE QUALIDADE - COPLAC</h1>
-        <div>
+        <h1 class="main-title">GESTÃO DE QUALIDADE - COPLAC</h1>
+        <div class="controls">
+            <select id="inspetorFiltro" onchange="processData()">
+                <option value="todos">Todos Inspetores</option>
+            </select>
             <select id="mesFiltro" onchange="processData()">
                 <option value="todos">Todos os Meses</option>
             </select>
+            <button class="btn-export" onclick="exportPDF()">Exportar PDF</button>
         </div>
     </div>
 
-    <!-- Indicadores Rápidos com Descrições de Cálculo -->
     <div class="kpi-grid">
         <div class="kpi-card" style="border-color: #3182ce;">
-            <span class="kpi-label">Total Verificado</span>
+            <span class="kpi-label">Peças Verificadas</span>
             <span id="kpiTotal" class="kpi-value">0</span>
-            <span class="kpi-desc">Soma total das quantidades informadas na Coluna F da planilha original.</span>
+            <span class="kpi-desc">Soma da Coluna F (Qtd Verificada).</span>
         </div>
         <div class="kpi-card" style="border-color: #e53e3e;">
-            <span class="kpi-label">Volume de Defeitos</span>
+            <span class="kpi-label">Ocorrências de Falha</span>
             <span id="kpiDefeitos" class="kpi-value">0</span>
-            <span class="kpi-desc">Contagem total de códigos de falha registrados (Coluna G).</span>
+            <span class="kpi-desc">Contagem de registros na Coluna G.</span>
         </div>
         <div class="kpi-card" style="border-color: #38a169;">
             <span class="kpi-label">Índice de Eficiência</span>
             <span id="kpiEficiencia" class="kpi-value">0%</span>
-            <span class="kpi-desc">Cálculo: ((Total Verificado - Volume de Defeitos) / Total Verificado) * 100.</span>
+            <span class="kpi-desc">Cálculo: ((Total - Falhas) / Total) * 100.</span>
         </div>
         <div class="kpi-card" style="border-color: #805ad5;">
-            <span class="kpi-label">Líder de Inspeção</span>
-            <span id="kpiTopInspetor" class="kpi-value" style="font-size: 18px;">-</span>
-            <span class="kpi-desc">Identifica o colaborador com maior volume de registros no período (Coluna B).</span>
+            <span class="kpi-label">Status de Produção</span>
+            <span id="kpiStatus" class="kpi-value" style="font-size: 18px;">-</span>
+            <span class="kpi-desc">Baseado no volume de apontamentos.</span>
         </div>
     </div>
 
     <div class="charts-grid">
-        <!-- Evolução Diária -->
         <div class="chart-card chart-full">
             <div class="chart-header">
-                <h2 class="chart-title">Evolução Diária de Ocorrências</h2>
-                <div class="calc-info">Agrupamento de falhas por data extraída da Coluna A (DataHora).</div>
+                <h2 class="chart-title">Evolução Diária de Qualidade</h2>
+                <span class="calc-info">Dados extraídos da Coluna A (DataHora)</span>
             </div>
             <div class="chart-container"><canvas id="chartEvolucao"></canvas></div>
         </div>
 
-        <!-- Ranking Inspetores -->
         <div class="chart-card">
             <div class="chart-header">
-                <h2 class="chart-title">Produtividade por Inspetor</h2>
-                <div class="calc-info">Ranking baseado na contagem de linhas por nome de inspetor.</div>
-            </div>
-            <div class="chart-container"><canvas id="chartInspetores"></canvas></div>
-        </div>
-
-        <!-- Defeitos por Tipo -->
-        <div class="chart-card">
-            <div class="chart-header">
-                <h2 class="chart-title">Análise de Falhas (Pareto)</h2>
-                <div class="calc-info">Tradução de códigos para nomes técnicos. Ex: 17 = Tecido Descolado.</div>
+                <h2 class="chart-title">Pareto de Defeitos</h2>
+                <span class="calc-info">Tradução automática de códigos</span>
             </div>
             <div class="chart-container"><canvas id="chartDefeitos"></canvas></div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-header">
+                <h2 class="chart-title">Produtividade por Equipe</h2>
+                <span class="calc-info">Registros por Coluna B</span>
+            </div>
+            <div class="chart-container"><canvas id="chartInspetores"></canvas></div>
         </div>
     </div>
 </div>
@@ -105,8 +107,7 @@
     const dic = {
         "17": "TECIDO DESCOLADO NAS BORDAS", "K9": "TECIDO COM RESÍDUOS DE COLA", "L7": "FRAME DESCOLADO MOLDURA", 
         "P5": "TECIDO COM RESÍDUOS DE COLA", "X7": "BLANK PERDIDO", "U3": "DEFORMAÇÃO DE BORDAS", "U4": "DEFORMAÇÃO DE SUPERFÍCIE",
-        "A3": "PEÇA DEFORMADA", "B4": "PEÇA QUEBRADA", "D6": "PEÇA QUEIMADA", "C3": "PEÇA SUJA", "A2": "PEÇA COM REBARBA",
-        "L6": "RETAINER INVERTIDO", "P4": "RETAINER QUEBRADO", "O7": "RETAINER SEM CLIP"
+        "A3": "PEÇA DEFORMADA", "B4": "PEÇA QUEBRADA", "D6": "PEÇA QUEIMADA", "C3": "PEÇA SUJA", "A2": "PEÇA COM REBARBA"
     };
 
     const mesesNome = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
@@ -120,19 +121,32 @@
             rawRows = csvText.split(/\r?\n/).slice(1);
             
             const mesesEncontrados = new Set();
+            const inspetoresEncontrados = new Set();
+
             rawRows.forEach(row => {
-                const dataStr = row.split(/[,;]/)[0]?.replace(/"/g, '').trim();
+                const cols = row.split(/[,;]/);
+                const dataStr = cols[0]?.replace(/"/g, '').trim();
+                const inspetor = cols[1]?.replace(/"/g, '').trim().toUpperCase();
+
                 if (dataStr) {
                     const m = parseInt(dataStr.split('/')[1]) - 1;
                     if (!isNaN(m)) mesesEncontrados.add(m);
                 }
+                if (inspetor) inspetoresEncontrados.add(inspetor);
             });
 
-            const select = document.getElementById('mesFiltro');
+            const selMes = document.getElementById('mesFiltro');
             Array.from(mesesEncontrados).sort().forEach(m => {
                 const opt = document.createElement('option');
                 opt.value = m; opt.textContent = mesesNome[m];
-                select.appendChild(opt);
+                selMes.appendChild(opt);
+            });
+
+            const selInsp = document.getElementById('inspetorFiltro');
+            Array.from(inspetoresEncontrados).sort().forEach(i => {
+                const opt = document.createElement('option');
+                opt.value = i; opt.textContent = i;
+                selInsp.appendChild(opt);
             });
 
             processData();
@@ -141,6 +155,7 @@
 
     function processData() {
         const filtroMes = document.getElementById('mesFiltro').value;
+        const filtroInsp = document.getElementById('inspetorFiltro').value;
         let inspetores = {}, tiposDefeitos = {}, evolucaoDiaria = {};
         let totalPecas = 0, totalDefeitosCount = 0;
 
@@ -152,10 +167,12 @@
             if(!dataCompleta) return;
             const diaMes = dataCompleta.split(' ')[0];
             const mesIndex = parseInt(diaMes.split('/')[1]) - 1;
-
-            if (filtroMes !== "todos" && mesIndex != filtroMes) return;
-
             const inspetor = cols[1]?.replace(/"/g, '').trim().toUpperCase();
+
+            // Lógica de Filtros Combinados
+            if (filtroMes !== "todos" && mesIndex != filtroMes) return;
+            if (filtroInsp !== "todos" && inspetor !== filtroInsp) return;
+
             const qtd = parseInt(cols[5]?.replace(/"/g, '').trim()) || 0;
             const defRaw = cols[6]?.replace(/"/g, '').trim();
 
@@ -175,26 +192,16 @@
             }
         });
 
-        // Atualizar KPIs com os cálculos solicitados
         document.getElementById('kpiTotal').textContent = totalPecas.toLocaleString();
         document.getElementById('kpiDefeitos').textContent = totalDefeitosCount.toLocaleString();
-        
-        // Cálculo de Eficiência (Métrica de Qualidade Industrial)
         const efici = totalPecas > 0 ? (((totalPecas - totalDefeitosCount) / totalPecas) * 100).toFixed(1) : 0;
         document.getElementById('kpiEficiencia').textContent = efici + "%";
-        
-        const sortedInsp = Object.entries(inspetores).sort((a,b) => b[1]-a[1]);
-        document.getElementById('kpiTopInspetor').textContent = sortedInsp[0] ? sortedInsp[0][0] : "-";
+        document.getElementById('kpiStatus').textContent = efici > 95 ? "ESTÁVEL" : "EM ALERTA";
 
-        // Renderização dos Gráficos
-        render('chartInspetores', sortedInsp.slice(0, 5), '#805ad5', 'y');
+        render('chartInspetores', Object.entries(inspetores).sort((a,b) => b[1]-a[1]).slice(0, 5), '#805ad5', 'y');
         render('chartDefeitos', Object.entries(tiposDefeitos).sort((a,b) => b[1]-a[1]).slice(0, 5), '#e53e3e', 'y');
         
-        const labelsEvo = Object.keys(evolucaoDiaria).sort((a,b) => {
-            const dateA = a.split('/').reverse().join('');
-            const dateB = b.split('/').reverse().join('');
-            return dateA.localeCompare(dateB);
-        });
+        const labelsEvo = Object.keys(evolucaoDiaria).sort((a,b) => a.split('/').reverse().join('').localeCompare(b.split('/').reverse().join('')));
         renderLine('chartEvolucao', labelsEvo, labelsEvo.map(l => evolucaoDiaria[l]));
     }
 
@@ -208,9 +215,7 @@
                 datasets: [{ data: dataArr.map(i => i[1]), backgroundColor: color, borderRadius: 5 }]
             },
             options: {
-                indexAxis: axis,
-                responsive: true,
-                maintainAspectRatio: false,
+                indexAxis: axis, responsive: true, maintainAspectRatio: false,
                 plugins: { legend: { display: false }, datalabels: { display: true, anchor: 'end', align: 'end', font: { weight: 'bold' } } },
                 scales: { x: { grid: { display: false } }, y: { grid: { display: false }, beginAtZero: true } }
             }
@@ -224,15 +229,26 @@
             type: 'line',
             data: {
                 labels: labels,
-                datasets: [{ label: 'Defeitos', data: data, borderColor: '#3182ce', tension: 0.3, fill: true, backgroundColor: 'rgba(49, 130, 206, 0.1)', pointRadius: 4 }]
+                datasets: [{ label: 'Falhas', data: data, borderColor: '#3182ce', tension: 0.3, fill: true, backgroundColor: 'rgba(49, 130, 206, 0.1)', pointRadius: 4 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false,
                 plugins: { legend: { display: false }, datalabels: { display: false } },
-                scales: { y: { beginAtZero: true, grid: { color: '#edf2f7' } }, x: { grid: { display: false } } }
+                scales: { y: { beginAtZero: true }, x: { grid: { display: false } } }
             }
         });
+    }
+
+    function exportPDF() {
+        const element = document.getElementById('dashboard-content');
+        const opt = {
+            margin: 0.5,
+            filename: 'Relatorio_Qualidade_Coplac.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' }
+        };
+        html2pdf().set(opt).from(element).save();
     }
 
     loadCSV();
