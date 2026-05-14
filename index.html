@@ -9,39 +9,64 @@
     <style>
         :root { --primary: #e74c3c; --secondary: #3498db; --accent: #27ae60; --dark: #2c3e50; }
         body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; padding: 20px; margin: 0; }
-        .container { max-width: 1100px; margin: auto; }
-        .dashboard-card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); margin-bottom: 30px; }
-        .header { border-bottom: 3px solid var(--primary); margin-bottom: 20px; padding-bottom: 10px; }
+        .container { max-width: 1200px; margin: auto; }
+        
+        .dashboard-card { 
+            background: white; 
+            border-radius: 12px; 
+            padding: 20px; 
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1); 
+            margin-bottom: 25px; 
+        }
+
+        /* Layout em colunas para os gráficos de Turno e Motivo */
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .header { border-bottom: 3px solid var(--primary); margin-bottom: 15px; padding-bottom: 8px; }
         .header.blue { border-bottom-color: var(--secondary); }
         .header.green { border-bottom-color: var(--accent); }
-        h2 { margin: 0; color: var(--dark); font-size: 1.4rem; }
+        
+        h2 { margin: 0; color: var(--dark); font-size: 1.2rem; }
+        p.subtitle { color: #7f8c8d; margin: 5px 0 0; font-size: 0.8rem; }
+
+        @media (max-width: 900px) {
+            .grid-layout { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- GRÁFICO 1: VOLUME POR PRODUTO -->
+        <!-- Gráfico de Produtos (Largo) -->
         <div class="dashboard-card">
             <div class="header blue">
                 <h2>Volume de Devoluções por Part Number</h2>
             </div>
-            <canvas id="productChart"></canvas>
+            <canvas id="productChart" height="100"></canvas>
         </div>
 
-        <!-- GRÁFICO 2: OCORRÊNCIAS POR TURNO -->
-        <div class="dashboard-card">
-            <div class="header green">
-                <h2>Ocorrências Totais por Turno (TA, TB, TC)</h2>
+        <!-- Seção Lado a Lado: Turnos e Motivos -->
+        <div class="grid-layout">
+            <!-- Gráfico de Turnos -->
+            <div class="dashboard-card">
+                <div class="header green">
+                    <h2>Ocorrências Totais por Turno</h2>
+                    <p class="subtitle">Desempenho: TA vs TB vs TC</p>
+                </div>
+                <canvas id="turnoChart"></canvas>
             </div>
-            <canvas id="turnoChart"></canvas>
-        </div>
 
-        <!-- NOVO GRÁFICO 3: MOTIVOS DETALHADOS -->
-        <div class="dashboard-card">
-            <div class="header">
-                <h2>Ranking de Motivos de Devolução</h2>
-                <p style="color: #7f8c8d; font-size: 0.85rem;">Análise detalhada de falhas encontradas no processo</p>
+            <!-- Ranking de Motivos -->
+            <div class="dashboard-card">
+                <div class="header">
+                    <h2>Ranking de Motivos de Devolução</h2>
+                    <p class="subtitle">Análise detalhada de falhas</p>
+                </div>
+                <canvas id="motivoChart"></canvas>
             </div>
-            <canvas id="motivoChart"></canvas>
         </div>
     </div>
 
@@ -54,7 +79,7 @@
                 complete: function(results) {
                     const rows = results.data;
                     
-                    // 1. PROCESSAR PRODUTOS (Colunas B e D)
+                    // 1. Dados de Produtos
                     const prodCount = {};
                     for(let i=1; i<rows.length; i++) {
                         const p = rows[i][1]; const q = parseFloat(rows[i][3]) || 0;
@@ -62,18 +87,16 @@
                     }
                     renderChart('productChart', Object.keys(prodCount), Object.values(prodCount), '#3498db', 'y');
 
-                    // 2. PROCESSAR TURNOS (Dados do seu resumo L17, M17, N17)
+                    // 2. Dados de Turnos (Fixo conforme sua tabela unificada)
                     renderChart('turnoChart', ["TA", "TB", "TC"], [19, 10, 12], '#27ae60', 'x');
 
-                    // 3. PROCESSAR MOTIVOS (Coluna K e Coluna O)
-                    // Conforme image_83a700.jpg, os motivos começam na linha 4 (índice 3) até a 16 (índice 15)
+                    // 3. Dados de Motivos (Lendo Coluna K e O)
                     const motivos = [];
                     const totaisMotivos = [];
-                    
-                    for(let i = 3; i <= 15; i++) { // Varre as linhas da tabela de motivos
-                        if(rows[i] && rows[i][10]) { // Coluna K é o índice 10
-                            motivos.push(rows[i][10]); // Nome do Motivo
-                            totaisMotivos.push(parseFloat(rows[i][14]) || 0); // Coluna O é o índice 14 (Total Geral)
+                    for(let i = 3; i <= 15; i++) {
+                        if(rows[i] && rows[i][10]) {
+                            motivos.push(rows[i][10]);
+                            totaisMotivos.push(parseFloat(rows[i][14]) || 0);
                         }
                     }
                     renderChart('motivoChart', motivos, totaisMotivos, '#e74c3c', 'y');
@@ -86,11 +109,12 @@
                 type: 'bar',
                 data: {
                     labels: labels,
-                    datasets: [{ label: 'Quantidade', data: values, backgroundColor: color, borderRadius: 5 }]
+                    datasets: [{ label: 'Quantidade', data: values, backgroundColor: color, borderRadius: 4 }]
                 },
                 options: { 
                     indexAxis: axis, 
                     responsive: true,
+                    plugins: { legend: { display: false } },
                     scales: { x: { beginAtZero: true }, y: { beginAtZero: true } }
                 }
             });
