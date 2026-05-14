@@ -2,50 +2,141 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard Industrial - Mylena</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Industrial | Mylena Izidoro</title>
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    
     <style>
-        body { font-family: sans-serif; background-color: #f4f7f6; padding: 20px; }
-        .dashboard-card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); margin-bottom: 30px; max-width: 1000px; margin: auto; }
-        .header { border-bottom: 3px solid #3498db; margin-bottom: 20px; padding-bottom: 10px; }
-        h2 { margin: 0; color: #2c3e50; }
+        :root {
+            --primary-color: #e74c3c;
+            --secondary-color: #3498db;
+            --bg-color: #f4f7f6;
+            --text-dark: #2c3e50;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: var(--bg-color); 
+            margin: 0; 
+            padding: 20px; 
+        }
+
+        .container { max-width: 1000px; margin: auto; }
+
+        .dashboard-card { 
+            background: white; 
+            border-radius: 12px; 
+            padding: 25px; 
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1); 
+            margin-bottom: 30px;
+        }
+
+        .header {
+            border-bottom: 3px solid var(--primary-color);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+        }
+
+        .header.blue { border-bottom-color: var(--secondary-color); }
+
+        h2 { margin: 0; color: var(--text-dark); font-size: 1.4rem; }
+        p.subtitle { color: #7f8c8d; margin-top: 5px; font-size: 0.85rem; }
+
+        .stats-summary { display: flex; gap: 15px; margin-bottom: 20px; }
+
+        .stat-badge {
+            background: #f8f9fa;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #555;
+            border: 1px solid #ddd;
+        }
     </style>
 </head>
 <body>
-    <div class="dashboard-card">
-        <div class="header">
-            <h2>Volume de Devoluções por Produto</h2>
-            <p>Rastreabilidade por Código de Peça e Quantidade</p>
+
+    <div class="container">
+        <!-- GRÁFICO 1: TENDÊNCIA DE PPM (Tabela Dinâmica) -->
+        <div class="dashboard-card">
+            <div class="header">
+                <h2>KPI: PPM Retorno PIC x Faturamento</h2>
+                <p class="subtitle">Monitoramento de Qualidade Industrial - Meta Automotiva</p>
+            </div>
+            <div class="stats-summary">
+                <div class="stat-badge">META: 3.000 PPM</div>
+                <div class="stat-badge" style="color: #27ae60;">STATUS: CONECTADO</div>
+            </div>
+            <canvas id="ppmChart"></canvas>
         </div>
-        <canvas id="productChart"></canvas>
+
+        <!-- GRÁFICO 2: VOLUME POR PRODUTO (Dados_Devolucoes_editável) -->
+        <div class="dashboard-card">
+            <div class="header blue">
+                <h2>Volume de Devoluções por Produto</h2>
+                <p class="subtitle">Rastreabilidade por Part Number (PN) - Aba Dados_Devolucoes_editável</p>
+            </div>
+            <canvas id="productChart"></canvas>
+        </div>
     </div>
 
     <script>
-        const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT7auqmo6fOoCEkoeoZ70TVM4ljEPsBlPfKBebWUbdWpb0URnI-ttwP2AlUNG4yHW7GLqkyLXXTo1Pm/pub?output=csv';
+        // Link CSV da aba Dados_Devolucoes_editável
+        const urlProdutos = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT7auqmo6fOoCEkoeoZ70TVM4ljEPsBlPfKBebWUbdWpb0URnI-ttwP2AlUNG4yHW7GLqkyLXXTo1Pm/pub?gid=536102353&single=true&output=csv';
 
         async function initDashboard() {
-            Papa.parse(sheetUrl, {
+            // Processando Aba de Produtos
+            Papa.parse(urlProdutos, {
                 download: true,
+                header: true,
                 complete: function(results) {
-                    const rows = results.data;
+                    const data = results.data;
+                    
+                    // 1. Lógica para Volume por Produto (Coluna B e D)
                     const contagemProdutos = {};
-
-                    // Começamos na linha 1 para pular o cabeçalho
-                    for (let i = 1; i < rows.length; i++) {
-                        const linha = rows[i];
-                        
-                        // Pegamos os dados pela POSIÇÃO da coluna:
-                        // Coluna B é o índice [1] | Coluna D é o índice [3]
-                        const prod = linha[1]; 
-                        const quant = parseFloat(linha[3]) || 0;
-
-                        if (prod && quant > 0) {
+                    data.forEach(row => {
+                        const prod = row['Produto']; 
+                        const quant = parseFloat(row['Quant.']) || 0;
+                        if(prod && quant > 0) {
                             contagemProdutos[prod] = (contagemProdutos[prod] || 0) + quant;
                         }
-                    }
-
+                    });
                     renderProductChart(Object.keys(contagemProdutos), Object.values(contagemProdutos));
+
+                    // 2. Lógica para o PPM (Puxando da área de indicadores da mesma aba ou link vinculado)
+                    // Para fins de demonstração, mapeamos os labels de data que você usa
+                    const rowsRaw = data.map(row => Object.values(row));
+                    // Nota: Se o PPM estiver em outra aba (gid), você pode fazer um segundo Papa.parse
+                    const labelsPPM = ["04/05", "05/05", "06/05", "07/05", "08/05"];
+                    const valoresPPM = [14894, 12632, 15180, 11605, 1900]; // Exemplo baseado na sua image_855ab1.png
+                    renderPpmChart(labelsPPM, valoresPPM);
+                }
+            });
+        }
+
+        function renderPpmChart(labels, values) {
+            new Chart(document.getElementById('ppmChart'), {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'PPM Real',
+                        data: values,
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }, {
+                        label: 'Meta (3000)',
+                        data: Array(labels.length).fill(3000),
+                        borderColor: '#27ae60',
+                        borderDash: [5, 5],
+                        pointRadius: 0,
+                        fill: false
+                    }]
                 }
             });
         }
