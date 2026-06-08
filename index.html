@@ -1,327 +1,41 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<title>Portal DHO - Grupo Coplac</title>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<style>
-
-body{
-    margin:0;
-    background:#eef3f8;
-    font-family:Arial;
-    color:#001b44;
-}
-
-.container{
-    max-width:1300px;
-    margin:30px auto;
-    padding:20px;
-}
-
-.cards{
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:20px;
-    margin-bottom:30px;
-}
-
-.card-top{
-    background:#fff;
-    border-radius:18px;
-    padding:25px;
-    text-align:center;
-    box-shadow:0 4px 15px rgba(0,0,0,.08);
-}
-
-.card-top h3{
-    margin:0;
-}
-
-.card-top p{
-    font-size:28px;
-    font-weight:bold;
-}
-
-.card{
-    background:#fff;
-    border-radius:20px;
-    padding:30px;
-    box-shadow:0 4px 15px rgba(0,0,0,.08);
-}
-
-.conteudo{
-    display:grid;
-    grid-template-columns:2fr 1fr;
-    gap:40px;
-    align-items:center;
-}
-
-.grafico{
-    height:450px;
-}
-
-.info{
-    background:#f5f8fc;
-    border-left:6px solid #1697e5;
-    border-radius:15px;
-    padding:25px;
-}
-
-.verde{
-    color:#10b981;
-}
-
-.vermelho{
-    color:#f43f5e;
-}
-
-</style>
-
+    <meta charset="UTF-8">
+    <title>Dashboard de DHO</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; padding: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .card { background: white; padding: 25px; border-left: 5px solid #007bff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h2 { color: #333; }
+        .kpi { font-size: 28px; font-weight: bold; margin-top: 10px; color: #007bff; }
+    </style>
 </head>
-
 <body>
 
-<div class="container">
-
-<div class="cards">
-
-<div class="card-top">
-<h3>Último Resultado</h3>
-<p id="ultimo">--</p>
-</div>
-
-<div class="card-top">
-<h3>Meta</h3>
-<p id="meta">--</p>
-</div>
-
-<div class="card-top">
-<h3>Status</h3>
-<p id="status">--</p>
-</div>
-
-<div class="card-top">
-<h3>Melhor Mês</h3>
-<p id="melhor">--</p>
-</div>
-
-</div>
-
-<div class="card">
-
-<h1>ABSENTEÍSMO PA - 03</h1>
-
-<p>Grupo Coplac | Performance</p>
-
-<div class="conteudo">
-
-<div class="grafico">
-<canvas id="grafico"></canvas>
-</div>
-
-<div class="info">
-
-<h2>DETALHAMENTO</h2>
-
-<p>
-Horas Ausentes / Horas Programadas
-</p>
-
-<p>
-<b>Verde:</b> Dentro da meta
-</p>
-
-<p>
-<b>Vermelho:</b> Fora da meta
-</p>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-<script>
-
-const URL="https://script.google.com/macros/s/AKfycbxts0fjzOaKjNFgISQucJ1UOJrfIfiQlD9-3TJqTt-0781scz85sF6Rut_y7oLsZVWKhA/exec?callback=carregar";
-
-const script=document.createElement("script");
-script.src=URL;
-document.body.appendChild(script);
-
-function carregar(dados){
-
-let lista=dados.filter(x=>
-String(x.processo).toUpperCase().includes("ABSENTEISMO")
-&& x.valorReal!=""
-&& x.valorReal!=null
-);
-
-let meses=[];
-let valores=[];
-let metas=[];
-
-for(let i=0;i<lista.length;i++){
-
-meses.push(lista[i].mes);
-
-valores.push(
-Number(
-String(lista[i].valorReal)
-.replace(",",".")
-)
-);
-
-metas.push(
-Number(
-String(lista[i].objetivo)
-.replace(",",".")
-)
-);
-
-}
-
-let ultimo=valores[valores.length-1];
-let meta=metas[metas.length-1];
-
-document.getElementById("ultimo").innerHTML=
-ultimo.toFixed(2).replace(".",",")+"%";
-
-document.getElementById("meta").innerHTML=
-meta.toFixed(2).replace(".",",")+"%";
-
-let status=document.getElementById("status");
-
-if(ultimo<=meta){
-
-status.innerHTML="Dentro";
-status.className="verde";
-
-}else{
-
-status.innerHTML="Fora";
-status.className="vermelho";
-
-}
-
-let menor=Math.min(...valores);
-let indice=valores.indexOf(menor);
-
-document.getElementById("melhor").innerHTML=
-meses[indice];
-
-let cores=[];
-
-for(let i=0;i<valores.length;i++){
-
-if(valores[i]<=metas[i]){
-cores.push("#10b981");
-}else{
-cores.push("#f43f5e");
-}
-
-}
-
-new Chart(
-document.getElementById("grafico"),
-
-{
-
-type:"bar",
-
-data:{
-
-labels:meses,
-
-datasets:[
-
-{
-
-label:"Realizado",
-
-data:valores,
-
-backgroundColor:cores,
-
-borderRadius:8,
-
-barThickness:24
-
-},
-
-{
-
-label:"Meta",
-
-data:metas,
-
-type:"line",
-
-borderColor:"#ff7a00",
-
-backgroundColor:"#ff7a00",
-
-borderDash:[6,6],
-
-pointRadius:4,
-
-fill:false
-
-}
-
-]
-
-},
-
-options:{
-
-responsive:true,
-
-maintainAspectRatio:false,
-
-plugins:{
-
-legend:{
-position:"top"
-}
-
-},
-
-scales:{
-
-y:{
-
-beginAtZero:true
-
-},
-
-x:{
-
-ticks:{
-
-maxRotation:60,
-minRotation:60
-
-}
-
-}
-
-}
-
-}
-
-}
-
-);
-
-}
-
-</script>
+    <h1>Indicadores de DHO</h1>
+
+    <div class="grid">
+        <div class="card">
+            <h2>Turnover</h2>
+            <div class="kpi">2.5%</div>
+            <p>Taxa de rotatividade mensal</p>
+        </div>
+        <div class="card">
+            <div style="border-left-color: #28a745;">
+                <h2>Clima Organizacional</h2>
+                <div class="kpi">8.4 / 10</div>
+                <p>Média da última pesquisa</p>
+            </div>
+        </div>
+        <div class="card">
+            <div style="border-left-color: #ffc107;">
+                <h2>Treinamento (T&D)</h2>
+                <div class="kpi">42h</div>
+                <p>Média de horas/colaborador</p>
+            </div>
+        </div>
+    </div>
 
 </body>
 </html>
