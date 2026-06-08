@@ -49,20 +49,14 @@
                 plugins: {
                     title: { display: true, text: 'TURNOVER SOLICITAÇÃO DE DESLIGAMENTOS 15 DIAS', font: { size: 20 } },
                     datalabels: {
-                        color: (ctx) => (ctx.datasetIndex === 3 || ctx.datasetIndex === 7) ? 'black' : 'white',
-                        anchor: (ctx) => (ctx.datasetIndex === 3 || ctx.datasetIndex === 7) ? 'end' : 'center',
-                        align: (ctx) => (ctx.datasetIndex === 3 || ctx.datasetIndex === 7) ? 'top' : 'center',
+                        color: 'white',
                         font: { weight: 'bold' },
+                        anchor: 'center',
+                        align: 'center',
                         formatter: function(value, ctx) {
-                            if (ctx.datasetIndex === 3 || ctx.datasetIndex === 7) {
-                                let stackName = ctx.dataset.stack;
-                                let soma = 0;
-                                ctx.chart.data.datasets.forEach(ds => {
-                                    if(ds.stack === stackName) soma += ds.data[ctx.dataIndex];
-                                });
-                                return soma > 0 ? soma : null;
-                            }
-                            return value > 0 ? value : null;
+                            // Exibe o valor do ADM (índices 3 e 7) e de todos os outros
+                            // Se o valor for maior que 0, exibe. Se for 0, oculta.
+                            return (value > 0) ? value : null;
                         }
                     }
                 },
@@ -73,8 +67,6 @@
                         barPercentage: 0.8,
                         ticks: {
                             callback: function(val, index) {
-                                // Aqui fixamos os nomes abaixo das barras
-                                // Usamos a lógica de que o gráfico agrupa os dados
                                 let label = this.getLabelForValue(val);
                                 return [label, "MOD / MOI"]; 
                             }
