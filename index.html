@@ -6,7 +6,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .container { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; padding: 20px; }
-        .box { width: 48%; min-width: 400px; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .box { width: 450px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
@@ -17,29 +17,25 @@
 </div>
 
 <script>
-    const url = 'https://script.google.com/macros/s/AKfycbwT-NrLz9LS2SDag3YMcTrVkT5WJFoKNTv2U6dN82mpyfwJGCCzJva_GYvKLlhxx4DPmQ/exec';
+    // A URL que você acabou de enviar
+    const url = 'https://script.google.com/macros/s/AKfycbxXdmQtgnLzu2l73eYxoSKbFLWEr4-yVdGJH4osBdbFtIYuT9Olt_LpuxG043oIpLBKPw/exec';
 
     async function carregar() {
         const res = await fetch(url);
-        const rawData = await res.json();
+        const dados = await res.json();
+        
+        // Pega os meses únicos, ordenando pelo array original para manter a ordem cronológica
+        const meses = [...new Set(dados.map(d => d.mes))];
 
-        // 1. Limpar e ordenar as datas (formatar "jan.-25")
-        const meses = [...new Set(rawData.map(d => {
-            const date = new Date(d.mes);
-            return date.toLocaleDateString('pt-BR', {month: 'short'}) + ".-" + date.getFullYear().toString().slice(-2);
-        }))].sort();
-
-        function renderizar(id, tipo, titulo) {
-            const series = ['1º TURNO', '2º TURNO', '3º TURNO', 'ADM'];
-            const datasets = series.map((turno, i) => ({
-                label: turno,
+        function desenhar(id, prefixo, titulo) {
+            const turnos = ['1º TURNO', '2º TURNO', '3º TURNO', 'ADM'];
+            const datasets = turnos.map((t, i) => ({
+                label: t,
                 data: meses.map(m => {
-                    const item = rawData.find(d => {
-                        const dDate = new Date(d.mes);
-                        const dMes = dDate.toLocaleDateString('pt-BR', {month: 'short'}) + ".-" + dDate.getFullYear().toString().slice(-2);
-                        return dMes === m && d.categoria === (tipo + " - " + turno);
-                    });
-                    return item ? item.qtd : 0;
+                    // Busca exata: "MOD - 1º TURNO" ou "MOI - 1º TURNO"
+                    const nomeCat = (t === 'ADM') ? 'ADM' : (prefixo + ' - ' + t);
+                    const item = dados.find(d => d.mes === m && d.categoria === nomeCat);
+                    return item ? parseInt(item.qtd) : 0;
                 }),
                 backgroundColor: ['#4472c4', '#ffc000', '#ed7d31', '#a5a5a5'][i]
             }));
@@ -47,15 +43,15 @@
             new Chart(document.getElementById(id), {
                 type: 'bar',
                 data: { labels: meses, datasets },
-                options: {
+                options: { 
                     plugins: { title: { display: true, text: titulo } },
                     scales: { y: { stacked: true, beginAtZero: true } }
                 }
             });
         }
 
-        renderizar('graficoMOD', 'MOD', 'Turnover MOD');
-        renderizar('graficoMOI', 'MOI', 'Turnover MOI');
+        desenhar('graficoMOD', 'MOD', 'Turnover MOD');
+        desenhar('graficoMOI', 'MOI', 'Turnover MOI');
     }
     carregar();
 </script>
