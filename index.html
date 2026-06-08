@@ -5,60 +5,52 @@
     <title>Dashboard Turnover DHO</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: sans-serif; background-color: #f4f7f6; padding: 20px; }
-        .container { max-width: 1000px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .container { display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; padding: 20px; }
+        .box { width: 450px; }
     </style>
 </head>
 <body>
-
     <div class="container">
-        <h2>Turnover por Mês (MOD vs MOI)</h2>
-        <canvas id="graficoTurnover"></canvas>
+        <div class="box"><canvas id="graficoMOD"></canvas></div>
+        <div class="box"><canvas id="graficoMOI"></canvas></div>
     </div>
 
     <script>
-        const url = 'https://script.google.com/macros/s/AKfycbzfzBsEQIjs00qNyNAbAZpLwIk_E6dHNbDWxItlmVvo_X--Aq8TmLpNjyM5Oi0RzeKt5A/exec';
+        const url = 'https://script.google.com/macros/s/AKfycbzSHsys-MDMovmUib_fI-BjHqTTgm4p3PcCyL6XtDCeF_mBIgUuAMjidaaoC29ZlGxV8Q/exec';
 
-        async function carregarDashboard() {
-            const resposta = await fetch(url);
-            const dados = await resposta.json();
+        async function carregar() {
+            const res = await fetch(url);
+            const dados = await res.json();
+            
+            // Pega apenas os meses únicos existentes nos dados
+            const meses = [...new Set(dados.map(d => d.mes))];
 
-            const dadosFiltrados = dados.filter(d => d.indicador === "TURNOVER SOLICITAÇÃO DE DESLIGAMENTOS 15 DIAS");
-            const labels = [...new Set(dadosFiltrados.map(d => d.mes.replace('.', '').toLowerCase()))];
+            function desenhar(id, prefixo, titulo) {
+                const categorias = ['1º TURNO', '2º TURNO', '3º TURNO', 'ADM'];
+                
+                const datasets = categorias.map((cat, i) => ({
+                    label: cat,
+                    data: meses.map(m => {
+                        const item = dados.find(d => d.mes == m && d.categoria == `${prefixo} - ${cat}`);
+                        return item ? item.qtd : 0;
+                    }),
+                    backgroundColor: ['#4472c4', '#ffc000', '#ed7d31', '#a5a5a5'][i]
+                }));
 
-            const getVal = (cat) => labels.map(m => {
-                const item = dadosFiltrados.find(d => d.mes.toLowerCase().includes(m.split('-')[0]) && d.categoria === cat);
-                return item ? parseInt(item.qtd) : 0;
-            });
-
-            const ctx = document.getElementById('graficoTurnover').getContext('2d');
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        // Coluna MOD
-                        { label: 'MOD 1º', data: getVal('MOD - 1º TURNO'), backgroundColor: '#4472c4', stack: 'MOD' },
-                        { label: 'MOD 2º', data: getVal('MOD - 2º TURNO'), backgroundColor: '#ffc000', stack: 'MOD' },
-                        { label: 'MOD 3º', data: getVal('MOD - 3º TURNO'), backgroundColor: '#ed7d31', stack: 'MOD' },
-                        { label: 'MOD ADM', data: getVal('ADM'),            backgroundColor: '#a5a5a5', stack: 'MOD' },
-                        
-                        // Coluna MOI
-                        { label: 'MOI 1º', data: getVal('MOI - 1º TURNO'), backgroundColor: '#4472c4', stack: 'MOI' },
-                        { label: 'MOI 2º', data: getVal('MOI - 2º TURNO'), backgroundColor: '#ffc000', stack: 'MOI' },
-                        { label: 'MOI 3º', data: getVal('MOI - 3º TURNO'), backgroundColor: '#ed7d31', stack: 'MOI' },
-                        { label: 'MOI ADM', data: getVal('MOI - ADM'),      backgroundColor: '#a5a5a5', stack: 'MOI' }
-                    ]
-                },
-                options: {
-                    scales: {
-                        x: { stacked: true },
-                        y: { stacked: true, beginAtZero: true }
+                new Chart(document.getElementById(id), {
+                    type: 'bar',
+                    data: { labels: meses, datasets },
+                    options: { 
+                        plugins: { title: { display: true, text: titulo } }, 
+                        scales: { y: { stacked: true } } 
                     }
-                }
-            });
+                });
+            }
+
+            desenhar('graficoMOD', 'MOD', 'Turnover MOD');
+            desenhar('graficoMOI', 'MOI', 'Turnover MOI');
         }
-        carregarDashboard();
+        carregar();
     </script>
 </body>
 </html>
