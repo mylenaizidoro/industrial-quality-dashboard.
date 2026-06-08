@@ -1,88 +1,60 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Dashboard Turnover DHO</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
-    <style>
-        body { font-family: sans-serif; background-color: #f9f9f9; }
-        .container { width: 95%; margin: auto; padding: 20px; }
-        canvas { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-    </style>
-</head>
-<body>
-
-    <div class="container">
-        <canvas id="graficoTurnover"></canvas>
-    </div>
-
 <script>
     Chart.register(ChartDataLabels);
 
-    const url = 'https://script.google.com/macros/s/AKfycbx5FCrbLsR6WNM_mXAxAEK0W_j45MFh5voYJRnz7wRwob8m60d3ehYDjbXjnmUjZkKM3Q/exec';
+    // ... (restante do seu código igual até a parte de datalabels) ...
 
-    async function carregar() {
-        const res = await fetch(url);
-        const dados = await res.json();
-        
-        const meses = [...new Set(dados.map(d => d.mes))];
-        const getVal = (cat, m) => dados.find(d => d.mes === m && d.categoria === cat)?.qtd || 0;
-
-        new Chart(document.getElementById('graficoTurnover'), {
-            type: 'bar',
-            data: {
-                labels: meses,
-                datasets: [
-                    // GRUPO MOD
-                    { label: 'MOD 1º', data: meses.map(m => getVal('MOD - 1º TURNO', m)), backgroundColor: '#4472c4', stack: 'MOD' },
-                    { label: 'MOD 2º', data: meses.map(m => getVal('MOD - 2º TURNO', m)), backgroundColor: '#ffc000', stack: 'MOD' },
-                    { label: 'MOD 3º', data: meses.map(m => getVal('MOD - 3º TURNO', m)), backgroundColor: '#ed7d31', stack: 'MOD' },
-                    { label: 'ADM',    data: meses.map(m => getVal('ADM', m)),            backgroundColor: '#a5a5a5', stack: 'MOD' },
-                    
-                    // GRUPO MOI
-                    { label: 'MOI 1º', data: meses.map(m => getVal('MOI - 1º TURNO', m)), backgroundColor: '#4472c4', stack: 'MOI' },
-                    { label: 'MOI 2º', data: meses.map(m => getVal('MOI - 2º TURNO', m)), backgroundColor: '#ffc000', stack: 'MOI' },
-                    { label: 'MOI 3º', data: meses.map(m => getVal('MOI - 3º TURNO', m)), backgroundColor: '#ed7d31', stack: 'MOI' },
-                    { label: 'ADM 1',  data: meses.map(m => getVal('ADM 1', m)),          backgroundColor: '#a5a5a5', stack: 'MOI' },
-                    
-                    // LINHA OBJETIVO
-                    { label: 'Objetivo', data: meses.map(() => 6), type: 'line', borderColor: 'red', borderWidth: 3, fill: false, pointRadius: 0 }
-                ]
-            },
-            options: {
-                responsive: true,
-                layout: { padding: { top: 35 } }, // Espaço para o número acumulado
-                plugins: {
-                    title: { display: true, text: 'TURNOVER SOLICITAÇÃO DE DESLIGAMENTOS 15 DIAS', font: { size: 20 } },
-                    datalabels: {
-                        color: 'black',
-                        anchor: 'end',
-                        align: 'top',
-                        font: { weight: 'bold' },
-                        formatter: function(value, context) {
-                            let dataset = context.chart.data.datasets;
-                            let sum = 0;
-                            // Soma apenas se for parte da mesma stack (MOD ou MOI)
-                            dataset.forEach(ds => {
-                                if (ds.stack === context.dataset.stack) {
-                                    sum += ds.data[context.dataIndex];
-                                }
-                            });
-                            // Exibe apenas no último elemento da pilha
-                            let lastIndex = dataset.findLastIndex(ds => ds.stack === context.dataset.stack);
-                            return (context.datasetIndex === lastIndex && sum > 0) ? sum : null;
-                        }
-                    }
-                },
-                scales: {
-                    x: { stacked: true, categoryPercentage: 0.7, barPercentage: 0.8 },
-                    y: { stacked: true, beginAtZero: true }
+    datalabels: {
+        color: function(context) {
+            // Preto para o acumulado no topo, Branco para os valores dentro das barras
+            let dataset = context.chart.data.datasets;
+            let lastDatasetIndex = -1;
+            dataset.forEach((ds, index) => {
+                if (ds.stack === context.dataset.stack) lastDatasetIndex = index;
+            });
+            return (context.datasetIndex === lastDatasetIndex) ? 'black' : 'white';
+        },
+        anchor: function(context) {
+            let dataset = context.chart.data.datasets;
+            let lastDatasetIndex = -1;
+            dataset.forEach((ds, index) => {
+                if (ds.stack === context.dataset.stack) lastDatasetIndex = index;
+            });
+            return (context.datasetIndex === lastDatasetIndex) ? 'end' : 'center';
+        },
+        align: function(context) {
+            let dataset = context.chart.data.datasets;
+            let lastDatasetIndex = -1;
+            dataset.forEach((ds, index) => {
+                if (ds.stack === context.dataset.stack) lastDatasetIndex = index;
+            });
+            return (context.datasetIndex === lastDatasetIndex) ? 'top' : 'center';
+        },
+        font: { weight: 'bold' },
+        formatter: function(value, context) {
+            let dataset = context.chart.data.datasets;
+            let currentStack = context.dataset.stack;
+            
+            // 1. Calcula o total acumulado daquela pilha (stack)
+            let sum = 0;
+            dataset.forEach(ds => {
+                if (ds.stack === currentStack) {
+                    sum += ds.data[context.dataIndex];
                 }
+            });
+
+            // 2. Identifica o último dataset da pilha
+            let lastDatasetIndex = -1;
+            dataset.forEach((ds, index) => {
+                if (ds.stack === currentStack) lastDatasetIndex = index;
+            });
+
+            // 3. Se for o último, retorna o acumulado. Se não, retorna o valor do próprio segmento.
+            if (context.datasetIndex === lastDatasetIndex) {
+                return sum > 0 ? sum : null; 
+            } else {
+                return value > 0 ? value : null;
             }
-        });
+        }
     }
-    carregar();
+    // ... (restante das opções) ...
 </script>
-</body>
-</html>
