@@ -7,7 +7,7 @@
     <style>
         body { font-family: sans-serif; background-color: #f9f9f9; }
         .container { width: 95%; margin: auto; padding: 20px; }
-        canvas { background: white; border-radius: 8px; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        canvas { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
@@ -17,15 +17,17 @@
     </div>
 
 <script>
+    // URL do seu Web App
     const url = 'https://script.google.com/macros/s/AKfycbxORXNgpGzYZehbscQi1TJUvBWvWDTdxiUyMzR0fzajhXE32HDx_C5qEKB_gFbfE57QNQ/exec';
 
     async function carregar() {
         const res = await fetch(url);
         const dados = await res.json();
         
-        // Pega as datas (meses) únicas
+        // Pega as datas (meses) únicas da planilha
         const meses = [...new Set(dados.map(d => d.mes))];
 
+        // Função que busca o valor de cada categoria para um determinado mês
         const getVal = (cat, m) => dados.find(d => d.mes === m && d.categoria === cat)?.qtd || 0;
 
         new Chart(document.getElementById('graficoTurnover'), {
@@ -33,21 +35,29 @@
             data: {
                 labels: meses,
                 datasets: [
-                    // GRUPO MOD (stack: 'MOD')
-                    { label: 'MOD 1º', data: meses.map(m => getVal('MOD - 1º TURNO', m)), backgroundColor: '#4472c4', stack: 'MOD' },
-                    { label: 'MOD 2º', data: meses.map(m => getVal('MOD - 2º TURNO', m)), backgroundColor: '#ffc000', stack: 'MOD' },
-                    { label: 'MOD 3º', data: meses.map(m => getVal('MOD - 3º TURNO', m)), backgroundColor: '#ed7d31', stack: 'MOD' },
-                    { label: 'ADM',    data: meses.map(m => getVal('ADM', m)),            backgroundColor: '#a5a5a5', stack: 'MOD' },
+                    // GRUPO MOD (Stack: 'MOD')
+                    { label: 'MOD 1º TURNO', data: meses.map(m => getVal('MOD - 1º TURNO', m)), backgroundColor: '#4472c4', stack: 'MOD' },
+                    { label: 'MOD 2º TURNO', data: meses.map(m => getVal('MOD - 2º TURNO', m)), backgroundColor: '#ffc000', stack: 'MOD' },
+                    { label: 'MOD 3º TURNO', data: meses.map(m => getVal('MOD - 3º TURNO', m)), backgroundColor: '#ed7d31', stack: 'MOD' },
+                    { label: 'MOD ADM',      data: meses.map(m => getVal('ADM', m)),            backgroundColor: '#a5a5a5', stack: 'MOD' },
                     
-                    // GRUPO MOI (stack: 'MOI')
-                    { label: 'MOI 1º', data: meses.map(m => getVal('MOI - 1º TURNO', m)), backgroundColor: '#4472c4', stack: 'MOI' },
-                    { label: 'MOI 2º', data: meses.map(m => getVal('MOI - 2º TURNO', m)), backgroundColor: '#ffc000', stack: 'MOI' },
-                    { label: 'MOI 3º', data: meses.map(m => getVal('MOI - 3º TURNO', m)), backgroundColor: '#ed7d31', stack: 'MOI' },
-                    { label: 'ADM 1',  data: meses.map(m => getVal('ADM 1', m)),          backgroundColor: '#a5a5a5', stack: 'MOI' }
+                    // GRUPO MOI (Stack: 'MOI')
+                    { label: 'MOI 1º TURNO', data: meses.map(m => getVal('MOI - 1º TURNO', m)), backgroundColor: '#4472c4', stack: 'MOI' },
+                    { label: 'MOI 2º TURNO', data: meses.map(m => getVal('MOI - 2º TURNO', m)), backgroundColor: '#ffc000', stack: 'MOI' },
+                    { label: 'MOI 3º TURNO', data: meses.map(m => getVal('MOI - 3º TURNO', m)), backgroundColor: '#ed7d31', stack: 'MOI' },
+                    { label: 'MOI ADM',      data: meses.map(m => getVal('ADM 1', m)),          backgroundColor: '#a5a5a5', stack: 'MOI' }
                 ]
             },
             options: {
                 responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'TURNOVER SOLICITAÇÃO DE DESLIGAMENTOS 15 DIAS',
+                        font: { size: 20, weight: 'bold' },
+                        padding: { bottom: 30 }
+                    }
+                },
                 scales: {
                     x: { 
                         stacked: true, 
