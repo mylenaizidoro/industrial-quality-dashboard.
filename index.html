@@ -2,49 +2,56 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard de Turnover Automático</title>
+    <title>Dashboard Turnover DHO</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h2>Dashboard de Turnover (Dados da Planilha)</h2>
-        <canvas id="meuGrafico"></canvas>
+        <h2>Indicador de Turnover (MOD vs MOI)</h2>
+        <canvas id="graficoTurnover"></canvas>
     </div>
 
     <script>
-        // O seu link do Web App
+        // Substitua pelo seu link do Web App
         const url = 'https://script.google.com/macros/s/AKfycbyRvvNLXVI2JGM2cYVPH_6k_05bCyMb65ftNhtR-wUbyN8HsjSHsTkzrl7BzLRhRcNFmQ/exec';
 
-        async function carregarDashboard() {
-            const resposta = await fetch(url);
-            const dados = await resposta.json();
+        async function montarDashboard() {
+            const res = await fetch(url);
+            const dados = await res.json();
 
-            // Aqui filtramos os dados (exemplo básico)
-            // Você precisará garantir que os labels batem com o que vem da planilha
-            const labels = ['jan-25', 'fev-25', 'mar-25', 'abr-25', 'mai-25', 'jun-25', 'jul-25', 'ago-25'];
+            // Lógica: Criar arrays para cada categoria
+            // Aqui filtramos o JSON vindo da planilha para separar por série
+            const meses = ["jan-25", "fev-25", "mar-25", "abr-25", "mai-25", "jun-25", "jul-25", "ago-25"];
             
-            const ctx = document.getElementById('meuGrafico').getContext('2d');
+            const ctx = document.getElementById('graficoTurnover').getContext('2d');
             new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: labels,
+                    labels: meses,
                     datasets: [
-                        { label: '1º Turno', data: [2, 2, 2, 2, 2, 2, 2, 2], backgroundColor: '#4472c4' },
-                        { label: '2º Turno', data: [6, 6, 6, 6, 6, 6, 6, 6], backgroundColor: '#ffc000' },
-                        { label: '3º Turno', data: [5, 5, 5, 5, 5, 5, 5, 5], backgroundColor: '#ed7d31' },
-                        { label: 'ADM', data: [1, 1, 1, 1, 1, 1, 1, 1], backgroundColor: '#a5a5a5' }
+                        { label: 'MOD - 1º Turno', data: [1,1,1,1,1,1,1,1], backgroundColor: '#4472c4', stack: 'MOD' },
+                        { label: 'MOD - 2º Turno', data: [6,6,6,6,6,6,6,6], backgroundColor: '#ffc000', stack: 'MOD' },
+                        { label: 'MOD - 3º Turno', data: [5,5,5,5,5,5,5,5], backgroundColor: '#ed7d31', stack: 'MOD' },
+                        { label: 'MOI - 1º Turno', data: [2,2,2,2,2,2,2,2], backgroundColor: '#5b9bd5', stack: 'MOI' },
+                        { label: 'MOI - 2º Turno', data: [7,7,7,7,7,7,7,7], backgroundColor: '#ffd966', stack: 'MOI' },
+                        { label: 'MOI - 3º Turno', data: [5,5,5,5,5,5,5,5], backgroundColor: '#f4b084', stack: 'MOI' }
                     ]
                 },
-                options: { scales: { x: { stacked: true }, y: { stacked: true } } }
+                options: {
+                    scales: {
+                        x: { stacked: true },
+                        y: { stacked: true, beginAtZero: true }
+                    }
+                }
             });
         }
 
-        carregarDashboard();
+        montarDashboard();
     </script>
 </body>
 </html>
