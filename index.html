@@ -1,240 +1,104 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard DHO - Absenteísmo</title>
+function montarGrafico(meses, valores, objetivos) {
+  const ctx = document.getElementById("graficoAbsenteismo");
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  const coresBarras = valores.map((valor, i) => {
+    return valor <= objetivos[i] ? "#10b981" : "#f43f5e";
+  });
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f9;
-      margin: 0;
-      padding: 20px;
-      color: #222;
-    }
-
-    h1 {
-      text-align: center;
-      color: #1f3c88;
-    }
-
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 15px;
-      margin: 25px 0;
-    }
-
-    .card {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.12);
-      text-align: center;
-    }
-
-    .card h2 {
-      margin: 0;
-      font-size: 18px;
-      color: #555;
-    }
-
-    .card p {
-      font-size: 28px;
-      font-weight: bold;
-      margin: 10px 0 0;
-    }
-
-    .ok {
-      color: green;
-    }
-
-    .ruim {
-      color: red;
-    }
-
-    .grafico {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.12);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 25px;
-      background: white;
-      border-radius: 12px;
-      overflow: hidden;
-    }
-
-    th, td {
-      padding: 10px;
-      border-bottom: 1px solid #ddd;
-      text-align: center;
-    }
-
-    th {
-      background: #1f3c88;
-      color: white;
-    }
-  </style>
-</head>
-
-<body>
-
-  <h1>Dashboard DHO - Absenteísmo</h1>
-
-  <div class="cards">
-    <div class="card">
-      <h2>Último Resultado</h2>
-      <p id="ultimoResultado">Carregando...</p>
-    </div>
-
-    <div class="card">
-      <h2>Meta</h2>
-      <p id="meta">Carregando...</p>
-    </div>
-
-    <div class="card">
-      <h2>Status</h2>
-      <p id="status">Carregando...</p>
-    </div>
-
-    <div class="card">
-      <h2>Melhor Mês</h2>
-      <p id="melhorMes">Carregando...</p>
-    </div>
-  </div>
-
-  <div class="grafico">
-    <canvas id="graficoAbsenteismo"></canvas>
-  </div>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Mês</th>
-        <th>Processo</th>
-        <th>Indicador</th>
-        <th>Valor Real</th>
-        <th>Objetivo</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody id="tabelaDados"></tbody>
-  </table>
-
-  <script>
-    const URL_DADOS = "https://script.google.com/macros/s/AKfycbzgm5hUTqxhMZQE9RnuXYnC5_eGNybcjO81lWbeNZKG_NjVogXcpuXjBtfm3yW6y9WYrQ/exec";
-
-    async function carregarDados() {
-      const resposta = await fetch(URL_DADOS);
-      const dados = await resposta.json();
-
-      const absenteismo = dados.filter(item =>
-        String(item.processo).toUpperCase().includes("ABSENTEISMO") &&
-        item.valorReal !== "" &&
-        item.valorReal !== null
-      );
-
-      const meses = absenteismo.map(item => item.mes);
-      const valores = absenteismo.map(item => Number(String(item.valorReal).replace(",", ".")));
-      const objetivos = absenteismo.map(item => Number(String(item.objetivo).replace(",", ".")));
-
-      const ultimoValor = valores[valores.length - 1];
-      const ultimoObjetivo = objetivos[objetivos.length - 1];
-      const ultimoMes = meses[meses.length - 1];
-
-      document.getElementById("ultimoResultado").innerText = ultimoValor.toFixed(2) + " h";
-      document.getElementById("meta").innerText = ultimoObjetivo.toFixed(2) + " h";
-
-      const status = document.getElementById("status");
-
-      if (ultimoValor <= ultimoObjetivo) {
-        status.innerText = "Dentro da meta";
-        status.className = "ok";
-      } else {
-        status.innerText = "Fora da meta";
-        status.className = "ruim";
-      }
-
-      const menorValor = Math.min(...valores);
-      const indiceMelhor = valores.indexOf(menorValor);
-      document.getElementById("melhorMes").innerText = meses[indiceMelhor] + " - " + menorValor.toFixed(2) + " h";
-
-      montarGrafico(meses, valores, objetivos);
-      montarTabela(absenteismo);
-    }
-
-    function montarGrafico(meses, valores, objetivos) {
-      const ctx = document.getElementById("graficoAbsenteismo");
-
-      new Chart(ctx, {
-        type: "line",
-        data: {
-          labels: meses,
-          datasets: [
-            {
-              label: "Valor Real",
-              data: valores,
-              borderWidth: 3,
-              tension: 0.3
-            },
-            {
-              label: "Objetivo",
-              data: objetivos,
-              borderWidth: 2,
-              borderDash: [5, 5],
-              tension: 0.3
-            }
-          ]
+  new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: meses,
+      datasets: [
+        {
+          label: "Realizado",
+          data: valores,
+          backgroundColor: coresBarras,
+          borderRadius: 8,
+          barThickness: 22
         },
-        options: {
-          responsive: true,
-          plugins: {
-            title: {
-              display: true,
-              text: "Absenteísmo - Valor Real x Objetivo"
-            }
-          },
-          scales: {
-            y: {
-              beginAtZero: true
+        {
+          label: "Meta",
+          data: objetivos,
+          type: "line",
+          borderColor: "#ff7a00",
+          backgroundColor: "#ff7a00",
+          borderWidth: 2,
+          borderDash: [6, 6],
+          pointRadius: 4,
+          pointBackgroundColor: "#ffffff",
+          pointBorderColor: "#ff7a00",
+          pointBorderWidth: 2,
+          tension: 0
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        title: {
+          display: true,
+          text: "ABSENTEÍSMO PA - 03",
+          align: "start",
+          color: "#0b1f3a",
+          font: {
+            size: 24,
+            weight: "bold"
+          }
+        },
+        legend: {
+          position: "top",
+          align: "center"
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return context.dataset.label + ": " + context.raw.toFixed(2) + "%";
             }
           }
         }
-      });
-    }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 9,
+          ticks: {
+            stepSize: 1
+          },
+          grid: {
+            color: "rgba(0,0,0,0.10)"
+          }
+        },
+        x: {
+          ticks: {
+            maxRotation: 60,
+            minRotation: 60
+          },
+          grid: {
+            color: "rgba(0,0,0,0.08)"
+          }
+        }
+      }
+    },
+    plugins: [{
+      afterDatasetsDraw(chart) {
+        const { ctx } = chart;
 
-    function montarTabela(dados) {
-      const tabela = document.getElementById("tabelaDados");
-      tabela.innerHTML = "";
+        chart.data.datasets[0].data.forEach((valor, index) => {
+          const meta = chart.getDatasetMeta(0);
+          const barra = meta.data[index];
 
-      dados.forEach(item => {
-        const valor = Number(String(item.valorReal).replace(",", "."));
-        const objetivo = Number(String(item.objetivo).replace(",", "."));
-        const status = valor <= objetivo ? "Dentro da meta" : "Fora da meta";
-
-        tabela.innerHTML += `
-          <tr>
-            <td>${item.mes}</td>
-            <td>${item.processo}</td>
-            <td>${item.indicador}</td>
-            <td>${valor.toFixed(2)}</td>
-            <td>${objetivo.toFixed(2)}</td>
-            <td class="${valor <= objetivo ? "ok" : "ruim"}">${status}</td>
-          </tr>
-        `;
-      });
-    }
-
-    carregarDados();
-  </script>
-
-</body>
-</html>
+          ctx.save();
+          ctx.fillStyle = "#111";
+          ctx.font = "bold 11px Arial";
+          ctx.textAlign = "center";
+          ctx.translate(barra.x, barra.y - 8);
+          ctx.rotate(-Math.PI / 2);
+          ctx.fillText(valor.toFixed(2).replace(".", ",") + "%", 0, 0);
+          ctx.restore();
+        });
+      }
+    }]
+  });
+}
