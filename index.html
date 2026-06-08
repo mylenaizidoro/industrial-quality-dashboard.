@@ -1,57 +1,72 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-pt">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard Turnover DHO</title>
+    <title>Dashboard de Turnover - DHO</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
-        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        body { font-family: sans-serif; background-color: #f4f7f6; padding: 20px; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h2>Indicador de Turnover (MOD vs MOI)</h2>
+        <h2>Turnover: Solicitação de Desligamentos (15 Dias)</h2>
         <canvas id="graficoTurnover"></canvas>
     </div>
 
     <script>
-        // Substitua pelo seu link do Web App
-        const url = 'https://script.google.com/macros/s/AKfycbyRvvNLXVI2JGM2cYVPH_6k_05bCyMb65ftNhtR-wUbyN8HsjSHsTkzrl7BzLRhRcNFmQ/exec';
+        // O URL do seu Web App
+        const url = 'https://script.google.com/macros/s/AKfycbzfzBsEQIjs00qNyNAbAZpLwIk_E6dHNbDWxItlmVvo_X--Aq8TmLpNjyM5Oi0RzeKt5A/exec';
 
-        async function montarDashboard() {
-            const res = await fetch(url);
-            const dados = await res.json();
+        async function carregarDashboard() {
+            try {
+                const resposta = await fetch(url);
+                const dados = await resposta.json();
 
-            // Lógica: Criar arrays para cada categoria
-            // Aqui filtramos o JSON vindo da planilha para separar por série
-            const meses = ["jan-25", "fev-25", "mar-25", "abr-25", "mai-25", "jun-25", "jul-25", "ago-25"];
-            
-            const ctx = document.getElementById('graficoTurnover').getContext('2d');
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: meses,
-                    datasets: [
-                        { label: 'MOD - 1º Turno', data: [1,1,1,1,1,1,1,1], backgroundColor: '#4472c4', stack: 'MOD' },
-                        { label: 'MOD - 2º Turno', data: [6,6,6,6,6,6,6,6], backgroundColor: '#ffc000', stack: 'MOD' },
-                        { label: 'MOD - 3º Turno', data: [5,5,5,5,5,5,5,5], backgroundColor: '#ed7d31', stack: 'MOD' },
-                        { label: 'MOI - 1º Turno', data: [2,2,2,2,2,2,2,2], backgroundColor: '#5b9bd5', stack: 'MOI' },
-                        { label: 'MOI - 2º Turno', data: [7,7,7,7,7,7,7,7], backgroundColor: '#ffd966', stack: 'MOI' },
-                        { label: 'MOI - 3º Turno', data: [5,5,5,5,5,5,5,5], backgroundColor: '#f4b084', stack: 'MOI' }
-                    ]
-                },
-                options: {
-                    scales: {
-                        x: { stacked: true },
-                        y: { stacked: true, beginAtZero: true }
+                // 1. Filtrar apenas o indicador necessário
+                const indicadorAlvo = "TURNOVER SOLICITAÇÃO DE DESLIGAMENTOS 15 DIAS";
+                const dadosFiltrados = dados.filter(d => d.indicador === indicadorAlvo);
+
+                // 2. Extrair meses únicos para os labels (Eixo X)
+                const meses = [...new Set(dadosFiltrados.map(d => d.mes))];
+
+                // 3. Preparar os datasets (Empilhamento por MOD e MOI)
+                // Usamos 'stack' para separar as duas colunas principais
+                const ctx = document.getElementById('graficoTurnover').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: meses,
+                        datasets: [
+                            { label: 'MOD 1º Turno', data: extrairDados(dadosFiltrados, meses, 'MOD - 1º TURNO'), backgroundColor: '#4472c4', stack: 'MOD' },
+                            { label: 'MOD 2º Turno', data: extrairDados(dadosFiltrados, meses, 'MOD - 2º TURNO'), backgroundColor: '#ffc000', stack: 'MOD' },
+                            { label: 'MOD 3º Turno', data: extrairDados(dadosFiltrados, meses, 'MOD - 3º TURNO'), backgroundColor: '#ed7d31', stack: 'MOD' },
+                            { label: 'MOD ADM',      data: extrairDados(dadosFiltrados, meses, 'ADM'), backgroundColor: '#a5a5a5', stack: 'MOD' },
+                            
+                            { label: 'MOI 1º Turno', data: extrairDados(dadosFiltrados, meses, 'MOI - 1º TURNO'), backgroundColor: '#4472c4', stack: 'MOI' },
+                            { label: 'MOI 2º Turno', data: extrairDados(dadosFiltrados, meses, 'MOI - 2º TURNO'), backgroundColor: '#ffc000', stack: 'MOI' },
+                            { label: 'MOI 3º Turno', data: extrairDados(dadosFiltrados, meses, 'MOI - 3º TURNO'), backgroundColor: '#ed7d31', stack: 'MOI' },
+                            { label: 'MOI ADM',      data: extrairDados(dadosFiltrados, meses, 'MOI - ADM'), backgroundColor: '#a5a5a5', stack: 'MOI' }
+                        ]
+                    },
+                    options: {
+                        scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }
                     }
-                }
+                });
+            } catch (e) { console.error("Erro ao carregar dados:", e); }
+        }
+
+        // Função auxiliar para encontrar o valor da célula por mês e categoria
+        function extrairDados(dados, meses, cat) {
+            return meses.map(mes => {
+                const item = dados.find(d => d.mes === mes && d.categoria === cat);
+                return item ? item.qtd : 0;
             });
         }
 
-        montarDashboard();
+        carregarDashboard();
     </script>
 </body>
 </html>
