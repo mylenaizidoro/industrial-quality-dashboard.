@@ -55,9 +55,10 @@
                         font: { weight: 'bold' },
                         formatter: function(value, ctx) {
                             if (ctx.datasetIndex === 3 || ctx.datasetIndex === 7) {
+                                let stackName = ctx.dataset.stack;
                                 let soma = 0;
                                 ctx.chart.data.datasets.forEach(ds => {
-                                    if(ds.stack === ctx.dataset.stack) soma += ds.data[ctx.dataIndex];
+                                    if(ds.stack === stackName) soma += ds.data[ctx.dataIndex];
                                 });
                                 return soma > 0 ? soma : null;
                             }
@@ -72,9 +73,10 @@
                         barPercentage: 0.8,
                         ticks: {
                             callback: function(val, index) {
+                                // Aqui fixamos os nomes abaixo das barras
+                                // Usamos a lógica de que o gráfico agrupa os dados
                                 let label = this.getLabelForValue(val);
-                                // Ajuste a lógica abaixo conforme a ordem dos seus meses
-                                return [label, "INDICADOR"]; 
+                                return [label, "MOD / MOI"]; 
                             }
                         }
                     },
