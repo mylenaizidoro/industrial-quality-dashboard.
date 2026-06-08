@@ -1,12 +1,13 @@
 <!DOCTYPE html>
-<html lang="pt-pt">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard de Turnover - DHO</title>
+    <title>Dashboard de Turnover DHO</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: sans-serif; background-color: #f4f7f6; padding: 20px; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .container { max-width: 950px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #333; }
     </style>
 </head>
 <body>
@@ -17,7 +18,6 @@
     </div>
 
     <script>
-        // O URL do seu Web App
         const url = 'https://script.google.com/macros/s/AKfycbzfzBsEQIjs00qNyNAbAZpLwIk_E6dHNbDWxItlmVvo_X--Aq8TmLpNjyM5Oi0RzeKt5A/exec';
 
         async function carregarDashboard() {
@@ -25,45 +25,47 @@
                 const resposta = await fetch(url);
                 const dados = await resposta.json();
 
-                // 1. Filtrar apenas o indicador necessário
-                const indicadorAlvo = "TURNOVER SOLICITAÇÃO DE DESLIGAMENTOS 15 DIAS";
-                const dadosFiltrados = dados.filter(d => d.indicador === indicadorAlvo);
+                // 1. Filtrar pelo nome exato do indicador
+                const dadosFiltrados = dados.filter(d => d.indicador === "TURNOVER SOLICITAÇÃO DE DESLIGAMENTOS 15 DIAS");
 
-                // 2. Extrair meses únicos para os labels (Eixo X)
-                const meses = [...new Set(dadosFiltrados.map(d => d.mes))];
+                // 2. Extrair meses únicos e formatar (jan-25)
+                const mesesBrutos = [...new Set(dadosFiltrados.map(d => d.mes))];
+                const labels = mesesBrutos.map(m => {
+                    // Se o mês já vem como "jan.-25" da planilha, apenas limpamos
+                    return m.replace('.', '').toLowerCase();
+                });
 
-                // 3. Preparar os datasets (Empilhamento por MOD e MOI)
-                // Usamos 'stack' para separar as duas colunas principais
+                // 3. Função para extrair dados por categoria
+                const getDados = (cat) => labels.map(m => {
+                    const item = dadosFiltrados.find(d => d.mes.toLowerCase().includes(m.split('-')[0]) && d.categoria === cat);
+                    return item ? item.qtd : 0;
+                });
+
                 const ctx = document.getElementById('graficoTurnover').getContext('2d');
                 new Chart(ctx, {
                     type: 'bar',
                     data: {
-                        labels: meses,
+                        labels: labels,
                         datasets: [
-                            { label: 'MOD 1º Turno', data: extrairDados(dadosFiltrados, meses, 'MOD - 1º TURNO'), backgroundColor: '#4472c4', stack: 'MOD' },
-                            { label: 'MOD 2º Turno', data: extrairDados(dadosFiltrados, meses, 'MOD - 2º TURNO'), backgroundColor: '#ffc000', stack: 'MOD' },
-                            { label: 'MOD 3º Turno', data: extrairDados(dadosFiltrados, meses, 'MOD - 3º TURNO'), backgroundColor: '#ed7d31', stack: 'MOD' },
-                            { label: 'MOD ADM',      data: extrairDados(dadosFiltrados, meses, 'ADM'), backgroundColor: '#a5a5a5', stack: 'MOD' },
+                            { label: 'MOD 1º Turno', data: getDados('MOD - 1º TURNO'), backgroundColor: '#4472c4', stack: 'MOD' },
+                            { label: 'MOD 2º Turno', data: getDados('MOD - 2º TURNO'), backgroundColor: '#ffc000', stack: 'MOD' },
+                            { label: 'MOD 3º Turno', data: getDados('MOD - 3º TURNO'), backgroundColor: '#ed7d31', stack: 'MOD' },
+                            { label: 'MOD ADM',      data: getDados('ADM'),          backgroundColor: '#a5a5a5', stack: 'MOD' },
                             
-                            { label: 'MOI 1º Turno', data: extrairDados(dadosFiltrados, meses, 'MOI - 1º TURNO'), backgroundColor: '#4472c4', stack: 'MOI' },
-                            { label: 'MOI 2º Turno', data: extrairDados(dadosFiltrados, meses, 'MOI - 2º TURNO'), backgroundColor: '#ffc000', stack: 'MOI' },
-                            { label: 'MOI 3º Turno', data: extrairDados(dadosFiltrados, meses, 'MOI - 3º TURNO'), backgroundColor: '#ed7d31', stack: 'MOI' },
-                            { label: 'MOI ADM',      data: extrairDados(dadosFiltrados, meses, 'MOI - ADM'), backgroundColor: '#a5a5a5', stack: 'MOI' }
+                            { label: 'MOI 1º Turno', data: getDados('MOI - 1º TURNO'), backgroundColor: '#4472c4', stack: 'MOI' },
+                            { label: 'MOI 2º Turno', data: getDados('MOI - 2º TURNO'), backgroundColor: '#ffc000', stack: 'MOI' },
+                            { label: 'MOI 3º Turno', data: getDados('MOI - 3º TURNO'), backgroundColor: '#ed7d31', stack: 'MOI' },
+                            { label: 'MOI ADM',      data: getDados('MOI - ADM'),      backgroundColor: '#a5a5a5', stack: 'MOI' }
                         ]
                     },
                     options: {
-                        scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }
+                        scales: { 
+                            x: { stacked: true }, 
+                            y: { stacked: true, beginAtZero: true } 
+                        }
                     }
                 });
-            } catch (e) { console.error("Erro ao carregar dados:", e); }
-        }
-
-        // Função auxiliar para encontrar o valor da célula por mês e categoria
-        function extrairDados(dados, meses, cat) {
-            return meses.map(mes => {
-                const item = dados.find(d => d.mes === mes && d.categoria === cat);
-                return item ? item.qtd : 0;
-            });
+            } catch (e) { console.error("Erro:", e); }
         }
 
         carregarDashboard();
