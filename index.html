@@ -18,7 +18,6 @@
     </div>
 
 <script>
-    // Registra o plugin globalmente
     Chart.register(ChartDataLabels);
 
     const url = 'https://script.google.com/macros/s/AKfycbx5FCrbLsR6WNM_mXAxAEK0W_j45MFh5voYJRnz7wRwob8m60d3ehYDjbXjnmUjZkKM3Q/exec';
@@ -26,6 +25,7 @@
     async function carregar() {
         const res = await fetch(url);
         const dados = await res.json();
+        
         const meses = [...new Set(dados.map(d => d.mes))];
         const getVal = (cat, m) => dados.find(d => d.mes === m && d.categoria === cat)?.qtd || 0;
 
@@ -34,27 +34,45 @@
             data: {
                 labels: meses,
                 datasets: [
+                    // GRUPO MOD
                     { label: 'MOD 1º', data: meses.map(m => getVal('MOD - 1º TURNO', m)), backgroundColor: '#4472c4', stack: 'MOD' },
                     { label: 'MOD 2º', data: meses.map(m => getVal('MOD - 2º TURNO', m)), backgroundColor: '#ffc000', stack: 'MOD' },
                     { label: 'MOD 3º', data: meses.map(m => getVal('MOD - 3º TURNO', m)), backgroundColor: '#ed7d31', stack: 'MOD' },
                     { label: 'ADM',    data: meses.map(m => getVal('ADM', m)),            backgroundColor: '#a5a5a5', stack: 'MOD' },
                     
+                    // GRUPO MOI
                     { label: 'MOI 1º', data: meses.map(m => getVal('MOI - 1º TURNO', m)), backgroundColor: '#4472c4', stack: 'MOI' },
                     { label: 'MOI 2º', data: meses.map(m => getVal('MOI - 2º TURNO', m)), backgroundColor: '#ffc000', stack: 'MOI' },
                     { label: 'MOI 3º', data: meses.map(m => getVal('MOI - 3º TURNO', m)), backgroundColor: '#ed7d31', stack: 'MOI' },
                     { label: 'ADM 1',  data: meses.map(m => getVal('ADM 1', m)),          backgroundColor: '#a5a5a5', stack: 'MOI' },
                     
+                    // LINHA OBJETIVO
                     { label: 'Objetivo', data: meses.map(() => 6), type: 'line', borderColor: 'red', borderWidth: 3, fill: false, pointRadius: 0 }
                 ]
             },
             options: {
                 responsive: true,
+                layout: { padding: { top: 35 } }, // Espaço para o número acumulado
                 plugins: {
                     title: { display: true, text: 'TURNOVER SOLICITAÇÃO DE DESLIGAMENTOS 15 DIAS', font: { size: 20 } },
                     datalabels: {
-                        color: 'white', // Cor do número dentro da barra
+                        color: 'black',
+                        anchor: 'end',
+                        align: 'top',
                         font: { weight: 'bold' },
-                        formatter: (value) => value > 0 ? value : '' // Só mostra se for maior que 0
+                        formatter: function(value, context) {
+                            let dataset = context.chart.data.datasets;
+                            let sum = 0;
+                            // Soma apenas se for parte da mesma stack (MOD ou MOI)
+                            dataset.forEach(ds => {
+                                if (ds.stack === context.dataset.stack) {
+                                    sum += ds.data[context.dataIndex];
+                                }
+                            });
+                            // Exibe apenas no último elemento da pilha
+                            let lastIndex = dataset.findLastIndex(ds => ds.stack === context.dataset.stack);
+                            return (context.datasetIndex === lastIndex && sum > 0) ? sum : null;
+                        }
                     }
                 },
                 scales: {
