@@ -1,176 +1,240 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard de Qualidade | Mylena Izidoro</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-    <style>
-        :root { --primary: #e74c3c; --secondary: #3498db; --dark: #2c3e50; --bg: #f4f7f6; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); padding: 20px; margin: 0; }
-        .container { max-width: 1200px; margin: auto; }
-        .dashboard-card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 8px 16px rgba(0,0,0,0.08); margin-bottom: 25px; }
-        .header { border-bottom: 3px solid var(--secondary); margin-bottom: 20px; padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-        h2 { margin: 0; color: var(--dark); font-size: 1.2rem; text-transform: uppercase; }
-        .meta-tag { font-weight: bold; color: #555; }
-        
-        /* Estilo da Tabela PPM conforme image_77c61c.png */
-        .ppm-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: center; margin-top: 10px; }
-        .ppm-table td { border: 1px solid #ccc; padding: 10px; font-weight: bold; }
-        .row-label { background: #f8f9fa; text-align: left !important; width: 160px; border-right: 2px solid #ddd !important; }
-        .bg-ppm { background: #FF9800; color: black; }
-        .bg-meta { background: #4CAF50; color: white; }
-        .bg-faturamento { background: #00BCD4; color: black; }
-        .bg-devolucao { background: #F44336; color: white; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard DHO - Absenteísmo</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 20px;
+      color: #222;
+    }
+
+    h1 {
+      text-align: center;
+      color: #1f3c88;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 15px;
+      margin: 25px 0;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+      text-align: center;
+    }
+
+    .card h2 {
+      margin: 0;
+      font-size: 18px;
+      color: #555;
+    }
+
+    .card p {
+      font-size: 28px;
+      font-weight: bold;
+      margin: 10px 0 0;
+    }
+
+    .ok {
+      color: green;
+    }
+
+    .ruim {
+      color: red;
+    }
+
+    .grafico {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 25px;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      text-align: center;
+    }
+
+    th {
+      background: #1f3c88;
+      color: white;
+    }
+  </style>
 </head>
+
 <body>
-    <div class="container">
-        
-        <!-- 1. Tabela de Dados (Topo da image_77c61c.png) -->
-        <div class="dashboard-card" style="overflow-x: auto;">
-            <div class="header" style="border-bottom-color: #FF9800;">
-                <h2>PPM RETORNO PIC X FATURAMENTO DIÁRIO</h2>
-            </div>
-            <table class="ppm-table" id="ppmTable"></table>
-        </div>
 
-        <!-- 2. Gráfico Principal de PPM (Conforme image_77c61c.png) -->
-        <div class="dashboard-card">
-            <div class="header" style="border-bottom-color: #e74c3c;">
-                <h2>PPM RETORNO PIC X FATURAMENTO DIÁRIO</h2>
-                <span class="meta-tag">META: <= 3.000</span>
-            </div>
-            <canvas id="ppmMainChart" height="100"></canvas>
-        </div>
+  <h1>Dashboard DHO - Absenteísmo</h1>
 
-        <!-- 3. Ranking de Motivos -->
-        <div class="dashboard-card">
-            <div class="header">
-                <h2>Ranking de Motivos (Volume de Devoluções)</h2>
-            </div>
-            <canvas id="motivoChart" height="80"></canvas>
-        </div>
+  <div class="cards">
+    <div class="card">
+      <h2>Último Resultado</h2>
+      <p id="ultimoResultado">Carregando...</p>
     </div>
 
-    <script>
-        Chart.register(ChartDataLabels);
+    <div class="card">
+      <h2>Meta</h2>
+      <p id="meta">Carregando...</p>
+    </div>
 
-        const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT7auqmo6fOoCEkoeoZ70TVM4ljEPsBlPfKBebWUbdWpb0URnI-ttwP2AlUNG4yHW7GLqkyLXXTo1Pm/pub?gid=536102353&single=true&output=csv';
+    <div class="card">
+      <h2>Status</h2>
+      <p id="status">Carregando...</p>
+    </div>
 
-        async function initDashboard() {
-            Papa.parse(sheetUrl, {
-                download: true,
-                complete: function(results) {
-                    const rows = results.data;
-                    const dailyData = {};
-                    const motivosRank = {};
+    <div class="card">
+      <h2>Melhor Mês</h2>
+      <p id="melhorMes">Carregando...</p>
+    </div>
+  </div>
 
-                    // Processamento ignorando cabeçalhos
-                    for(let i = 1; i < rows.length; i++) {
-                        const data = rows[i][0];       // Coluna A: Data
-                        const fat = parseFloat(rows[i][2]) || 0; // Coluna C: Faturamento
-                        const dev = parseFloat(rows[i][3]) || 0; // Coluna D: Devolução
-                        const motivo = rows[i][10];    // Coluna K: Motivo
+  <div class="grafico">
+    <canvas id="graficoAbsenteismo"></canvas>
+  </div>
 
-                        if(data && !isNaN(fat)) {
-                            if(!dailyData[data]) dailyData[data] = { fat: 0, dev: 0 };
-                            dailyData[data].fat += fat;
-                            dailyData[data].dev += dev;
-                        }
+  <table>
+    <thead>
+      <tr>
+        <th>Mês</th>
+        <th>Processo</th>
+        <th>Indicador</th>
+        <th>Valor Real</th>
+        <th>Objetivo</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="tabelaDados"></tbody>
+  </table>
 
-                        if(motivo && motivo !== "Desc. Motivo" && dev > 0) {
-                            motivosRank[motivo] = (motivosRank[motivo] || 0) + dev;
-                        }
-                    }
+  <script>
+    const URL_DADOS = "https://script.google.com/macros/s/AKfycbzgm5hUTqxhMZQE9RnuXYnC5_eGNybcjO81lWbeNZKG_NjVogXcpuXjBtfm3yW6y9WYrQ/exec";
 
-                    const dates = Object.keys(dailyData).slice(-7); // Últimos 7 dias
-                    renderPPMTable(dailyData, dates);
-                    renderPPMChart(dailyData, dates);
-                    renderMotivos(motivosRank);
-                }
-            });
+    async function carregarDados() {
+      const resposta = await fetch(URL_DADOS);
+      const dados = await resposta.json();
+
+      const absenteismo = dados.filter(item =>
+        String(item.processo).toUpperCase().includes("ABSENTEISMO") &&
+        item.valorReal !== "" &&
+        item.valorReal !== null
+      );
+
+      const meses = absenteismo.map(item => item.mes);
+      const valores = absenteismo.map(item => Number(String(item.valorReal).replace(",", ".")));
+      const objetivos = absenteismo.map(item => Number(String(item.objetivo).replace(",", ".")));
+
+      const ultimoValor = valores[valores.length - 1];
+      const ultimoObjetivo = objetivos[objetivos.length - 1];
+      const ultimoMes = meses[meses.length - 1];
+
+      document.getElementById("ultimoResultado").innerText = ultimoValor.toFixed(2) + " h";
+      document.getElementById("meta").innerText = ultimoObjetivo.toFixed(2) + " h";
+
+      const status = document.getElementById("status");
+
+      if (ultimoValor <= ultimoObjetivo) {
+        status.innerText = "Dentro da meta";
+        status.className = "ok";
+      } else {
+        status.innerText = "Fora da meta";
+        status.className = "ruim";
+      }
+
+      const menorValor = Math.min(...valores);
+      const indiceMelhor = valores.indexOf(menorValor);
+      document.getElementById("melhorMes").innerText = meses[indiceMelhor] + " - " + menorValor.toFixed(2) + " h";
+
+      montarGrafico(meses, valores, objetivos);
+      montarTabela(absenteismo);
+    }
+
+    function montarGrafico(meses, valores, objetivos) {
+      const ctx = document.getElementById("graficoAbsenteismo");
+
+      new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: meses,
+          datasets: [
+            {
+              label: "Valor Real",
+              data: valores,
+              borderWidth: 3,
+              tension: 0.3
+            },
+            {
+              label: "Objetivo",
+              data: objetivos,
+              borderWidth: 2,
+              borderDash: [5, 5],
+              tension: 0.3
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            title: {
+              display: true,
+              text: "Absenteísmo - Valor Real x Objetivo"
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
         }
+      });
+    }
 
-        function renderPPMTable(dailyData, dates) {
-            const table = document.getElementById('ppmTable');
-            const meta = 3000;
+    function montarTabela(dados) {
+      const tabela = document.getElementById("tabelaDados");
+      tabela.innerHTML = "";
 
-            let html = `<tr><td class="row-label">DIÁRIO</td>` + dates.map(d => `<td>${d}</td>`).join('') + `</tr>`;
-            
-            // PPM
-            html += `<tr class="bg-ppm"><td class="row-label">PPM</td>` + dates.map(d => {
-                const ppm = dailyData[d].fat > 0 ? ((dailyData[d].dev / dailyData[d].fat) * 1000000) : 0;
-                return `<td>${Math.round(ppm).toLocaleString('pt-BR')}</td>`;
-            }).join('') + `</tr>`;
+      dados.forEach(item => {
+        const valor = Number(String(item.valorReal).replace(",", "."));
+        const objetivo = Number(String(item.objetivo).replace(",", "."));
+        const status = valor <= objetivo ? "Dentro da meta" : "Fora da meta";
 
-            // META
-            html += `<tr class="bg-meta"><td class="row-label">META</td>` + dates.map(() => `<td>${meta}</td>`).join('') + `</tr>`;
+        tabela.innerHTML += `
+          <tr>
+            <td>${item.mes}</td>
+            <td>${item.processo}</td>
+            <td>${item.indicador}</td>
+            <td>${valor.toFixed(2)}</td>
+            <td>${objetivo.toFixed(2)}</td>
+            <td class="${valor <= objetivo ? "ok" : "ruim"}">${status}</td>
+          </tr>
+        `;
+      });
+    }
 
-            // FATURAMENTO
-            html += `<tr class="bg-faturamento"><td class="row-label">FATURAMENTO</td>` + dates.map(d => `<td>${dailyData[d].fat}</td>`).join('') + `</tr>`;
+    carregarDados();
+  </script>
 
-            // DEVOLUÇÃO
-            html += `<tr class="bg-devolucao"><td class="row-label">DEVOLUÇÃO PIC</td>` + dates.map(d => `<td>${dailyData[d].dev}</td>`).join('') + `</tr>`;
-
-            table.innerHTML = html;
-        }
-
-        function renderPPMChart(dailyData, dates) {
-            const ppmValues = dates.map(d => {
-                return dailyData[d].fat > 0 ? Math.round((dailyData[d].dev / dailyData[d].fat) * 1000000) : 0;
-            });
-
-            new Chart(document.getElementById('ppmMainChart'), {
-                type: 'bar',
-                data: {
-                    labels: dates,
-                    datasets: [{
-                        label: 'PPM',
-                        data: ppmValues,
-                        backgroundColor: '#FF0000', // Vermelho conforme image_77c61c.png
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    plugins: {
-                        legend: { display: false },
-                        datalabels: {
-                            anchor: 'end', align: 'top',
-                            font: { weight: 'bold', size: 12 },
-                            formatter: (val) => val.toLocaleString('pt-BR')
-                        }
-                    },
-                    scales: {
-                        y: { beginAtZero: true, max: 20000, ticks: { stepSize: 5000 } },
-                        x: { grid: { display: false } }
-                    }
-                }
-            });
-        }
-
-        function renderMotivos(dados) {
-            const labels = Object.keys(dados).sort((a,b) => dados[b] - dados[a]).slice(0, 8);
-            new Chart(document.getElementById('motivoChart'), {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{ data: labels.map(l => dados[l]), backgroundColor: '#e74c3c' }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    plugins: {
-                        legend: { display: false },
-                        datalabels: { anchor: 'end', align: 'right', font: { weight: 'bold' } }
-                    },
-                    scales: { x: { beginAtZero: true } }
-                }
-            });
-        }
-
-        initDashboard();
-    </script>
 </body>
 </html>
