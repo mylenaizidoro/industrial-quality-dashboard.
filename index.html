@@ -5,29 +5,22 @@
     <title>Dashboard Turnover DHO</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: sans-serif; background-color: #f9f9f9; }
         .container { width: 95%; margin: auto; padding: 20px; }
         canvas { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
-
     <div class="container">
         <canvas id="graficoTurnover"></canvas>
     </div>
 
 <script>
-    // URL gerada pelo seu Apps Script após a última implantação
-    const url = 'https://script.google.com/macros/s/AKfycbxORXNgpGzYZehbscQi1TJUvBWvWDTdxiUyMzR0fzajhXE32HDx_C5qEKB_gFbfE57QNQ/exec';
+    const url = 'COLE_AQUI_A_NOVA_URL'; // Insira a nova URL gerada acima
 
     async function carregar() {
         const res = await fetch(url);
         const dados = await res.json();
-        
-        // Pega as datas (meses) únicas
         const meses = [...new Set(dados.map(d => d.mes))];
-
-        // Função para encontrar o valor de cada categoria
         const getVal = (cat, m) => dados.find(d => d.mes === m && d.categoria === cat)?.qtd || 0;
 
         new Chart(document.getElementById('graficoTurnover'), {
@@ -35,35 +28,22 @@
             data: {
                 labels: meses,
                 datasets: [
-                    // GRUPO MOD (Stack: 'MOD')
-                    { label: 'MOD 1º TURNO', data: meses.map(m => getVal('MOD - 1º TURNO', m)), backgroundColor: '#4472c4', stack: 'MOD' },
-                    { label: 'MOD 2º TURNO', data: meses.map(m => getVal('MOD - 2º TURNO', m)), backgroundColor: '#ffc000', stack: 'MOD' },
-                    { label: 'MOD 3º TURNO', data: meses.map(m => getVal('MOD - 3º TURNO', m)), backgroundColor: '#ed7d31', stack: 'MOD' },
-                    { label: 'MOD ADM',      data: meses.map(m => getVal('ADM', m)),            backgroundColor: '#a5a5a5', stack: 'MOD' },
-                    
-                    // GRUPO MOI (Stack: 'MOI')
-                    { label: 'MOI 1º TURNO', data: meses.map(m => getVal('MOI - 1º TURNO', m)), backgroundColor: '#4472c4', stack: 'MOI' },
-                    { label: 'MOI 2º TURNO', data: meses.map(m => getVal('MOI - 2º TURNO', m)), backgroundColor: '#ffc000', stack: 'MOI' },
-                    { label: 'MOI 3º TURNO', data: meses.map(m => getVal('MOI - 3º TURNO', m)), backgroundColor: '#ed7d31', stack: 'MOI' },
-                    { label: 'MOI ADM',      data: meses.map(m => getVal('ADM 1', m)),          backgroundColor: '#a5a5a5', stack: 'MOI' }
+                    { label: 'MOD 1º', data: meses.map(m => getVal('MOD - 1º TURNO', m)), backgroundColor: '#4472c4', stack: 'MOD' },
+                    { label: 'MOD 2º', data: meses.map(m => getVal('MOD - 2º TURNO', m)), backgroundColor: '#ffc000', stack: 'MOD' },
+                    { label: 'MOD 3º', data: meses.map(m => getVal('MOD - 3º TURNO', m)), backgroundColor: '#ed7d31', stack: 'MOD' },
+                    { label: 'ADM',    data: meses.map(m => getVal('ADM', m)),            backgroundColor: '#a5a5a5', stack: 'MOD' },
+                    { label: 'MOI 1º', data: meses.map(m => getVal('MOI - 1º TURNO', m)), backgroundColor: '#4472c4', stack: 'MOI' },
+                    { label: 'MOI 2º', data: meses.map(m => getVal('MOI - 2º TURNO', m)), backgroundColor: '#ffc000', stack: 'MOI' },
+                    { label: 'MOI 3º', data: meses.map(m => getVal('MOI - 3º TURNO', m)), backgroundColor: '#ed7d31', stack: 'MOI' },
+                    { label: 'ADM 1',  data: meses.map(m => getVal('ADM 1', m)),          backgroundColor: '#a5a5a5', stack: 'MOI' }
                 ]
             },
             options: {
-                responsive: true,
                 plugins: {
-                    title: {
-                        display: true,
-                        text: 'TURNOVER SOLICITAÇÃO DE DESLIGAMENTOS 15 DIAS',
-                        font: { size: 20, weight: 'bold' },
-                        padding: { bottom: 30 }
-                    }
+                    title: { display: true, text: 'TURNOVER SOLICITAÇÃO DE DESLIGAMENTOS 15 DIAS', font: { size: 20 } }
                 },
                 scales: {
-                    x: { 
-                        stacked: true, 
-                        categoryPercentage: 0.7, 
-                        barPercentage: 0.8 
-                    },
+                    x: { stacked: true, categoryPercentage: 0.7, barPercentage: 0.8 },
                     y: { stacked: true, beginAtZero: true }
                 }
             }
