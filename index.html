@@ -24,53 +24,42 @@
     async function carregar() {
         const res = await fetch(url);
         const dados = await res.json();
+        
+        // Criamos arrays separados para o eixo X multinível
         const meses = [...new Set(dados.map(d => d.mes))];
+        
+        // Vamos duplicar as labels para criar o efeito MOD/MOI
+        const labelsData = [];
+        const labelsGrupo = [];
+        meses.forEach(m => {
+            labelsData.push(m, m);
+            labelsGrupo.push('MOI', 'MOD');
+        });
+
         const getVal = (cat, m) => dados.find(d => d.mes === m && d.categoria === cat)?.qtd || 0;
 
         new Chart(document.getElementById('graficoTurnover'), {
             type: 'bar',
             data: {
-                labels: meses,
+                labels: [labelsData, labelsGrupo], // Eixo X com 2 níveis
                 datasets: [
-                    { label: 'MOD 1º', data: meses.map(m => getVal('MOD - 1º TURNO', m)), backgroundColor: '#4472c4', stack: 'MOD' },
-                    { label: 'MOD 2º', data: meses.map(m => getVal('MOD - 2º TURNO', m)), backgroundColor: '#ffc000', stack: 'MOD' },
-                    { label: 'MOD 3º', data: meses.map(m => getVal('MOD - 3º TURNO', m)), backgroundColor: '#ed7d31', stack: 'MOD' },
-                    { label: 'ADM',    data: meses.map(m => getVal('ADM', m)),            backgroundColor: '#a5a5a5', stack: 'MOD' },
-                    { label: 'MOI 1º', data: meses.map(m => getVal('MOI - 1º TURNO', m)), backgroundColor: '#4472c4', stack: 'MOI' },
-                    { label: 'MOI 2º', data: meses.map(m => getVal('MOI - 2º TURNO', m)), backgroundColor: '#ffc000', stack: 'MOI' },
-                    { label: 'MOI 3º', data: meses.map(m => getVal('MOI - 3º TURNO', m)), backgroundColor: '#ed7d31', stack: 'MOI' },
-                    { label: 'ADM 1',  data: meses.map(m => getVal('ADM 1', m)),          backgroundColor: '#a5a5a5', stack: 'MOI' },
-                    { label: 'Objetivo', data: meses.map(() => 6), type: 'line', borderColor: 'red', borderWidth: 3, fill: false, pointRadius: 0 }
+                    { label: 'MOI', data: meses.flatMap(m => [dados.filter(d=>d.mes===m && d.categoria.includes('MOI')).reduce((a,b)=>a+b.qtd,0), 0]), backgroundColor: '#4472c4', stack: 'Stack0' },
+                    { label: 'MOD', data: meses.flatMap(m => [0, dados.filter(d=>d.mes===m && d.categoria.includes('MOD')).reduce((a,b)=>a+b.qtd,0)]), backgroundColor: '#ed7d31', stack: 'Stack0' }
                 ]
             },
             options: {
                 responsive: true,
-                layout: { padding: { top: 40, bottom: 40 } }, // Adicionado padding inferior para os rótulos MOD/MOI
-                plugins: {
-                    title: { display: true, text: 'TURNOVER SOLICITAÇÃO DE DESLIGAMENTOS 15 DIAS', font: { size: 20 } },
-                    datalabels: {
-                        color: (ctx) => (ctx.datasetIndex === 3 || ctx.datasetIndex === 7) ? 'black' : 'white',
-                        anchor: (ctx) => (ctx.datasetIndex === 3 || ctx.datasetIndex === 7) ? 'end' : 'center',
-                        align: (ctx) => (ctx.datasetIndex === 3 || ctx.datasetIndex === 7) ? 'top' : 'center',
-                        font: { weight: 'bold' },
-                        formatter: function(value, ctx) {
-                            if (ctx.datasetIndex === 3 || ctx.datasetIndex === 7) {
-                                let soma = 0;
-                                ctx.chart.data.datasets.forEach(ds => {
-                                    if(ds.stack === ctx.dataset.stack) soma += ds.data[ctx.dataIndex];
-                                });
-                                return soma > 0 ? soma : null;
-                            }
-                            return value > 0 ? value : null;
-                        }
-                    }
-                },
                 scales: {
-                    x: { 
-                        stacked: true, 
-                        title: { display: true, text: 'MOD                   MOI', font: { weight: 'bold', size: 16 } }
+                    x: {
+                        stacked: true,
+                        ticks: {
+                            callback: function(val, index) {
+                                // Exibe Data na linha 1 e MOD/MOI na linha 2
+                                return index % 2 === 0 ? this.getLabelForValue(val) : "";
+                            }
+                        }
                     },
-                    y: { stacked: true, beginAtZero: true }
+                    y: { stacked: true }
                 }
             }
         });
