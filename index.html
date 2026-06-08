@@ -1,42 +1,159 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Teste DHO</title>
+<title>Portal de DHO - Grupo Coplac</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{margin:0;font-family:Arial;background:#eef3f8;color:#071d3a}
+.container{max-width:1300px;margin:40px auto;padding:20px}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:25px}
+.mini-card,.card,.tabela-box{background:white;border-radius:18px;padding:25px;box-shadow:0 4px 14px #0001}
+.mini-card{text-align:center}
+.mini-card p{font-size:24px;font-weight:bold}
+.conteudo{display:grid;grid-template-columns:2.2fr 1fr;gap:35px;align-items:center}
+.grafico-box{height:430px}
+.detalhamento{background:#f6f9fd;border-left:6px solid #0ea5e9;border-radius:14px;padding:25px}
+.verde{color:#10b981!important}
+.vermelho{color:#f43f5e!important}
+table{width:100%;border-collapse:collapse}
+th{background:#071d3a;color:white;padding:10px}
+td{padding:10px;text-align:center;border-bottom:1px solid #ddd}
+</style>
 </head>
 
-<body style="font-family:Arial;padding:30px">
+<body>
+<div class="container">
 
-<h1>Teste Apps Script</h1>
+<div class="cards">
+  <div class="mini-card"><h3>Último Resultado</h3><p id="ultimoResultado">--</p></div>
+  <div class="mini-card"><h3>Meta</h3><p id="meta">--</p></div>
+  <div class="mini-card"><h3>Status</h3><p id="status">--</p></div>
+  <div class="mini-card"><h3>Melhor Mês</h3><p id="melhorMes">--</p></div>
+</div>
 
-<button onclick="carregar()">Carregar Dados</button>
+<div class="card">
+  <h1>ABSENTEÍSMO PA - 03</h1>
+  <p>Grupo Coplac | Performance</p>
 
-<pre id="resultado"></pre>
+  <div class="conteudo">
+    <div class="grafico-box">
+      <canvas id="graficoAbsenteismo"></canvas>
+    </div>
+
+    <div class="detalhamento">
+      <h3>DETALHAMENTO</h3>
+      <p>Horas Ausentes / Horas Programadas.</p>
+      <p><b>Verde:</b> dentro da meta.</p>
+      <p><b>Vermelho:</b> fora da meta.</p>
+    </div>
+  </div>
+</div>
+
+<div class="tabela-box">
+<h2>Tabela do Indicador</h2>
+<table>
+<thead>
+<tr>
+<th>Mês</th><th>Processo</th><th>Indicador</th><th>Valor Real</th><th>Objetivo</th><th>Status</th>
+</tr>
+</thead>
+<tbody id="tabelaDados"></tbody>
+</table>
+</div>
+
+</div>
 
 <script>
+const URL_DADOS = "https://script.google.com/macros/s/AKfycbxrZm-K6S80aFtbXvMuPzMZD-Qvd6fTsc7bAzGRJzsSC0Zxqc7445IBAKvmbrhf1c6RTw/exec";
 
-const URL="https://script.google.com/macros/s/AKfycbxrZm-K6S80aFtbXvMuPzMZD-Qvd6fTsc7bAzGRJzsSC0Zxqc7445IBAKvmbrhf1c6RTw/exec";
-
-async function carregar(){
-
-try{
-
-const resposta=await fetch(URL);
-
-const dados=await resposta.json();
-
-document.getElementById("resultado").innerHTML=
-JSON.stringify(dados,null,4);
-
-}catch(e){
-
-document.getElementById("resultado").innerHTML=e;
-
+function carregarDados(){
+  const script = document.createElement("script");
+  script.src = URL_DADOS + "?callback=receberDados";
+  document.body.appendChild(script);
 }
 
+function receberDados(dados){
+  const abs = dados.filter(item =>
+    String(item.processo || "").toUpperCase().includes("ABSENTEISMO") &&
+    item.valorReal !== "" &&
+    item.valorReal !== null
+  );
+
+  const meses = abs.map(i => i.mes);
+  const valores = abs.map(i => Number(String(i.valorReal).replace(",",".")));
+  const metas = abs.map(i => Number(String(i.objetivo).replace(",",".")));
+
+  atualizarCards(meses,valores,metas);
+  montarGrafico(meses,valores,metas);
+  montarTabela(abs);
 }
 
+function atualizarCards(meses,valores,metas){
+  let ultimo = valores[valores.length-1];
+  let meta = metas[metas.length-1];
+
+  ultimoResultado.innerText = fmt(ultimo)+"%";
+  document.getElementById("meta").innerText = fmt(meta)+"%";
+
+  if(ultimo <= meta){
+    status.innerText = "Dentro";
+    status.className = "verde";
+  }else{
+    status.innerText = "Fora";
+    status.className = "vermelho";
+  }
+
+  let melhor = Math.min(...valores);
+  let i = valores.indexOf(melhor);
+  melhorMes.innerText = meses[i]+" - "+fmt(melhor)+"%";
+}
+
+function montarGrafico(meses,valores,metas){
+  const cores = valores.map((v,i)=> v <= metas[i] ? "#10b981" : "#f43f5e");
+
+  new Chart(document.getElementById("graficoAbsenteismo"),{
+    type:"bar",
+    data:{
+      labels:meses,
+      datasets:[
+        {label:"Realizado",data:valores,backgroundColor:cores,borderRadius:8,barThickness:24},
+        {label:"Meta",data:metas,type:"line",borderColor:"#ff7a00",backgroundColor:"#ff7a00",borderDash:[6,6],pointRadius:4}
+      ]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      scales:{y:{beginAtZero:true,suggestedMax:9},x:{ticks:{maxRotation:60,minRotation:60}}}
+    }
+  });
+}
+
+function montarTabela(dados){
+  tabelaDados.innerHTML = "";
+  dados.forEach(i=>{
+    let valor = Number(String(i.valorReal).replace(",","."));
+    let obj = Number(String(i.objetivo).replace(",","."));
+    let ok = valor <= obj;
+
+    tabelaDados.innerHTML += `
+    <tr>
+      <td>${i.mes}</td>
+      <td>${i.processo}</td>
+      <td>${i.indicador}</td>
+      <td>${fmt(valor)}%</td>
+      <td>${fmt(obj)}%</td>
+      <td class="${ok ? "verde" : "vermelho"}"><b>${ok ? "Dentro da meta" : "Fora da meta"}</b></td>
+    </tr>`;
+  });
+}
+
+function fmt(n){
+  return Number(n).toFixed(2).replace(".",",");
+}
+
+carregarDados();
 </script>
-
 </body>
 </html>
