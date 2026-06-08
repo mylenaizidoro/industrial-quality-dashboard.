@@ -1,104 +1,298 @@
-function montarGrafico(meses, valores, objetivos) {
-  const ctx = document.getElementById("graficoAbsenteismo");
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal de DHO - Grupo Coplac</title>
 
-  const coresBarras = valores.map((valor, i) => {
-    return valor <= objetivos[i] ? "#10b981" : "#f43f5e";
-  });
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: meses,
-      datasets: [
-        {
-          label: "Realizado",
-          data: valores,
-          backgroundColor: coresBarras,
-          borderRadius: 8,
-          barThickness: 22
-        },
-        {
-          label: "Meta",
-          data: objetivos,
-          type: "line",
-          borderColor: "#ff7a00",
-          backgroundColor: "#ff7a00",
-          borderWidth: 2,
-          borderDash: [6, 6],
-          pointRadius: 4,
-          pointBackgroundColor: "#ffffff",
-          pointBorderColor: "#ff7a00",
-          pointBorderWidth: 2,
-          tension: 0
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #eef3f8;
+      color: #0b1f3a;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 30px auto;
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 18px;
+      padding: 35px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      color: #071d3a;
+    }
+
+    .subtitulo {
+      margin-top: 6px;
+      font-size: 16px;
+      color: #071d3a;
+    }
+
+    .conteudo {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 35px;
+      align-items: center;
+      margin-top: 35px;
+    }
+
+    .grafico-box {
+      height: 390px;
+    }
+
+    .detalhamento {
+      background: #f6f9fd;
+      border-left: 6px solid #0ea5e9;
+      border-radius: 14px;
+      padding: 25px;
+      color: #17335c;
+    }
+
+    .detalhamento h3 {
+      color: #0284c7;
+      font-size: 14px;
+      margin-top: 0;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      margin-top: 25px;
+    }
+
+    .mini-card {
+      background: white;
+      padding: 18px;
+      border-radius: 14px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+
+    .mini-card h3 {
+      margin: 0;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .mini-card p {
+      margin: 8px 0 0;
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    .verde { color: #10b981; }
+    .vermelho { color: #f43f5e; }
+
+    @media (max-width: 900px) {
+      .conteudo, .cards {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <div class="cards">
+      <div class="mini-card">
+        <h3>Último Resultado</h3>
+        <p id="ultimoResultado">--</p>
+      </div>
+
+      <div class="mini-card">
+        <h3>Meta</h3>
+        <p id="meta">--</p>
+      </div>
+
+      <div class="mini-card">
+        <h3>Status</h3>
+        <p id="status">--</p>
+      </div>
+
+      <div class="mini-card">
+        <h3>Melhor Mês</h3>
+        <p id="melhorMes">--</p>
+      </div>
+    </div>
+
+    <br>
+
+    <div class="card">
+      <h1>ABSENTEÍSMO PA - 03</h1>
+      <div class="subtitulo">Grupo Coplac | Performance</div>
+
+      <div class="conteudo">
+        <div class="grafico-box">
+          <canvas id="graficoAbsenteismo"></canvas>
+        </div>
+
+        <div class="detalhamento">
+          <h3>DETALHAMENTO</h3>
+          <p>Horas Ausentes / Horas Programadas.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const URL_DADOS = "https://script.google.com/macros/s/AKfycbzgm5hUTqxhMZQE9RnuXYnC5_eGNybcjO81lWbeNZKG_NjVogXcpuXjBtfm3yW6y9WYrQ/exec";
+
+    async function carregarDados() {
+      try {
+        const resposta = await fetch(URL_DADOS);
+        const dados = await resposta.json();
+
+        const absenteismo = dados.filter(item =>
+          String(item.processo).toUpperCase().includes("ABSENTEISMO") &&
+          item.valorReal !== "" &&
+          item.valorReal !== null
+        );
+
+        const meses = absenteismo.map(item => item.mes);
+        const valores = absenteismo.map(item => Number(String(item.valorReal).replace(",", ".")));
+        const objetivos = absenteismo.map(item => Number(String(item.objetivo).replace(",", ".")));
+
+        const ultimoValor = valores[valores.length - 1];
+        const ultimoObjetivo = objetivos[objetivos.length - 1];
+
+        document.getElementById("ultimoResultado").innerText = ultimoValor.toFixed(2).replace(".", ",") + "%";
+        document.getElementById("meta").innerText = ultimoObjetivo.toFixed(2).replace(".", ",") + "%";
+
+        const status = document.getElementById("status");
+
+        if (ultimoValor <= ultimoObjetivo) {
+          status.innerText = "Dentro";
+          status.className = "verde";
+        } else {
+          status.innerText = "Fora";
+          status.className = "vermelho";
         }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        title: {
-          display: true,
-          text: "ABSENTEÍSMO PA - 03",
-          align: "start",
-          color: "#0b1f3a",
-          font: {
-            size: 24,
-            weight: "bold"
-          }
+
+        const melhorValor = Math.min(...valores);
+        const indiceMelhor = valores.indexOf(melhorValor);
+        document.getElementById("melhorMes").innerText =
+          meses[indiceMelhor] + " - " + melhorValor.toFixed(2).replace(".", ",") + "%";
+
+        montarGrafico(meses, valores, objetivos);
+
+      } catch (erro) {
+        alert("Erro ao carregar dados. Verifique a URL do Apps Script.");
+        console.error(erro);
+      }
+    }
+
+    function montarGrafico(meses, valores, objetivos) {
+      const ctx = document.getElementById("graficoAbsenteismo");
+
+      const coresBarras = valores.map((valor, i) => {
+        return valor <= objetivos[i] ? "#10b981" : "#f43f5e";
+      });
+
+      new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: meses,
+          datasets: [
+            {
+              label: "Realizado",
+              data: valores,
+              backgroundColor: coresBarras,
+              borderRadius: 8,
+              barThickness: 24
+            },
+            {
+              label: "Meta",
+              data: objetivos,
+              type: "line",
+              borderColor: "#ff7a00",
+              backgroundColor: "#ff7a00",
+              borderWidth: 2,
+              borderDash: [6, 6],
+              pointRadius: 4,
+              pointBackgroundColor: "#ffffff",
+              pointBorderColor: "#ff7a00",
+              pointBorderWidth: 2,
+              tension: 0
+            }
+          ]
         },
-        legend: {
-          position: "top",
-          align: "center"
-        },
-        tooltip: {
-          callbacks: {
-            label: function(context) {
-              return context.dataset.label + ": " + context.raw.toFixed(2) + "%";
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "top",
+              align: "center"
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return context.dataset.label + ": " +
+                    Number(context.raw).toFixed(2).replace(".", ",") + "%";
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 9,
+              ticks: {
+                stepSize: 1
+              }
+            },
+            x: {
+              ticks: {
+                maxRotation: 60,
+                minRotation: 60
+              }
             }
           }
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          max: 9,
-          ticks: {
-            stepSize: 1
-          },
-          grid: {
-            color: "rgba(0,0,0,0.10)"
-          }
         },
-        x: {
-          ticks: {
-            maxRotation: 60,
-            minRotation: 60
-          },
-          grid: {
-            color: "rgba(0,0,0,0.08)"
+        plugins: [{
+          afterDatasetsDraw(chart) {
+            const ctx = chart.ctx;
+            const meta = chart.getDatasetMeta(0);
+
+            chart.data.datasets[0].data.forEach((valor, index) => {
+              const barra = meta.data[index];
+
+              ctx.save();
+              ctx.fillStyle = "#111";
+              ctx.font = "bold 11px Arial";
+              ctx.textAlign = "center";
+              ctx.translate(barra.x, barra.y - 8);
+              ctx.rotate(-Math.PI / 2);
+              ctx.fillText(
+                Number(valor).toFixed(2).replace(".", ",") + "%",
+                0,
+                0
+              );
+              ctx.restore();
+            });
           }
-        }
-      }
-    },
-    plugins: [{
-      afterDatasetsDraw(chart) {
-        const { ctx } = chart;
+        }]
+      });
+    }
 
-        chart.data.datasets[0].data.forEach((valor, index) => {
-          const meta = chart.getDatasetMeta(0);
-          const barra = meta.data[index];
+    carregarDados();
+  </script>
 
-          ctx.save();
-          ctx.fillStyle = "#111";
-          ctx.font = "bold 11px Arial";
-          ctx.textAlign = "center";
-          ctx.translate(barra.x, barra.y - 8);
-          ctx.rotate(-Math.PI / 2);
-          ctx.fillText(valor.toFixed(2).replace(".", ",") + "%", 0, 0);
-          ctx.restore();
-        });
-      }
-    }]
-  });
-}
+</body>
+</html>
