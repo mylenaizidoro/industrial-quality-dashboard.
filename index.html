@@ -12,16 +12,44 @@
       margin: 0;
       font-family: Arial, sans-serif;
       background: #eef3f8;
-      color: #0b1f3a;
+      color: #071d3a;
     }
 
     .container {
-      max-width: 1200px;
-      margin: 30px auto;
+      max-width: 1300px;
+      margin: 40px auto;
       padding: 20px;
     }
 
-    .card {
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-bottom: 25px;
+    }
+
+    .mini-card {
+      background: white;
+      padding: 22px;
+      border-radius: 16px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+
+    .mini-card h3 {
+      margin: 0;
+      font-size: 15px;
+      color: #444;
+    }
+
+    .mini-card p {
+      margin: 10px 0 0;
+      font-size: 24px;
+      font-weight: bold;
+      color: #071d3a;
+    }
+
+    .card-principal {
       background: white;
       border-radius: 18px;
       padding: 35px;
@@ -30,26 +58,26 @@
 
     h1 {
       margin: 0;
-      font-size: 28px;
+      font-size: 30px;
       color: #071d3a;
     }
 
     .subtitulo {
       margin-top: 6px;
-      font-size: 16px;
+      font-size: 17px;
       color: #071d3a;
     }
 
     .conteudo {
       display: grid;
-      grid-template-columns: 2fr 1fr;
+      grid-template-columns: 2.2fr 1fr;
       gap: 35px;
       align-items: center;
       margin-top: 35px;
     }
 
     .grafico-box {
-      height: 390px;
+      height: 430px;
     }
 
     .detalhamento {
@@ -62,43 +90,54 @@
 
     .detalhamento h3 {
       color: #0284c7;
-      font-size: 14px;
+      font-size: 15px;
       margin-top: 0;
     }
 
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 15px;
-      margin-top: 25px;
+    .verde {
+      color: #10b981 !important;
     }
 
-    .mini-card {
+    .vermelho {
+      color: #f43f5e !important;
+    }
+
+    .tabela-box {
+      margin-top: 30px;
       background: white;
-      padding: 18px;
-      border-radius: 14px;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-      text-align: center;
+      border-radius: 16px;
+      padding: 25px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
     }
 
-    .mini-card h3 {
-      margin: 0;
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    th {
+      background: #071d3a;
+      color: white;
+      padding: 12px;
       font-size: 14px;
-      color: #555;
     }
 
-    .mini-card p {
-      margin: 8px 0 0;
-      font-size: 22px;
-      font-weight: bold;
+    td {
+      padding: 11px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+      font-size: 14px;
     }
-
-    .verde { color: #10b981; }
-    .vermelho { color: #f43f5e; }
 
     @media (max-width: 900px) {
-      .conteudo, .cards {
+      .cards,
+      .conteudo {
         grid-template-columns: 1fr;
+      }
+
+      .grafico-box {
+        height: 360px;
       }
     }
   </style>
@@ -111,28 +150,26 @@
     <div class="cards">
       <div class="mini-card">
         <h3>Último Resultado</h3>
-        <p id="ultimoResultado">--</p>
+        <p id="ultimoResultado">Carregando...</p>
       </div>
 
       <div class="mini-card">
         <h3>Meta</h3>
-        <p id="meta">--</p>
+        <p id="meta">Carregando...</p>
       </div>
 
       <div class="mini-card">
         <h3>Status</h3>
-        <p id="status">--</p>
+        <p id="status">Carregando...</p>
       </div>
 
       <div class="mini-card">
         <h3>Melhor Mês</h3>
-        <p id="melhorMes">--</p>
+        <p id="melhorMes">Carregando...</p>
       </div>
     </div>
 
-    <br>
-
-    <div class="card">
+    <div class="card-principal">
       <h1>ABSENTEÍSMO PA - 03</h1>
       <div class="subtitulo">Grupo Coplac | Performance</div>
 
@@ -144,57 +181,102 @@
         <div class="detalhamento">
           <h3>DETALHAMENTO</h3>
           <p>Horas Ausentes / Horas Programadas.</p>
+          <p><b>Verde:</b> dentro da meta.</p>
+          <p><b>Vermelho:</b> fora da meta.</p>
         </div>
       </div>
+    </div>
+
+    <div class="tabela-box">
+      <h2>Tabela do Indicador</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Mês</th>
+            <th>Processo</th>
+            <th>Indicador</th>
+            <th>Valor Real</th>
+            <th>Objetivo</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="tabelaDados"></tbody>
+      </table>
     </div>
 
   </div>
 
   <script>
-    const URL_DADOS = "https://script.google.com/macros/s/AKfycbzgm5hUTqxhMZQE9RnuXYnC5_eGNybcjO81lWbeNZKG_NjVogXcpuXjBtfm3yW6y9WYrQ/exec";
+    const URL_DADOS = "https://script.google.com/macros/s/AKfycbxrZm-K6S80aFtbXvMuPzMZD-Qvd6fTsc7bAzGRJzsSC0Zxqc7445IBAKvmbrhf1c6RTw/exec";
+
+    let graficoCriado = null;
 
     async function carregarDados() {
       try {
         const resposta = await fetch(URL_DADOS);
         const dados = await resposta.json();
 
-        const absenteismo = dados.filter(item =>
-          String(item.processo).toUpperCase().includes("ABSENTEISMO") &&
-          item.valorReal !== "" &&
-          item.valorReal !== null
-        );
+        const absenteismo = dados.filter(item => {
+          const processo = String(item.processo || "").toUpperCase();
+          const valor = item.valorReal;
 
-        const meses = absenteismo.map(item => item.mes);
-        const valores = absenteismo.map(item => Number(String(item.valorReal).replace(",", ".")));
-        const objetivos = absenteismo.map(item => Number(String(item.objetivo).replace(",", ".")));
+          return processo.includes("ABSENTEISMO") &&
+                 valor !== "" &&
+                 valor !== null &&
+                 valor !== undefined;
+        });
 
-        const ultimoValor = valores[valores.length - 1];
-        const ultimoObjetivo = objetivos[objetivos.length - 1];
-
-        document.getElementById("ultimoResultado").innerText = ultimoValor.toFixed(2).replace(".", ",") + "%";
-        document.getElementById("meta").innerText = ultimoObjetivo.toFixed(2).replace(".", ",") + "%";
-
-        const status = document.getElementById("status");
-
-        if (ultimoValor <= ultimoObjetivo) {
-          status.innerText = "Dentro";
-          status.className = "verde";
-        } else {
-          status.innerText = "Fora";
-          status.className = "vermelho";
+        if (absenteismo.length === 0) {
+          alert("Nenhum dado de ABSENTEISMO encontrado.");
+          return;
         }
 
-        const melhorValor = Math.min(...valores);
-        const indiceMelhor = valores.indexOf(melhorValor);
-        document.getElementById("melhorMes").innerText =
-          meses[indiceMelhor] + " - " + melhorValor.toFixed(2).replace(".", ",") + "%";
+        const meses = absenteismo.map(item => item.mes);
 
+        const valores = absenteismo.map(item =>
+          Number(String(item.valorReal).replace(",", "."))
+        );
+
+        const objetivos = absenteismo.map(item =>
+          Number(String(item.objetivo).replace(",", "."))
+        );
+
+        atualizarCards(meses, valores, objetivos);
         montarGrafico(meses, valores, objetivos);
+        montarTabela(absenteismo);
 
       } catch (erro) {
-        alert("Erro ao carregar dados. Verifique a URL do Apps Script.");
         console.error(erro);
+        alert("Erro ao carregar dados. Verifique o Apps Script e a implantação.");
       }
+    }
+
+    function atualizarCards(meses, valores, objetivos) {
+      const ultimoValor = valores[valores.length - 1];
+      const ultimoObjetivo = objetivos[objetivos.length - 1];
+
+      document.getElementById("ultimoResultado").innerText =
+        formatarNumero(ultimoValor) + "%";
+
+      document.getElementById("meta").innerText =
+        formatarNumero(ultimoObjetivo) + "%";
+
+      const status = document.getElementById("status");
+
+      if (ultimoValor <= ultimoObjetivo) {
+        status.innerText = "Dentro";
+        status.className = "verde";
+      } else {
+        status.innerText = "Fora";
+        status.className = "vermelho";
+      }
+
+      const melhorValor = Math.min(...valores);
+      const indiceMelhor = valores.indexOf(melhorValor);
+
+      document.getElementById("melhorMes").innerText =
+        meses[indiceMelhor] + " - " + formatarNumero(melhorValor) + "%";
     }
 
     function montarGrafico(meses, valores, objetivos) {
@@ -204,7 +286,11 @@
         return valor <= objetivos[i] ? "#10b981" : "#f43f5e";
       });
 
-      new Chart(ctx, {
+      if (graficoCriado) {
+        graficoCriado.destroy();
+      }
+
+      graficoCriado = new Chart(ctx, {
         type: "bar",
         data: {
           labels: meses,
@@ -244,7 +330,7 @@
               callbacks: {
                 label: function(context) {
                   return context.dataset.label + ": " +
-                    Number(context.raw).toFixed(2).replace(".", ",") + "%";
+                    formatarNumero(context.raw) + "%";
                 }
               }
             }
@@ -252,15 +338,21 @@
           scales: {
             y: {
               beginAtZero: true,
-              max: 9,
+              suggestedMax: 9,
               ticks: {
                 stepSize: 1
+              },
+              grid: {
+                color: "rgba(0,0,0,0.10)"
               }
             },
             x: {
               ticks: {
                 maxRotation: 60,
                 minRotation: 60
+              },
+              grid: {
+                color: "rgba(0,0,0,0.08)"
               }
             }
           }
@@ -279,16 +371,40 @@
               ctx.textAlign = "center";
               ctx.translate(barra.x, barra.y - 8);
               ctx.rotate(-Math.PI / 2);
-              ctx.fillText(
-                Number(valor).toFixed(2).replace(".", ",") + "%",
-                0,
-                0
-              );
+              ctx.fillText(formatarNumero(valor) + "%", 0, 0);
               ctx.restore();
             });
           }
         }]
       });
+    }
+
+    function montarTabela(dados) {
+      const tabela = document.getElementById("tabelaDados");
+      tabela.innerHTML = "";
+
+      dados.forEach(item => {
+        const valor = Number(String(item.valorReal).replace(",", "."));
+        const objetivo = Number(String(item.objetivo).replace(",", "."));
+
+        const dentroMeta = valor <= objetivo;
+        const status = dentroMeta ? "Dentro da meta" : "Fora da meta";
+
+        tabela.innerHTML += `
+          <tr>
+            <td>${item.mes}</td>
+            <td>${item.processo}</td>
+            <td>${item.indicador}</td>
+            <td>${formatarNumero(valor)}%</td>
+            <td>${formatarNumero(objetivo)}%</td>
+            <td class="${dentroMeta ? "verde" : "vermelho"}"><b>${status}</b></td>
+          </tr>
+        `;
+      });
+    }
+
+    function formatarNumero(numero) {
+      return Number(numero).toFixed(2).replace(".", ",");
     }
 
     carregarDados();
