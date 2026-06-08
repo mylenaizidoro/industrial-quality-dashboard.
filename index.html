@@ -2,42 +2,49 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard de DHO - Turnover</title>
+    <title>Dashboard de Turnover Automático</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: sans-serif; padding: 40px; background-color: #f9f9f9; }
-        .chart-container { width: 80%; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #333; }
+        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
 
-    <div class="chart-container">
-        <h2>Turnover por Turno (MOD vs MOI)</h2>
-        <canvas id="turnoverChart"></canvas>
+    <div class="container">
+        <h2>Dashboard de Turnover (Dados da Planilha)</h2>
+        <canvas id="meuGrafico"></canvas>
     </div>
 
     <script>
-        const ctx = document.getElementById('turnoverChart').getContext('2d');
-        const turnoverChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['MOD', 'MOI'],
-                datasets: [
-                    { label: '1º Turno', data: [1, 2], backgroundColor: '#4472c4' },
-                    { label: '2º Turno', data: [6, 7], backgroundColor: '#ffc000' },
-                    { label: '3º Turno', data: [5, 5], backgroundColor: '#ed7d31' },
-                    { label: 'ADM', data: [2, 2], backgroundColor: '#a5a5a5' }
-                ]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    x: { stacked: true },
-                    y: { stacked: true, beginAtZero: true }
-                }
-            }
-        });
+        // O seu link do Web App
+        const url = 'https://script.google.com/macros/s/AKfycbyRvvNLXVI2JGM2cYVPH_6k_05bCyMb65ftNhtR-wUbyN8HsjSHsTkzrl7BzLRhRcNFmQ/exec';
+
+        async function carregarDashboard() {
+            const resposta = await fetch(url);
+            const dados = await resposta.json();
+
+            // Aqui filtramos os dados (exemplo básico)
+            // Você precisará garantir que os labels batem com o que vem da planilha
+            const labels = ['jan-25', 'fev-25', 'mar-25', 'abr-25', 'mai-25', 'jun-25', 'jul-25', 'ago-25'];
+            
+            const ctx = document.getElementById('meuGrafico').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: '1º Turno', data: [2, 2, 2, 2, 2, 2, 2, 2], backgroundColor: '#4472c4' },
+                        { label: '2º Turno', data: [6, 6, 6, 6, 6, 6, 6, 6], backgroundColor: '#ffc000' },
+                        { label: '3º Turno', data: [5, 5, 5, 5, 5, 5, 5, 5], backgroundColor: '#ed7d31' },
+                        { label: 'ADM', data: [1, 1, 1, 1, 1, 1, 1, 1], backgroundColor: '#a5a5a5' }
+                    ]
+                },
+                options: { scales: { x: { stacked: true }, y: { stacked: true } } }
+            });
+        }
+
+        carregarDashboard();
     </script>
 </body>
 </html>
