@@ -2,75 +2,62 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard de Turnover DHO</title>
+    <title>Dashboard Turnover DHO</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 20px; }
+        body { font-family: sans-serif; background-color: #f4f7f6; padding: 20px; }
         .container { max-width: 1000px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #333; margin-bottom: 30px; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h2>Turnover: Solicitação de Desligamentos (15 Dias)</h2>
+        <h2>Turnover por Mês (MOD vs MOI)</h2>
         <canvas id="graficoTurnover"></canvas>
     </div>
 
     <script>
-        // URL DO SEU WEB APP (Implantado no Apps Script)
         const url = 'https://script.google.com/macros/s/AKfycbzfzBsEQIjs00qNyNAbAZpLwIk_E6dHNbDWxItlmVvo_X--Aq8TmLpNjyM5Oi0RzeKt5A/exec';
 
         async function carregarDashboard() {
-            try {
-                const resposta = await fetch(url);
-                const dados = await resposta.json();
+            const resposta = await fetch(url);
+            const dados = await resposta.json();
 
-                // 1. Filtrar pelo nome exato do indicador na coluna B
-                const dadosFiltrados = dados.filter(d => d.indicador === "TURNOVER SOLICITAÇÃO DE DESLIGAMENTOS 15 DIAS");
+            const dadosFiltrados = dados.filter(d => d.indicador === "TURNOVER SOLICITAÇÃO DE DESLIGAMENTOS 15 DIAS");
+            const labels = [...new Set(dadosFiltrados.map(d => d.mes.replace('.', '').toLowerCase()))];
 
-                // 2. Extrair meses únicos e formatar (ex: jan-25)
-                const labels = [...new Set(dadosFiltrados.map(d => d.mes.replace('.', '').toLowerCase()))];
+            const getVal = (cat) => labels.map(m => {
+                const item = dadosFiltrados.find(d => d.mes.toLowerCase().includes(m.split('-')[0]) && d.categoria === cat);
+                return item ? parseInt(item.qtd) : 0;
+            });
 
-                // 3. Função auxiliar para buscar o valor da planilha por mês e categoria
-                const getDados = (cat) => labels.map(m => {
-                    const item = dadosFiltrados.find(d => d.mes.toLowerCase().includes(m.split('-')[0]) && d.categoria === cat);
-                    return item ? parseInt(item.qtd) : 0;
-                });
-
-                const ctx = document.getElementById('graficoTurnover').getContext('2d');
-                new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [
-                            // GRUPO MOD (Stack: 'MOD')
-                            { label: 'MOD 1º Turno', data: getDados('MOD - 1º TURNO'), backgroundColor: '#4472c4', stack: 'MOD' },
-                            { label: 'MOD 2º Turno', data: getDados('MOD - 2º TURNO'), backgroundColor: '#ffc000', stack: 'MOD' },
-                            { label: 'MOD 3º Turno', data: getDados('MOD - 3º TURNO'), backgroundColor: '#ed7d31', stack: 'MOD' },
-                            { label: 'MOD ADM',      data: getDados('ADM'),          backgroundColor: '#a5a5a5', stack: 'MOD' },
-                            
-                            // GRUPO MOI (Stack: 'MOI')
-                            { label: 'MOI 1º Turno', data: getDados('MOI - 1º TURNO'), backgroundColor: '#4472c4', stack: 'MOI' },
-                            { label: 'MOI 2º Turno', data: getDados('MOI - 2º TURNO'), backgroundColor: '#ffc000', stack: 'MOI' },
-                            { label: 'MOI 3º Turno', data: getDados('MOI - 3º TURNO'), backgroundColor: '#ed7d31', stack: 'MOI' },
-                            { label: 'MOI ADM',      data: getDados('MOI - ADM'),      backgroundColor: '#a5a5a5', stack: 'MOI' }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        scales: { 
-                            x: { stacked: true }, 
-                            y: { stacked: true, beginAtZero: true } 
-                        }
+            const ctx = document.getElementById('graficoTurnover').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        // Coluna MOD
+                        { label: 'MOD 1º', data: getVal('MOD - 1º TURNO'), backgroundColor: '#4472c4', stack: 'MOD' },
+                        { label: 'MOD 2º', data: getVal('MOD - 2º TURNO'), backgroundColor: '#ffc000', stack: 'MOD' },
+                        { label: 'MOD 3º', data: getVal('MOD - 3º TURNO'), backgroundColor: '#ed7d31', stack: 'MOD' },
+                        { label: 'MOD ADM', data: getVal('ADM'),            backgroundColor: '#a5a5a5', stack: 'MOD' },
+                        
+                        // Coluna MOI
+                        { label: 'MOI 1º', data: getVal('MOI - 1º TURNO'), backgroundColor: '#4472c4', stack: 'MOI' },
+                        { label: 'MOI 2º', data: getVal('MOI - 2º TURNO'), backgroundColor: '#ffc000', stack: 'MOI' },
+                        { label: 'MOI 3º', data: getVal('MOI - 3º TURNO'), backgroundColor: '#ed7d31', stack: 'MOI' },
+                        { label: 'MOI ADM', data: getVal('MOI - ADM'),      backgroundColor: '#a5a5a5', stack: 'MOI' }
+                    ]
+                },
+                options: {
+                    scales: {
+                        x: { stacked: true },
+                        y: { stacked: true, beginAtZero: true }
                     }
-                });
-            } catch (e) {
-                console.error("Erro ao carregar os dados:", e);
-                alert("Erro ao carregar dados. Verifique o console.");
-            }
+                }
+            });
         }
-
         carregarDashboard();
     </script>
 </body>
