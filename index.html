@@ -17,13 +17,15 @@
     </div>
 
 <script>
-    const url = 'https://script.google.com/macros/s/AKfycbxXdmQtgnLzu2l73eYxoSKbFLWEr4-yVdGJH4osBdbFtIYuT9Olt_LpuxG043oIpLBKPw/exec';
+    const url = 'https://script.google.com/macros/s/AKfycbxORXNgpGzYZehbscQi1TJUvBWvWDTdxiUyMzR0fzajhXE32HDx_C5qEKB_gFbfE57QNQ/exec';
 
     async function carregar() {
         const res = await fetch(url);
         const dados = await res.json();
         
+        // Pega as datas (meses) únicas
         const meses = [...new Set(dados.map(d => d.mes))];
+
         const getVal = (cat, m) => dados.find(d => d.mes === m && d.categoria === cat)?.qtd || 0;
 
         new Chart(document.getElementById('graficoTurnover'), {
@@ -31,23 +33,27 @@
             data: {
                 labels: meses,
                 datasets: [
-                    // Colunas MOD (agrupadas na stack 'MOD')
+                    // GRUPO MOD (stack: 'MOD')
                     { label: 'MOD 1º', data: meses.map(m => getVal('MOD - 1º TURNO', m)), backgroundColor: '#4472c4', stack: 'MOD' },
                     { label: 'MOD 2º', data: meses.map(m => getVal('MOD - 2º TURNO', m)), backgroundColor: '#ffc000', stack: 'MOD' },
                     { label: 'MOD 3º', data: meses.map(m => getVal('MOD - 3º TURNO', m)), backgroundColor: '#ed7d31', stack: 'MOD' },
-                    { label: 'MOD ADM', data: meses.map(m => getVal('ADM', m)),            backgroundColor: '#a5a5a5', stack: 'MOD' },
+                    { label: 'ADM',    data: meses.map(m => getVal('ADM', m)),            backgroundColor: '#a5a5a5', stack: 'MOD' },
                     
-                    // Colunas MOI (agrupadas na stack 'MOI')
+                    // GRUPO MOI (stack: 'MOI')
                     { label: 'MOI 1º', data: meses.map(m => getVal('MOI - 1º TURNO', m)), backgroundColor: '#4472c4', stack: 'MOI' },
                     { label: 'MOI 2º', data: meses.map(m => getVal('MOI - 2º TURNO', m)), backgroundColor: '#ffc000', stack: 'MOI' },
                     { label: 'MOI 3º', data: meses.map(m => getVal('MOI - 3º TURNO', m)), backgroundColor: '#ed7d31', stack: 'MOI' },
-                    { label: 'MOI ADM', data: meses.map(m => getVal('ADM 1', m)),          backgroundColor: '#a5a5a5', stack: 'MOI' }
+                    { label: 'ADM 1',  data: meses.map(m => getVal('ADM 1', m)),          backgroundColor: '#a5a5a5', stack: 'MOI' }
                 ]
             },
             options: {
                 responsive: true,
                 scales: {
-                    x: { stacked: true },
+                    x: { 
+                        stacked: true, 
+                        categoryPercentage: 0.7, 
+                        barPercentage: 0.8 
+                    },
                     y: { stacked: true, beginAtZero: true }
                 }
             }
