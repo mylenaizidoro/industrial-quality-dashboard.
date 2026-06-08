@@ -17,7 +17,6 @@
     </div>
 
 <script>
-    // Registra o plugin globalmente
     Chart.register(ChartDataLabels);
 
     const url = 'https://script.google.com/macros/s/AKfycbx5FCrbLsR6WNM_mXAxAEK0W_j45MFh5voYJRnz7wRwob8m60d3ehYDjbXjnmUjZkKM3Q/exec';
@@ -46,37 +45,31 @@
             },
             options: {
                 responsive: true,
-                layout: { padding: { top: 40 } },
+                layout: { padding: { top: 40, bottom: 40 } }, // Adicionado padding inferior para os rótulos MOD/MOI
                 plugins: {
                     title: { display: true, text: 'TURNOVER SOLICITAÇÃO DE DESLIGAMENTOS 15 DIAS', font: { size: 20 } },
                     datalabels: {
-                        color: function(ctx) {
-                            return (ctx.datasetIndex === 3 || ctx.datasetIndex === 7) ? 'black' : 'white';
-                        },
-                        anchor: function(ctx) {
-                            return (ctx.datasetIndex === 3 || ctx.datasetIndex === 7) ? 'end' : 'center';
-                        },
-                        align: function(ctx) {
-                            return (ctx.datasetIndex === 3 || ctx.datasetIndex === 7) ? 'top' : 'center';
-                        },
+                        color: (ctx) => (ctx.datasetIndex === 3 || ctx.datasetIndex === 7) ? 'black' : 'white',
+                        anchor: (ctx) => (ctx.datasetIndex === 3 || ctx.datasetIndex === 7) ? 'end' : 'center',
+                        align: (ctx) => (ctx.datasetIndex === 3 || ctx.datasetIndex === 7) ? 'top' : 'center',
                         font: { weight: 'bold' },
                         formatter: function(value, ctx) {
-                            // Se for um dos datasets de rodapé (ADM ou ADM 1), mostra a soma da stack
                             if (ctx.datasetIndex === 3 || ctx.datasetIndex === 7) {
-                                let stackName = ctx.dataset.stack;
                                 let soma = 0;
                                 ctx.chart.data.datasets.forEach(ds => {
-                                    if(ds.stack === stackName) soma += ds.data[ctx.dataIndex];
+                                    if(ds.stack === ctx.dataset.stack) soma += ds.data[ctx.dataIndex];
                                 });
                                 return soma > 0 ? soma : null;
                             }
-                            // Caso contrário, mostra o valor do segmento (se > 0)
                             return value > 0 ? value : null;
                         }
                     }
                 },
                 scales: {
-                    x: { stacked: true, categoryPercentage: 0.7, barPercentage: 0.8 },
+                    x: { 
+                        stacked: true, 
+                        title: { display: true, text: 'MOD                   MOI', font: { weight: 'bold', size: 16 } }
+                    },
                     y: { stacked: true, beginAtZero: true }
                 }
             }
