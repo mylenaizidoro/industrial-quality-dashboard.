@@ -18,7 +18,6 @@
     </div>
 
 <script>
-    // Registra o plugin para exibir os valores
     Chart.register(ChartDataLabels);
 
     const url = 'https://script.google.com/macros/s/AKfycbx5FCrbLsR6WNM_mXAxAEK0W_j45MFh5voYJRnz7wRwob8m60d3ehYDjbXjnmUjZkKM3Q/exec';
@@ -53,29 +52,26 @@
             },
             options: {
                 responsive: true,
-                layout: { padding: { top: 40 } }, // Espaço superior para o total acumulado
+                layout: { padding: { top: 35 } }, // Espaço para o número acumulado
                 plugins: {
                     title: { display: true, text: 'TURNOVER SOLICITAÇÃO DE DESLIGAMENTOS 15 DIAS', font: { size: 20 } },
                     datalabels: {
                         color: 'black',
                         anchor: 'end',
                         align: 'top',
-                        font: { weight: 'bold', size: 14 },
+                        font: { weight: 'bold' },
                         formatter: function(value, context) {
-                            // Calcula o total daquela coluna (stack)
                             let dataset = context.chart.data.datasets;
                             let sum = 0;
+                            // Soma apenas se for parte da mesma stack (MOD ou MOI)
                             dataset.forEach(ds => {
                                 if (ds.stack === context.dataset.stack) {
                                     sum += ds.data[context.dataIndex];
                                 }
                             });
-                            // Exibe o total apenas no último dataset daquela pilha
-                            let lastDatasetIndex = -1;
-                            dataset.forEach((ds, index) => {
-                                if (ds.stack === context.dataset.stack) lastDatasetIndex = index;
-                            });
-                            return (context.datasetIndex === lastDatasetIndex && sum > 0) ? sum : null;
+                            // Exibe apenas no último elemento da pilha
+                            let lastIndex = dataset.findLastIndex(ds => ds.stack === context.dataset.stack);
+                            return (context.datasetIndex === lastIndex && sum > 0) ? sum : null;
                         }
                     }
                 },
