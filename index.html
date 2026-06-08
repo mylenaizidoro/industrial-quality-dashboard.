@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Dashboard Turnover DHO</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <style>
         body { font-family: sans-serif; background-color: #f9f9f9; }
         .container { width: 95%; margin: auto; padding: 20px; }
@@ -17,12 +18,14 @@
     </div>
 
 <script>
+    // Registra o plugin globalmente
+    Chart.register(ChartDataLabels);
+
     const url = 'https://script.google.com/macros/s/AKfycbx5FCrbLsR6WNM_mXAxAEK0W_j45MFh5voYJRnz7wRwob8m60d3ehYDjbXjnmUjZkKM3Q/exec';
 
     async function carregar() {
         const res = await fetch(url);
         const dados = await res.json();
-        
         const meses = [...new Set(dados.map(d => d.mes))];
         const getVal = (cat, m) => dados.find(d => d.mes === m && d.categoria === cat)?.qtd || 0;
 
@@ -31,7 +34,6 @@
             data: {
                 labels: meses,
                 datasets: [
-                    // GRUPOS DE BARRAS (MOD e MOI)
                     { label: 'MOD 1º', data: meses.map(m => getVal('MOD - 1º TURNO', m)), backgroundColor: '#4472c4', stack: 'MOD' },
                     { label: 'MOD 2º', data: meses.map(m => getVal('MOD - 2º TURNO', m)), backgroundColor: '#ffc000', stack: 'MOD' },
                     { label: 'MOD 3º', data: meses.map(m => getVal('MOD - 3º TURNO', m)), backgroundColor: '#ed7d31', stack: 'MOD' },
@@ -42,23 +44,18 @@
                     { label: 'MOI 3º', data: meses.map(m => getVal('MOI - 3º TURNO', m)), backgroundColor: '#ed7d31', stack: 'MOI' },
                     { label: 'ADM 1',  data: meses.map(m => getVal('ADM 1', m)),          backgroundColor: '#a5a5a5', stack: 'MOI' },
                     
-                    // LINHA DE OBJETIVO (Meta)
-                    { 
-                        label: 'Objetivo', 
-                        data: meses.map(() => 6), 
-                        type: 'line', 
-                        borderColor: 'red', 
-                        borderWidth: 3, 
-                        fill: false, 
-                        tension: 0.1,
-                        pointRadius: 0 // Remove pontos para ficar uma linha limpa
-                    }
+                    { label: 'Objetivo', data: meses.map(() => 6), type: 'line', borderColor: 'red', borderWidth: 3, fill: false, pointRadius: 0 }
                 ]
             },
             options: {
                 responsive: true,
                 plugins: {
-                    title: { display: true, text: 'TURNOVER SOLICITAÇÃO DE DESLIGAMENTOS 15 DIAS', font: { size: 20 } }
+                    title: { display: true, text: 'TURNOVER SOLICITAÇÃO DE DESLIGAMENTOS 15 DIAS', font: { size: 20 } },
+                    datalabels: {
+                        color: 'white', // Cor do número dentro da barra
+                        font: { weight: 'bold' },
+                        formatter: (value) => value > 0 ? value : '' // Só mostra se for maior que 0
+                    }
                 },
                 scales: {
                     x: { stacked: true, categoryPercentage: 0.7, barPercentage: 0.8 },
