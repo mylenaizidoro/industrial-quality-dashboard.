@@ -17,17 +17,17 @@
     </div>
 
 <script>
-    // URL do seu Web App
+    // URL gerada pelo seu Apps Script após a última implantação
     const url = 'https://script.google.com/macros/s/AKfycbxORXNgpGzYZehbscQi1TJUvBWvWDTdxiUyMzR0fzajhXE32HDx_C5qEKB_gFbfE57QNQ/exec';
 
     async function carregar() {
         const res = await fetch(url);
         const dados = await res.json();
         
-        // Pega as datas (meses) únicas da planilha
+        // Pega as datas (meses) únicas
         const meses = [...new Set(dados.map(d => d.mes))];
 
-        // Função que busca o valor de cada categoria para um determinado mês
+        // Função para encontrar o valor de cada categoria
         const getVal = (cat, m) => dados.find(d => d.mes === m && d.categoria === cat)?.qtd || 0;
 
         new Chart(document.getElementById('graficoTurnover'), {
