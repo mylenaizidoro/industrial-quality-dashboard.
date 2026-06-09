@@ -17,14 +17,15 @@
 
 <script>
     Chart.register(ChartDataLabels);
-    // URL ATUALIZADA
-    const url = 'https://script.google.com/macros/s/AKfycbwtxUJo-VL451YiAkvWF5PdX4Pb8PtkBgFHElIzZIfWstNo4WcXjW0MQah6DI66hlZV/exec';
+    
+    // COLE A SUA NOVA URL AQUI ENTRE AS ASPAS SIMPLES:
+    const url = 'https://script.google.com/macros/s/AKfycbyNUS6xQNoEtMjaTp1i9jYLbMBhMUOVIhrtB0lskfKWgBccgx5xd6jxzwfrfe7LgZvqKg/exec';
 
     async function carregar() {
         const res = await fetch(url);
         const dados = await res.json();
         
-        // Pega meses únicos já formatados pelo Apps Script
+        // Pega meses únicos formatados
         const meses = [...new Set(dados.map(d => d.mes))];
         
         const getVal = (cat, m) => {
@@ -32,8 +33,9 @@
             return item ? parseFloat(item.valor) : 0;
         };
         
+        // Busca o objetivo na coluna correta
         const getObj = (m) => {
-            const item = dados.find(d => d.mes === m && d.objetivo != null);
+            const item = dados.find(d => d.mes === m && d.objetivo > 0);
             return item ? parseFloat(item.objetivo) : 0;
         };
 
@@ -55,9 +57,9 @@
                         data: meses.map(m => getObj(m)), 
                         type: 'line', 
                         borderColor: '#ff9800', 
-                        borderWidth: 2, 
+                        borderWidth: 3, 
                         borderDash: [5, 5], 
-                        pointRadius: 4,
+                        pointRadius: 5, 
                         fill: false 
                     }
                 ]
@@ -65,7 +67,7 @@
             options: {
                 responsive: true,
                 plugins: {
-                    datalabels: { display: false } // Mantém o gráfico limpo
+                    datalabels: { display: false }
                 },
                 scales: { 
                     x: { 
@@ -76,7 +78,7 @@
                     y: { 
                         stacked: true, 
                         beginAtZero: true, 
-                        suggestedMax: 15,
+                        suggestedMax: 12, // Garantindo espaço para o 6
                         grid: { color: '#eee' } 
                     } 
                 }
