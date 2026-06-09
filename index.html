@@ -15,31 +15,53 @@
     </div>
 
 <script>
-    // URL inserida corretamente:
-    const url = 'https://script.google.com/macros/s/AKfycbydDFGSC2CA_8XndZZr_yd3lD1Qu-xf-JX3b5uqjS3qJ5mM4z-IyT9vKtUCBgNUzdlTIw/exec';
+    // URL inserida:
+    const url = 'https://script.google.com/macros/s/AKfycbzmcVgGuyAtZug5fwl4DPPhJHqbcXjQcQEPpGIeuDDxmUBiNYgUSpIJvU3OAuwnt-M-_Q/exec';
 
     async function carregar() {
-        const res = await fetch(url);
-        const dados = await res.json();
-        
-        // Agrupa valores por mês
-        const meses = [...new Set(dados.map(d => d.mes))];
-        const totais = meses.map(m => dados.filter(d => d.mes === m).reduce((s, d) => s + d.valor, 0));
+        try {
+            const res = await fetch(url);
+            const dados = await res.json();
+            
+            // Agrupa os valores de 'valor' por 'mes'
+            const meses = [...new Set(dados.map(d => d.mes))];
+            const totais = meses.map(m => dados.filter(d => d.mes === m).reduce((s, d) => s + d.valor, 0));
 
-        new Chart(document.getElementById('meuGrafico'), {
-            type: 'bar',
-            data: {
-                labels: meses,
-                datasets: [
-                    { label: 'Realizado', data: totais, backgroundColor: '#ff4081' },
-                    { label: 'Meta', data: meses.map(() => 6), type: 'line', borderColor: '#ff9800', borderDash: [5, 5], borderWidth: 2, pointRadius: 4 }
-                ]
-            },
-            options: {
-                responsive: true,
-                scales: { y: { beginAtZero: true, max: 15 } }
-            }
-        });
+            new Chart(document.getElementById('meuGrafico'), {
+                type: 'bar',
+                data: {
+                    labels: meses,
+                    datasets: [
+                        { 
+                            label: 'Realizado', 
+                            data: totais, 
+                            backgroundColor: '#ff4081' 
+                        },
+                        { 
+                            label: 'Meta', 
+                            data: meses.map(() => 6), // Meta fixa em 6
+                            type: 'line', 
+                            borderColor: '#ff9800', 
+                            borderDash: [5, 5], 
+                            borderWidth: 2, 
+                            pointRadius: 4,
+                            fill: false 
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: { 
+                        y: { 
+                            beginAtZero: true, 
+                            max: 15 
+                        } 
+                    }
+                }
+            });
+        } catch (error) {
+            console.error("Erro ao carregar dados:", error);
+        }
     }
     carregar();
 </script>
