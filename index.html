@@ -5,21 +5,26 @@
     <title>Dashboard Turnover DHO</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #fff; }
+    </style>
 </head>
 <body>
     <div style="width: 95%; margin: auto; padding: 20px;">
-        <h1 style="text-align: center; color: #0b1c3d;">GESTÃO DE INDICADORES - DHO</h1>
+        <h1 style="text-align: center; color: #0b1c3d;">TURNOVER PA > 180 DIAS</h1>
         <canvas id="graficoTurnover"></canvas>
     </div>
 
 <script>
     Chart.register(ChartDataLabels);
-    const url = 'https://script.google.com/macros/s/AKfycbz5yhx_JiLJl39jtVSkTQQGXoRKbGRPqPNIF7REqRnRQyM3zqiyL75BDpH1ookSiUw7Uw/exec';
+    // URL ATUALIZADA
+    const url = 'https://script.google.com/macros/s/AKfycbwtxUJo-VL451YiAkvWF5PdX4Pb8PtkBgFHElIzZIfWstNo4WcXjW0MQah6DI66hlZV/exec';
 
     async function carregar() {
         const res = await fetch(url);
         const dados = await res.json();
         
+        // Pega meses únicos já formatados pelo Apps Script
         const meses = [...new Set(dados.map(d => d.mes))];
         
         const getVal = (cat, m) => {
@@ -27,9 +32,8 @@
             return item ? parseFloat(item.valor) : 0;
         };
         
-        // Função para pegar o objetivo (usando a primeira categoria encontrada para aquele mês)
         const getObj = (m) => {
-            const item = dados.find(d => d.mes === m && d.objetivo !== undefined);
+            const item = dados.find(d => d.mes === m && d.objetivo != null);
             return item ? parseFloat(item.objetivo) : 0;
         };
 
@@ -46,26 +50,35 @@
                     { label: 'MOI 2º', data: meses.map(m => getVal('MOI - 2º TURNO', m)), backgroundColor: '#ffcc00', stack: 'stack2' },
                     { label: 'MOI 3º', data: meses.map(m => getVal('MOI - 3º TURNO', m)), backgroundColor: '#f4b084', stack: 'stack2' },
                     { label: 'ADM MOI', data: meses.map(m => getVal('ADM - MOI', m)), backgroundColor: '#c0c0c0', stack: 'stack2' },
-                    // Linha do Objetivo
                     { 
-                        label: 'Objetivo', 
+                        label: 'Meta', 
                         data: meses.map(m => getObj(m)), 
                         type: 'line', 
-                        borderColor: 'red', 
-                        borderWidth: 3, 
-                        fill: false, 
-                        tension: 0.1 
+                        borderColor: '#ff9800', 
+                        borderWidth: 2, 
+                        borderDash: [5, 5], 
+                        pointRadius: 4,
+                        fill: false 
                     }
                 ]
             },
             options: {
                 responsive: true,
                 plugins: {
-                    datalabels: { color: 'black', anchor: 'end', align: 'top', formatter: (val) => val > 0 ? val : '' }
+                    datalabels: { display: false } // Mantém o gráfico limpo
                 },
                 scales: { 
-                    x: { stacked: true }, 
-                    y: { stacked: true, beginAtZero: true, suggestedMax: 50 } 
+                    x: { 
+                        stacked: true, 
+                        grid: { display: false },
+                        ticks: { maxRotation: 45, minRotation: 45 } 
+                    }, 
+                    y: { 
+                        stacked: true, 
+                        beginAtZero: true, 
+                        suggestedMax: 15,
+                        grid: { color: '#eee' } 
+                    } 
                 }
             }
         });
