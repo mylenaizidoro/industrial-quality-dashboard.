@@ -5,16 +5,11 @@
     <title>Dashboard Turnover DHO</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #ffffff; }
-        .container { width: 90%; margin: auto; padding: 30px; }
-        h1 { color: #333; font-size: 24px; margin-bottom: 20px; }
-    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>TURNOVER PA > 180 DIAS</h1>
-        <canvas id="graficoTurnover" height="100"></canvas>
+    <div style="width: 95%; margin: auto; padding: 20px;">
+        <h1 style="text-align: center; color: #0b1c3d;">GESTÃO DE INDICADORES - DHO</h1>
+        <canvas id="graficoTurnover"></canvas>
     </div>
 
 <script>
@@ -24,14 +19,17 @@
     async function carregar() {
         const res = await fetch(url);
         const dados = await res.json();
+        
         const meses = [...new Set(dados.map(d => d.mes))];
         
         const getVal = (cat, m) => {
             const item = dados.find(d => d.mes === m && d.indicador === cat);
             return item ? parseFloat(item.valor) : 0;
         };
+        
+        // Função para pegar o objetivo (usando a primeira categoria encontrada para aquele mês)
         const getObj = (m) => {
-            const item = dados.find(d => d.mes === m && d.objetivo != null);
+            const item = dados.find(d => d.mes === m && d.objetivo !== undefined);
             return item ? parseFloat(item.objetivo) : 0;
         };
 
@@ -40,25 +38,34 @@
             data: {
                 labels: meses,
                 datasets: [
-                    { label: 'Realizado', data: meses.map(m => getVal('TURNOVER TOTAL', m)), backgroundColor: '#e91e63', borderRadius: 5 },
-                    { label: 'Meta', data: meses.map(m => getObj(m)), type: 'line', borderColor: '#ff9800', borderWidth: 2, borderDash: [5, 5], fill: false, pointRadius: 4, pointBackgroundColor: '#ff9800' }
+                    { label: 'MOD 1º', data: meses.map(m => getVal('MOD - 1º TURNO', m)), backgroundColor: '#4472c4', stack: 'stack1' },
+                    { label: 'MOD 2º', data: meses.map(m => getVal('MOD - 2º TURNO', m)), backgroundColor: '#ffc000', stack: 'stack1' },
+                    { label: 'MOD 3º', data: meses.map(m => getVal('MOD - 3º TURNO', m)), backgroundColor: '#ed7d31', stack: 'stack1' },
+                    { label: 'ADM MOD', data: meses.map(m => getVal('ADM - MOD', m)), backgroundColor: '#a5a5a5', stack: 'stack1' },
+                    { label: 'MOI 1º', data: meses.map(m => getVal('MOI - 1º TURNO', m)), backgroundColor: '#5b9bd5', stack: 'stack2' },
+                    { label: 'MOI 2º', data: meses.map(m => getVal('MOI - 2º TURNO', m)), backgroundColor: '#ffcc00', stack: 'stack2' },
+                    { label: 'MOI 3º', data: meses.map(m => getVal('MOI - 3º TURNO', m)), backgroundColor: '#f4b084', stack: 'stack2' },
+                    { label: 'ADM MOI', data: meses.map(m => getVal('ADM - MOI', m)), backgroundColor: '#c0c0c0', stack: 'stack2' },
+                    // Linha do Objetivo
+                    { 
+                        label: 'Objetivo', 
+                        data: meses.map(m => getObj(m)), 
+                        type: 'line', 
+                        borderColor: 'red', 
+                        borderWidth: 3, 
+                        fill: false, 
+                        tension: 0.1 
+                    }
                 ]
             },
             options: {
                 responsive: true,
                 plugins: {
-                    legend: { position: 'top', labels: { font: { size: 14, family: 'Segoe UI' } } },
-                    datalabels: { 
-                        color: '#000', 
-                        anchor: 'end', 
-                        align: 'top', 
-                        font: { weight: 'bold', size: 12 },
-                        formatter: (val) => val > 0 ? val + '%' : '' 
-                    }
+                    datalabels: { color: 'black', anchor: 'end', align: 'top', formatter: (val) => val > 0 ? val : '' }
                 },
                 scales: { 
-                    x: { grid: { display: false } }, 
-                    y: { beginAtZero: true, max: 16, grid: { color: '#f0f0f0' } } 
+                    x: { stacked: true }, 
+                    y: { stacked: true, beginAtZero: true, suggestedMax: 50 } 
                 }
             }
         });
