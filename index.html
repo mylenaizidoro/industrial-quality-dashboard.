@@ -14,16 +14,17 @@
 
 <script>
     Chart.register(ChartDataLabels);
-    // COLE A NOVA URL AQUI:
+    // Sua URL atualizada
     const url = 'https://script.google.com/macros/s/AKfycbz5yhx_JiLJl39jtVSkTQQGXoRKbGRPqPNIF7REqRnRQyM3zqiyL75BDpH1ookSiUw7Uw/exec';
 
     async function carregar() {
         const res = await fetch(url);
         const dados = await res.json();
         
-        // Extrai meses únicos. Se a chave for 'mes' (como no script), manteremos assim.
+        // Pega os meses únicos (garantindo que o nome da chave seja 'mes')
         const meses = [...new Set(dados.map(d => d.mes))];
         
+        // Função de busca corrigida
         const getVal = (cat, m) => {
             const item = dados.find(d => d.mes === m && d.indicador === cat);
             return item ? parseFloat(item.valor) : 0;
@@ -34,13 +35,30 @@
             data: {
                 labels: meses,
                 datasets: [
-                    { label: 'MOD 1º', data: meses.map(m => getVal('MOD - 1º TURNO', m)), backgroundColor: '#4472c4', stack: 'MOD' },
-                    { label: 'ADM MOD', data: meses.map(m => getVal('ADM - MOD', m)), backgroundColor: '#a5a5a5', stack: 'MOD' }
-                    // Adicione os outros datasets seguindo este padrão
+                    { label: 'MOD 1º', data: meses.map(m => getVal('MOD - 1º TURNO', m)), backgroundColor: '#4472c4', stack: 'stack1' },
+                    { label: 'MOD 2º', data: meses.map(m => getVal('MOD - 2º TURNO', m)), backgroundColor: '#ffc000', stack: 'stack1' },
+                    { label: 'MOD 3º', data: meses.map(m => getVal('MOD - 3º TURNO', m)), backgroundColor: '#ed7d31', stack: 'stack1' },
+                    { label: 'ADM MOD', data: meses.map(m => getVal('ADM - MOD', m)), backgroundColor: '#a5a5a5', stack: 'stack1' },
+                    { label: 'MOI 1º', data: meses.map(m => getVal('MOI - 1º TURNO', m)), backgroundColor: '#5b9bd5', stack: 'stack2' },
+                    { label: 'MOI 2º', data: meses.map(m => getVal('MOI - 2º TURNO', m)), backgroundColor: '#ffcc00', stack: 'stack2' },
+                    { label: 'MOI 3º', data: meses.map(m => getVal('MOI - 3º TURNO', m)), backgroundColor: '#f4b084', stack: 'stack2' },
+                    { label: 'ADM MOI', data: meses.map(m => getVal('ADM - MOI', m)), backgroundColor: '#c0c0c0', stack: 'stack2' }
                 ]
             },
             options: {
-                scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }
+                responsive: true,
+                plugins: {
+                    datalabels: { color: 'black', anchor: 'center', align: 'center', formatter: (val) => val > 0 ? val : '' }
+                },
+                scales: { 
+                    x: { stacked: true }, 
+                    y: { 
+                        stacked: true, 
+                        beginAtZero: true,
+                        // Se as barras ainda parecerem grandes, aumente este valor (ex: 50 ou 100)
+                        suggestedMax: 50 
+                    } 
+                }
             }
         });
     }
