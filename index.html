@@ -14,20 +14,23 @@
 
 <script>
     Chart.register(ChartDataLabels);
-    // Sua URL atualizada
     const url = 'https://script.google.com/macros/s/AKfycbz5yhx_JiLJl39jtVSkTQQGXoRKbGRPqPNIF7REqRnRQyM3zqiyL75BDpH1ookSiUw7Uw/exec';
 
     async function carregar() {
         const res = await fetch(url);
         const dados = await res.json();
         
-        // Pega os meses únicos (garantindo que o nome da chave seja 'mes')
         const meses = [...new Set(dados.map(d => d.mes))];
         
-        // Função de busca corrigida
         const getVal = (cat, m) => {
             const item = dados.find(d => d.mes === m && d.indicador === cat);
             return item ? parseFloat(item.valor) : 0;
+        };
+        
+        // Função para pegar o objetivo (usando a primeira categoria encontrada para aquele mês)
+        const getObj = (m) => {
+            const item = dados.find(d => d.mes === m && d.objetivo !== undefined);
+            return item ? parseFloat(item.objetivo) : 0;
         };
 
         new Chart(document.getElementById('graficoTurnover'), {
@@ -42,22 +45,27 @@
                     { label: 'MOI 1º', data: meses.map(m => getVal('MOI - 1º TURNO', m)), backgroundColor: '#5b9bd5', stack: 'stack2' },
                     { label: 'MOI 2º', data: meses.map(m => getVal('MOI - 2º TURNO', m)), backgroundColor: '#ffcc00', stack: 'stack2' },
                     { label: 'MOI 3º', data: meses.map(m => getVal('MOI - 3º TURNO', m)), backgroundColor: '#f4b084', stack: 'stack2' },
-                    { label: 'ADM MOI', data: meses.map(m => getVal('ADM - MOI', m)), backgroundColor: '#c0c0c0', stack: 'stack2' }
+                    { label: 'ADM MOI', data: meses.map(m => getVal('ADM - MOI', m)), backgroundColor: '#c0c0c0', stack: 'stack2' },
+                    // Linha do Objetivo
+                    { 
+                        label: 'Objetivo', 
+                        data: meses.map(m => getObj(m)), 
+                        type: 'line', 
+                        borderColor: 'red', 
+                        borderWidth: 3, 
+                        fill: false, 
+                        tension: 0.1 
+                    }
                 ]
             },
             options: {
                 responsive: true,
                 plugins: {
-                    datalabels: { color: 'black', anchor: 'center', align: 'center', formatter: (val) => val > 0 ? val : '' }
+                    datalabels: { color: 'black', anchor: 'end', align: 'top', formatter: (val) => val > 0 ? val : '' }
                 },
                 scales: { 
                     x: { stacked: true }, 
-                    y: { 
-                        stacked: true, 
-                        beginAtZero: true,
-                        // Se as barras ainda parecerem grandes, aumente este valor (ex: 50 ou 100)
-                        suggestedMax: 50 
-                    } 
+                    y: { stacked: true, beginAtZero: true, suggestedMax: 50 } 
                 }
             }
         });
