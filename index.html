@@ -4,84 +4,40 @@
     <meta charset="UTF-8">
     <title>Dashboard Turnover DHO</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #fff; }
+        body { font-family: 'Segoe UI', sans-serif; background: #fff; }
     </style>
 </head>
 <body>
-    <div style="width: 95%; margin: auto; padding: 20px;">
-        <h1 style="text-align: center; color: #0b1c3d;">TURNOVER PA > 180 DIAS</h1>
-        <canvas id="graficoTurnover"></canvas>
+    <div style="width: 90%; margin: auto; padding: 20px;">
+        <h1 style="text-align: center; color: #333;">TURNOVER PA > 180 DIAS</h1>
+        <canvas id="meuGrafico"></canvas>
     </div>
 
 <script>
-    Chart.register(ChartDataLabels);
-    
-    // COLE A SUA NOVA URL AQUI ENTRE AS ASPAS SIMPLES:
-    const url = 'https://script.google.com/macros/s/AKfycbyNUS6xQNoEtMjaTp1i9jYLbMBhMUOVIhrtB0lskfKWgBccgx5xd6jxzwfrfe7LgZvqKg/exec';
+    // URL inserida corretamente:
+    const url = 'https://script.google.com/macros/s/AKfycbydDFGSC2CA_8XndZZr_yd3lD1Qu-xf-JX3b5uqjS3qJ5mM4z-IyT9vKtUCBgNUzdlTIw/exec';
 
     async function carregar() {
         const res = await fetch(url);
         const dados = await res.json();
         
-        // Pega meses únicos formatados
+        // Agrupa valores por mês
         const meses = [...new Set(dados.map(d => d.mes))];
-        
-        const getVal = (cat, m) => {
-            const item = dados.find(d => d.mes === m && d.indicador === cat);
-            return item ? parseFloat(item.valor) : 0;
-        };
-        
-        // Busca o objetivo na coluna correta
-        const getObj = (m) => {
-            const item = dados.find(d => d.mes === m && d.objetivo > 0);
-            return item ? parseFloat(item.objetivo) : 0;
-        };
+        const totais = meses.map(m => dados.filter(d => d.mes === m).reduce((s, d) => s + d.valor, 0));
 
-        new Chart(document.getElementById('graficoTurnover'), {
+        new Chart(document.getElementById('meuGrafico'), {
             type: 'bar',
             data: {
                 labels: meses,
                 datasets: [
-                    { label: 'MOD 1º', data: meses.map(m => getVal('MOD - 1º TURNO', m)), backgroundColor: '#4472c4', stack: 'stack1' },
-                    { label: 'MOD 2º', data: meses.map(m => getVal('MOD - 2º TURNO', m)), backgroundColor: '#ffc000', stack: 'stack1' },
-                    { label: 'MOD 3º', data: meses.map(m => getVal('MOD - 3º TURNO', m)), backgroundColor: '#ed7d31', stack: 'stack1' },
-                    { label: 'ADM MOD', data: meses.map(m => getVal('ADM - MOD', m)), backgroundColor: '#a5a5a5', stack: 'stack1' },
-                    { label: 'MOI 1º', data: meses.map(m => getVal('MOI - 1º TURNO', m)), backgroundColor: '#5b9bd5', stack: 'stack2' },
-                    { label: 'MOI 2º', data: meses.map(m => getVal('MOI - 2º TURNO', m)), backgroundColor: '#ffcc00', stack: 'stack2' },
-                    { label: 'MOI 3º', data: meses.map(m => getVal('MOI - 3º TURNO', m)), backgroundColor: '#f4b084', stack: 'stack2' },
-                    { label: 'ADM MOI', data: meses.map(m => getVal('ADM - MOI', m)), backgroundColor: '#c0c0c0', stack: 'stack2' },
-                    { 
-                        label: 'Meta', 
-                        data: meses.map(m => getObj(m)), 
-                        type: 'line', 
-                        borderColor: '#ff9800', 
-                        borderWidth: 3, 
-                        borderDash: [5, 5], 
-                        pointRadius: 5, 
-                        fill: false 
-                    }
+                    { label: 'Realizado', data: totais, backgroundColor: '#ff4081' },
+                    { label: 'Meta', data: meses.map(() => 6), type: 'line', borderColor: '#ff9800', borderDash: [5, 5], borderWidth: 2, pointRadius: 4 }
                 ]
             },
             options: {
                 responsive: true,
-                plugins: {
-                    datalabels: { display: false }
-                },
-                scales: { 
-                    x: { 
-                        stacked: true, 
-                        grid: { display: false },
-                        ticks: { maxRotation: 45, minRotation: 45 } 
-                    }, 
-                    y: { 
-                        stacked: true, 
-                        beginAtZero: true, 
-                        suggestedMax: 12, // Garantindo espaço para o 6
-                        grid: { color: '#eee' } 
-                    } 
-                }
+                scales: { y: { beginAtZero: true, max: 15 } }
             }
         });
     }
