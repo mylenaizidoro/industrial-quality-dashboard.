@@ -8,13 +8,7 @@
     <style>
         body { font-family: sans-serif; background-color: #f9f9f9; }
         .container { width: 95%; margin: auto; padding: 20px; }
-        .titulo-dashboard {
-            text-align: center;
-            color: #0b1c3d;
-            font-family: Arial, sans-serif;
-            font-weight: bold;
-            margin-bottom: 20px;
-        }
+        .titulo-dashboard { text-align: center; color: #0b1c3d; font-weight: bold; margin-bottom: 20px; }
         canvas { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
     </style>
 </head>
@@ -27,14 +21,14 @@
 <script>
     Chart.register(ChartDataLabels);
 
-    // Substitua pela URL da sua nova planilha atualizada
     const url = 'https://script.google.com/macros/s/AKfycbx5FCrbLsR6WNM_mXAxAEK0W_j45MFh5voYJRnz7wRwob8m60d3ehYDjbXjnmUjZkKM3Q/exec';
 
     async function carregar() {
         const res = await fetch(url);
         const dados = await res.json();
         const meses = [...new Set(dados.map(d => d.mes))];
-        // Função ajustada para buscar as novas categorias da planilha
+        
+        // A função agora busca exatamente pelos nomes que você definiu na planilha
         const getVal = (cat, m) => dados.find(d => d.mes === m && d.indicador === cat)?.['valor real'] || 0;
 
         new Chart(document.getElementById('graficoTurnover'), {
@@ -54,40 +48,15 @@
                 ]
             },
             options: {
-                responsive: true,
-                layout: { padding: { top: 20, bottom: 20 } },
                 plugins: {
-                    title: { display: true, text: 'TURNOVER SOLICITAÇÃO DE DESLIGAMENTOS 15 DIAS', font: { size: 18 } },
                     datalabels: {
-                        color: (ctx) => (ctx.datasetIndex === 3 || ctx.datasetIndex === 7) ? 'black' : 'white',
-                        anchor: (ctx) => (ctx.datasetIndex === 3 || ctx.datasetIndex === 7) ? 'end' : 'center',
-                        align: (ctx) => (ctx.datasetIndex === 3 || ctx.datasetIndex === 7) ? 'top' : 'center',
-                        font: { size: 10, weight: 'normal' },
-                        formatter: function(value, ctx) {
-                            // Soma acumulada no topo (ADM MOD/MOI são os índices 3 e 7)
-                            if (ctx.datasetIndex === 3 || ctx.datasetIndex === 7) {
-                                let stackName = ctx.dataset.stack;
-                                let soma = 0;
-                                ctx.chart.data.datasets.forEach(ds => {
-                                    if(ds.stack === stackName) soma += ds.data[ctx.dataIndex];
-                                });
-                                return soma > 0 ? soma : null;
-                            }
-                            return value > 0 ? value : null;
-                        }
+                        color: 'white',
+                        font: { size: 10 },
+                        formatter: (value) => (value > 0 ? value : null)
                     }
                 },
                 scales: {
-                    x: { 
-                        stacked: true, 
-                        categoryPercentage: 0.7, 
-                        barPercentage: 0.8,
-                        ticks: {
-                            callback: function(val) {
-                                return [this.getLabelForValue(val), "MOD / MOI"]; 
-                            }
-                        }
-                    },
+                    x: { stacked: true },
                     y: { stacked: true, beginAtZero: true }
                 }
             }
