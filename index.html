@@ -2,60 +2,23 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard Turnover DHO</title>
+    <title>Diagnóstico do Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 </head>
 <body>
-    <div class="container" style="width: 95%; margin: auto; padding: 20px;">
-        <canvas id="graficoTurnover"></canvas>
-    </div>
-
+    <h2 style="text-align:center;">Verifique o Console (F12) para ver os dados!</h2>
 <script>
-    Chart.register(ChartDataLabels);
     const url = 'https://script.google.com/macros/s/AKfycbx5FCrbLsR6WNM_mXAxAEK0W_j45MFh5voYJRnz7wRwob8m60d3ehYDjbXjnmUjZkKM3Q/exec';
 
-    async function carregar() {
-        const res = await fetch(url);
-        const dados = await res.json();
-        
-        // Ajuste: usando 'mês' com acento conforme sua planilha
-        const meses = [...new Set(dados.map(d => d['mês']))];
-        
-        const getVal = (cat, m) => {
-            const item = dados.find(d => d['mês'] === m && d.indicador === cat);
-            // Garantindo que o valor seja tratado como número
-            return item ? parseFloat(item['valor real']) : 0;
-        };
-
-        new Chart(document.getElementById('graficoTurnover'), {
-            type: 'bar',
-            data: {
-                labels: meses,
-                datasets: [
-                    { label: 'MOD 1º', data: meses.map(m => getVal('MOD - 1º TURNO', m)), backgroundColor: '#4472c4', stack: 'MOD' },
-                    { label: 'MOD 2º', data: meses.map(m => getVal('MOD - 2º TURNO', m)), backgroundColor: '#ffc000', stack: 'MOD' },
-                    { label: 'MOD 3º', data: meses.map(m => getVal('MOD - 3º TURNO', m)), backgroundColor: '#ed7d31', stack: 'MOD' },
-                    { label: 'ADM MOD', data: meses.map(m => getVal('ADM - MOD', m)),       backgroundColor: '#a5a5a5', stack: 'MOD' },
-                    { label: 'MOI 1º', data: meses.map(m => getVal('MOI - 1º TURNO', m)), backgroundColor: '#4472c4', stack: 'MOI' },
-                    { label: 'MOI 2º', data: meses.map(m => getVal('MOI - 2º TURNO', m)), backgroundColor: '#ffc000', stack: 'MOI' },
-                    { label: 'MOI 3º', data: meses.map(m => getVal('MOI - 3º TURNO', m)), backgroundColor: '#ed7d31', stack: 'MOI' },
-                    { label: 'ADM MOI', data: meses.map(m => getVal('ADM - MOI', m)),       backgroundColor: '#a5a5a5', stack: 'MOI' }
-                ]
-            },
-            options: {
-                plugins: {
-                    datalabels: {
-                        color: 'white',
-                        font: { size: 10 },
-                        formatter: (val) => val > 0 ? val : null
-                    }
-                },
-                scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }
-            }
-        });
-    }
-    carregar();
+    fetch(url)
+        .then(response => response.json())
+        .then(dados => {
+            console.log("--- DADOS RECEBIDOS DA PLANILHA ---");
+            console.log("Primeiro registro:", dados[0]);
+            console.log("Chaves disponíveis:", Object.keys(dados[0]));
+            alert("Verifique o console (F12)!");
+        })
+        .catch(err => console.error("Erro no fetch:", err));
 </script>
 </body>
 </html>
