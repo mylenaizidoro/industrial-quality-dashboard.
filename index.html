@@ -49,14 +49,28 @@
                 plugins: {
                     title: { display: true, text: 'TURNOVER SOLICITAÇÃO DE DESLIGAMENTOS 15 DIAS', font: { size: 20 } },
                     datalabels: {
-                        color: 'white',
+                        color: function(ctx) {
+                            return (ctx.datasetIndex === 3 || ctx.datasetIndex === 7) ? 'black' : 'white';
+                        },
+                        anchor: function(ctx) {
+                            return (ctx.datasetIndex === 3 || ctx.datasetIndex === 7) ? 'end' : 'center';
+                        },
+                        align: function(ctx) {
+                            return (ctx.datasetIndex === 3 || ctx.datasetIndex === 7) ? 'top' : 'center';
+                        },
                         font: { weight: 'bold' },
-                        anchor: 'center',
-                        align: 'center',
                         formatter: function(value, ctx) {
-                            // Exibe o valor do ADM (índices 3 e 7) e de todos os outros
-                            // Se o valor for maior que 0, exibe. Se for 0, oculta.
-                            return (value > 0) ? value : null;
+                            // Se for ADM (topo da pilha), calcula o total acumulado daquela stack
+                            if (ctx.datasetIndex === 3 || ctx.datasetIndex === 7) {
+                                let stackName = ctx.dataset.stack;
+                                let soma = 0;
+                                ctx.chart.data.datasets.forEach(ds => {
+                                    if(ds.stack === stackName) soma += ds.data[ctx.dataIndex];
+                                });
+                                return soma > 0 ? soma : null;
+                            }
+                            // Se for turno (abaixo do ADM), exibe o valor do segmento, se > 0
+                            return value > 0 ? value : null;
                         }
                     }
                 },
@@ -67,8 +81,7 @@
                         barPercentage: 0.8,
                         ticks: {
                             callback: function(val, index) {
-                                let label = this.getLabelForValue(val);
-                                return [label, "MOD / MOI"]; 
+                                return [this.getLabelForValue(val), "MOD / MOI"]; 
                             }
                         }
                     },
