@@ -7,7 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 </head>
 <body>
-    <div style="width: 90%; margin: auto;">
+    <div class="container" style="width: 95%; margin: auto; padding: 20px;">
         <canvas id="graficoTurnover"></canvas>
     </div>
 
@@ -19,14 +19,12 @@
         const res = await fetch(url);
         const dados = await res.json();
         
-        // DEPURACAO: Veja no console do F12 o que chegou da planilha
-        console.log("Dados recebidos:", dados); 
-
-        const meses = [...new Set(dados.map(d => d.mes))];
+        // Ajuste: usando 'mês' com acento conforme sua planilha
+        const meses = [...new Set(dados.map(d => d['mês']))];
         
-        // Função ajustada para ser mais resiliente
         const getVal = (cat, m) => {
-            const item = dados.find(d => d.mes === m && d.indicador === cat);
+            const item = dados.find(d => d['mês'] === m && d.indicador === cat);
+            // Garantindo que o valor seja tratado como número
             return item ? parseFloat(item['valor real']) : 0;
         };
 
@@ -49,6 +47,7 @@
                 plugins: {
                     datalabels: {
                         color: 'white',
+                        font: { size: 10 },
                         formatter: (val) => val > 0 ? val : null
                     }
                 },
