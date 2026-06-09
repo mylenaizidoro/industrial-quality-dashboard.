@@ -8,11 +8,19 @@
     <style>
         body { font-family: sans-serif; background-color: #f9f9f9; }
         .container { width: 95%; margin: auto; padding: 20px; }
+        .titulo-dashboard {
+            text-align: center;
+            color: #0b1c3d;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
         canvas { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
     <div class="container">
+        <h1 class="titulo-dashboard">GESTÃO DE INDICADORES - DHO</h1>
         <canvas id="graficoTurnover"></canvas>
     </div>
 
@@ -45,9 +53,9 @@
             },
             options: {
                 responsive: true,
-                layout: { padding: { top: 40, bottom: 20 } },
+                layout: { padding: { top: 20, bottom: 20 } },
                 plugins: {
-                    title: { display: true, text: 'TURNOVER SOLICITAÇÃO DE DESLIGAMENTOS 15 DIAS', font: { size: 20 } },
+                    title: { display: true, text: 'TURNOVER SOLICITAÇÃO DE DESLIGAMENTOS 15 DIAS', font: { size: 18 } },
                     datalabels: {
                         color: function(ctx) {
                             return (ctx.datasetIndex === 3 || ctx.datasetIndex === 7) ? 'black' : 'white';
@@ -63,6 +71,7 @@
                             weight: 'normal' 
                         },
                         formatter: function(value, ctx) {
+                            // Se for o topo da pilha (ADM ou ADM 1), exibe o total acumulado
                             if (ctx.datasetIndex === 3 || ctx.datasetIndex === 7) {
                                 let stackName = ctx.dataset.stack;
                                 let soma = 0;
@@ -71,6 +80,7 @@
                                 });
                                 return soma > 0 ? soma : null;
                             }
+                            // Se for um dos segmentos abaixo, exibe o valor do segmento (se > 0)
                             return value > 0 ? value : null;
                         }
                     }
