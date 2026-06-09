@@ -5,67 +5,53 @@
     <title>Dashboard Turnover DHO</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
-    <style>
-        body { font-family: sans-serif; background-color: #f9f9f9; }
-        .container { width: 95%; margin: auto; padding: 20px; }
-        .titulo-dashboard { text-align: center; color: #0b1c3d; font-weight: bold; margin-bottom: 20px; }
-        canvas { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-    </style>
 </head>
 <body>
-    <div class="container">
-        <h1 class="titulo-dashboard">GESTÃO DE INDICADORES - DHO</h1>
+    <div style="width: 95%; margin: auto; padding: 20px;">
+        <h1 style="text-align: center; color: #0b1c3d;">GESTÃO DE INDICADORES - DHO</h1>
         <canvas id="graficoTurnover"></canvas>
     </div>
 
 <script>
     Chart.register(ChartDataLabels);
-
-    // COLE A SUA NOVA URL AQUI:
-    const url = 'https://script.google.com/macros/s/AKfycbxDpFwrhd0NjjFwLRSnHbBxE1B0IDN4qRKWQ0NHFwO7aAlPyntu4sJlNUv29g14thn3pQ/exec';
+    // Sua URL atualizada
+    const url = 'https://script.google.com/macros/s/AKfycbxHDwMLv-EDarys79pdjVjct5VCNgoBp3Awhb4R7zgtKZEqrAiFaPrfG-Ts6Zrk2ntpyg/exec';
 
     async function carregar() {
-        try {
-            const res = await fetch(url);
-            const dados = await res.json();
-            
-            // Pega os meses únicos da lista
-            const meses = [...new Set(dados.map(d => d.mes))];
-            
-            // Busca o valor da categoria para um mês específico
-            const getVal = (cat, m) => dados.find(d => d.mes === m && d.categoria === cat)?.qtd || 0;
+        const res = await fetch(url);
+        const dados = await res.json();
+        
+        // Pega os meses únicos (usando a chave correta 'mês')
+        const meses = [...new Set(dados.map(d => d['mês']))];
+        
+        // Função ajustada para buscar 'indicador' e 'valor real'
+        const getVal = (cat, m) => {
+            const item = dados.find(d => d['mês'] === m && d.indicador === cat);
+            return item ? parseFloat(item['valor real']) : 0;
+        };
 
-            new Chart(document.getElementById('graficoTurnover'), {
-                type: 'bar',
-                data: {
-                    labels: meses,
-                    datasets: [
-                        { label: 'MOD 1º', data: meses.map(m => getVal('MOD - 1º TURNO', m)), backgroundColor: '#4472c4', stack: 'MOD' },
-                        { label: 'MOD 2º', data: meses.map(m => getVal('MOD - 2º TURNO', m)), backgroundColor: '#ffc000', stack: 'MOD' },
-                        { label: 'MOD 3º', data: meses.map(m => getVal('MOD - 3º TURNO', m)), backgroundColor: '#ed7d31', stack: 'MOD' },
-                        { label: 'ADM MOD', data: meses.map(m => getVal('ADM - MOD', m)),       backgroundColor: '#a5a5a5', stack: 'MOD' },
-                        { label: 'MOI 1º', data: meses.map(m => getVal('MOI - 1º TURNO', m)), backgroundColor: '#4472c4', stack: 'MOI' },
-                        { label: 'MOI 2º', data: meses.map(m => getVal('MOI - 2º TURNO', m)), backgroundColor: '#ffc000', stack: 'MOI' },
-                        { label: 'MOI 3º', data: meses.map(m => getVal('MOI - 3º TURNO', m)), backgroundColor: '#ed7d31', stack: 'MOI' },
-                        { label: 'ADM MOI', data: meses.map(m => getVal('ADM - MOI', m)),       backgroundColor: '#a5a5a5', stack: 'MOI' }
-                    ]
+        new Chart(document.getElementById('graficoTurnover'), {
+            type: 'bar',
+            data: {
+                labels: meses,
+                datasets: [
+                    { label: 'MOD 1º', data: meses.map(m => getVal('MOD - 1º TURNO', m)), backgroundColor: '#4472c4', stack: 'MOD' },
+                    { label: 'MOD 2º', data: meses.map(m => getVal('MOD - 2º TURNO', m)), backgroundColor: '#ffc000', stack: 'MOD' },
+                    { label: 'MOD 3º', data: meses.map(m => getVal('MOD - 3º TURNO', m)), backgroundColor: '#ed7d31', stack: 'MOD' },
+                    { label: 'ADM MOD', data: meses.map(m => getVal('ADM - MOD', m)),       backgroundColor: '#a5a5a5', stack: 'MOD' },
+                    { label: 'MOI 1º', data: meses.map(m => getVal('MOI - 1º TURNO', m)), backgroundColor: '#4472c4', stack: 'MOI' },
+                    { label: 'MOI 2º', data: meses.map(m => getVal('MOI - 2º TURNO', m)), backgroundColor: '#ffc000', stack: 'MOI' },
+                    { label: 'MOI 3º', data: meses.map(m => getVal('MOI - 3º TURNO', m)), backgroundColor: '#ed7d31', stack: 'MOI' },
+                    { label: 'ADM MOI', data: meses.map(m => getVal('ADM - MOI', m)),       backgroundColor: '#a5a5a5', stack: 'MOI' }
+                ]
+            },
+            options: {
+                plugins: {
+                    datalabels: { color: 'white', formatter: (val) => val > 0 ? val : null }
                 },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        datalabels: {
-                            color: 'white',
-                            font: { size: 10 },
-                            formatter: (val) => val > 0 ? val : null
-                        }
-                    },
-                    scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }
-                }
-            });
-        } catch (error) {
-            console.error("Erro ao carregar o gráfico:", error);
-            alert("Erro ao carregar dados. Verifique a URL do script no console (F12).");
-        }
+                scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }
+            }
+        });
     }
     carregar();
 </script>
