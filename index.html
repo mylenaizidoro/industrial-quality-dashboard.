@@ -14,20 +14,19 @@
 
 <script>
     Chart.register(ChartDataLabels);
-    // Sua URL atualizada
-    const url = 'https://script.google.com/macros/s/AKfycbxHDwMLv-EDarys79pdjVjct5VCNgoBp3Awhb4R7zgtKZEqrAiFaPrfG-Ts6Zrk2ntpyg/exec';
+    // COLE A NOVA URL AQUI:
+    const url = 'https://script.google.com/macros/s/AKfycbz5yhx_JiLJl39jtVSkTQQGXoRKbGRPqPNIF7REqRnRQyM3zqiyL75BDpH1ookSiUw7Uw/exec';
 
     async function carregar() {
         const res = await fetch(url);
         const dados = await res.json();
         
-        // Pega os meses únicos (usando a chave correta 'mês')
-        const meses = [...new Set(dados.map(d => d['mês']))];
+        // Extrai meses únicos. Se a chave for 'mes' (como no script), manteremos assim.
+        const meses = [...new Set(dados.map(d => d.mes))];
         
-        // Função ajustada para buscar 'indicador' e 'valor real'
         const getVal = (cat, m) => {
-            const item = dados.find(d => d['mês'] === m && d.indicador === cat);
-            return item ? parseFloat(item['valor real']) : 0;
+            const item = dados.find(d => d.mes === m && d.indicador === cat);
+            return item ? parseFloat(item.valor) : 0;
         };
 
         new Chart(document.getElementById('graficoTurnover'), {
@@ -36,19 +35,11 @@
                 labels: meses,
                 datasets: [
                     { label: 'MOD 1º', data: meses.map(m => getVal('MOD - 1º TURNO', m)), backgroundColor: '#4472c4', stack: 'MOD' },
-                    { label: 'MOD 2º', data: meses.map(m => getVal('MOD - 2º TURNO', m)), backgroundColor: '#ffc000', stack: 'MOD' },
-                    { label: 'MOD 3º', data: meses.map(m => getVal('MOD - 3º TURNO', m)), backgroundColor: '#ed7d31', stack: 'MOD' },
-                    { label: 'ADM MOD', data: meses.map(m => getVal('ADM - MOD', m)),       backgroundColor: '#a5a5a5', stack: 'MOD' },
-                    { label: 'MOI 1º', data: meses.map(m => getVal('MOI - 1º TURNO', m)), backgroundColor: '#4472c4', stack: 'MOI' },
-                    { label: 'MOI 2º', data: meses.map(m => getVal('MOI - 2º TURNO', m)), backgroundColor: '#ffc000', stack: 'MOI' },
-                    { label: 'MOI 3º', data: meses.map(m => getVal('MOI - 3º TURNO', m)), backgroundColor: '#ed7d31', stack: 'MOI' },
-                    { label: 'ADM MOI', data: meses.map(m => getVal('ADM - MOI', m)),       backgroundColor: '#a5a5a5', stack: 'MOI' }
+                    { label: 'ADM MOD', data: meses.map(m => getVal('ADM - MOD', m)), backgroundColor: '#a5a5a5', stack: 'MOD' }
+                    // Adicione os outros datasets seguindo este padrão
                 ]
             },
             options: {
-                plugins: {
-                    datalabels: { color: 'white', formatter: (val) => val > 0 ? val : null }
-                },
                 scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }
             }
         });
