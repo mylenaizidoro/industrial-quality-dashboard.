@@ -2,68 +2,63 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>PPM Interno - Dashboard de Qualidade</title>
+    <title>Dashboard de Qualidade</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; padding: 20px; color: #333; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 20px; }
         .container { max-width: 1000px; margin: auto; }
         
-        /* Cabeçalho como no DHO */
-        .header { background: #002b5b; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-        
-        /* Grid de Cards */
+        /* Grid dos 4 Cards */
         .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
-        .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; border-left: 5px solid #0056b3; }
-        .card h3 { font-size: 0.7em; color: #777; margin: 0; text-transform: uppercase; }
-        .valor { font-size: 1.4em; font-weight: bold; margin-top: 5px; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; border-bottom: 4px solid #0056b3; }
+        .card h3 { font-size: 0.8em; color: #666; margin: 0; text-transform: uppercase; }
+        .valor { font-size: 1.5em; font-weight: bold; margin-top: 10px; color: #333; }
         
-        /* Gráfico */
-        .chart-box { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        /* Container do Gráfico */
+        .chart-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="header">
-        <h1>QUALIDADE - UNIDADE CURITIBA</h1>
-        <p>Grupo Coplac | Performance</p>
-    </div>
-
     <div class="grid">
-        <div class="card"><h3>PPM ATUAL</h3><div class="valor" id="ppm">-</div></div>
-        <div class="card"><h3>META PPM</h3><div class="valor" id="meta">-</div></div>
-        <div class="card"><h3>PRODUZIDO</h3><div class="valor" id="prod">-</div></div>
-        <div class="card"><h3>REFUGO</h3><div class="valor" id="refugo">-</div></div>
+        <div class="card"><h3>PPM</h3><div id="ppm-val" class="valor">-</div></div>
+        <div class="card"><h3>META</h3><div id="meta-val" class="valor">-</div></div>
+        <div class="card"><h3>PRODUZIDO</h3><div id="prod-val" class="valor">-</div></div>
+        <div class="card"><h3>REFUGO</h3><div id="ref-val" class="valor">-</div></div>
     </div>
 
-    <div class="chart-box">
-        <h3>Evolução Mensal (PPM)</h3>
-        <canvas id="graficoBarra"></canvas>
+    <div class="chart-container">
+        <canvas id="meuGrafico"></canvas>
     </div>
 </div>
 
 <script>
-    const url = 'https://script.google.com/macros/s/AKfycbzqbL1U5RKs0N9LFxomtPnmTT6iEK2Bc7AxwmLHjGbHtWAngVNQ9IRvpHqwqSEQTxdjlg/exec';
+    // URL do seu Web App
+    const url = 'https://script.google.com/macros/s/AKfycbzXzhiMJg9nAcFuSIX-jtBELHK5OcB9LWwXaxd1uN3hUUoQmIEc-BLI8zoIwSnWtFmDnA/exec';
 
     fetch(url)
         .then(res => res.json())
         .then(data => {
             const i = data.ppm.length - 1;
-            document.getElementById('ppm').innerText = data.ppm[i];
-            document.getElementById('meta').innerText = data.meta[i];
-            document.getElementById('prod').innerText = data.produzido[i];
-            document.getElementById('refugo').innerText = data.refugo[i];
+            
+            // Atualiza os Cards com o último mês disponível
+            document.getElementById('ppm-val').innerText = data.ppm[i];
+            document.getElementById('meta-val').innerText = data.meta[i];
+            document.getElementById('prod-val').innerText = data.produzido[i];
+            document.getElementById('ref-val').innerText = data.refugo[i];
 
-            // Cores: Verde (abaixo da meta) e Vermelho (acima)
-            const cores = data.ppm.map((v, idx) => v > data.meta[idx] ? '#e63946' : '#2a9d8f');
+            // Define cor das barras: Vermelho se PPM > Meta, Verde se <= Meta
+            const cores = data.ppm.map((v, idx) => v > data.meta[idx] ? '#d9534f' : '#5cb85c');
 
-            new Chart(document.getElementById('graficoBarra'), {
+            // Cria o gráfico
+            new Chart(document.getElementById('meuGrafico'), {
                 type: 'bar',
                 data: {
                     labels: data.meses,
                     datasets: [
-                        { label: 'Realizado', data: data.ppm, backgroundColor: cores },
-                        { label: 'Meta', data: data.meta, type: 'line', borderColor: '#f4a261', borderDash: [5, 5] }
+                        { label: 'PPM Realizado', data: data.ppm, backgroundColor: cores },
+                        { label: 'Meta', data: data.meta, type: 'line', borderColor: '#f0ad4e', borderDash: [5, 5], fill: false }
                     ]
                 },
                 options: { responsive: true, scales: { y: { beginAtZero: true } } }
