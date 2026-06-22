@@ -24,8 +24,8 @@
 </div>
 
 <script>
-    // Insira aqui a sua URL do Apps Script
-    const url = 'https://script.google.com/macros/s/AKfycbzTHdWHlgjzInG4PEt2SLwhXrifRcCqQV-DFVauYf-0RgmNy6nqio192oXEg9ZPMuiqhg/exec';
+    // --- COLE AQUI SUA NOVA URL DO GOOGLE APPS SCRIPT ---
+    const url = 'https://script.google.com/macros/s/AKfycbwtl2DP02fR67wNIZRw7eE4lasbdnuBO7E9RPcyW-q3aYnEU1Xfsn2z_f6GBX3UYIig-w/exec';
 
     Chart.register(ChartDataLabels);
 
@@ -33,7 +33,7 @@
         .then(r => r.json())
         .then(data => {
             
-            // 1. Renderizar Gráfico PPM
+            // 1. Gráfico PPM
             const ctxPPM = document.getElementById('graficoPPM').getContext('2d');
             const coresPPM = data.ppm.map((v, i) => v <= data.meta[i] ? '#27ae60' : '#e74c3c');
 
@@ -47,13 +47,11 @@
                     ]
                 },
                 options: {
-                    plugins: { 
-                        datalabels: { anchor: 'end', align: 'top', color: '#333', font: { weight: 'bold' } } 
-                    }
+                    plugins: { datalabels: { anchor: 'end', align: 'top', color: '#333', font: { weight: 'bold' } } }
                 }
             });
 
-            // 2. Renderizar Gráfico de Defeitos
+            // 2. Gráfico Defeitos
             const ctxDefeitos = document.getElementById('graficoDefeitos').getContext('2d');
             new Chart(ctxDefeitos, {
                 type: 'bar',
@@ -66,9 +64,7 @@
                     }]
                 },
                 options: {
-                    plugins: { 
-                        datalabels: { anchor: 'end', align: 'top', color: '#333', font: { weight: 'bold' } } 
-                    }
+                    plugins: { datalabels: { anchor: 'end', align: 'top', color: '#333', font: { weight: 'bold' } } }
                 }
             });
         });
