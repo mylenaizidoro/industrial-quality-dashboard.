@@ -2,71 +2,20 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Indicadores - Qualidade Coplac Curitiba</title>
+    <title>Dashboard PPM - Qualidade</title>
+    <!-- Carregando a biblioteca de gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; }
-        
-        /* Cabeçalho padrão DHO */
-        .header-dho { 
-            background-color: #2c3e50; 
-            color: #ffffff; 
-            text-align: center; 
-            padding: 25px; 
-            font-size: 1.8rem; 
-            font-weight: bold; 
-            border-bottom: 5px solid #3498db;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            margin-bottom: 30px;
-        }
-
-        /* Container da tabela no modelo anterior */
-        .table-container { 
-            max-width: 1100px; 
-            margin: auto; 
-            background: white; 
-            border-radius: 8px; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
-            overflow: hidden; 
-            border: 1px solid #dee2e6;
-        }
-
-        .titulo-tabela { 
-            background-color: #2c3e50; 
-            color: #ffffff; 
-            padding: 15px; 
-            text-align: center; 
-            font-weight: bold; 
-            letter-spacing: 1px;
-        }
-
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #dee2e6; padding: 12px; text-align: center; }
-        thead th { background-color: #f1f3f5; font-weight: bold; }
-        
-        /* Cores das linhas conforme seu modelo validado */
-        .row-ppm { background-color: #fffaf0; color: #856404; font-weight: bold; }
-        .row-meta { background-color: #ffffff; color: #000; }
-        .row-produzido { background-color: #e7f5ff; color: #1c7ed6; font-weight: bold; }
-        .row-refugo { background-color: #fff5f5; color: #c92a2a; font-weight: bold; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .header { text-align: center; color: #2c3e50; margin-bottom: 20px; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
-<div class="header-dho">INDICADORES DE QUALIDADE - COPLAC CURITIBA</div>
-
-<div class="table-container">
-    <div class="titulo-tabela">RELATÓRIO DE QUALIDADE - PPM INTERNO</div>
-    <table id="tabela-dados">
-        <thead><tr id="linha-meses"><th>MÊS</th></tr></thead>
-        <tbody>
-            <tr id="linha-ppm" class="row-ppm"><td>PPM</td></tr>
-            <tr id="linha-meta" class="row-meta"><td>META</td></tr>
-            <tr id="linha-prod" class="row-produzido"><td>PRODUZIDO</td></tr>
-            <tr id="linha-ref" class="row-refugo"><td>REFUGO</td></tr>
-        </tbody>
-    </table>
+<div class="container">
+    <h2 class="header">PPM INTERNO - TENDÊNCIA E META</h2>
+    <canvas id="meuGrafico"></canvas>
 </div>
 
 <script>
@@ -75,25 +24,21 @@
     fetch(url)
         .then(r => r.json())
         .then(data => {
-            const meses = document.getElementById('linha-meses');
-            const ppm = document.getElementById('linha-ppm');
-            const meta = document.getElementById('linha-meta');
-            const prod = document.getElementById('linha-prod');
-            const ref = document.getElementById('linha-ref');
+            const ctx = document.getElementById('meuGrafico').getContext('2d');
+            
+            // Lógica para pintar barras: Verde se menor que meta, Vermelho se maior
+            const cores = data.ppm.map((valor, i) => valor <= data.meta[i] ? '#27ae60' : '#e74c3c');
 
-            // Limpa antes de preencher
-            meses.innerHTML = '<th>MÊS</th>';
-            ppm.innerHTML = '<td>PPM</td>';
-            meta.innerHTML = '<td>META</td>';
-            prod.innerHTML = '<td>PRODUZIDO</td>';
-            ref.innerHTML = '<td>REFUGO</td>';
-
-            data.meses.forEach((m, i) => {
-                meses.innerHTML += `<th>${m}</th>`;
-                ppm.innerHTML += `<td>${data.ppm[i]}</td>`;
-                meta.innerHTML += `<td>${data.meta[i]}</td>`;
-                prod.innerHTML += `<td>${data.produzido[i]}</td>`;
-                ref.innerHTML += `<td>${data.refugo[i]}</td>`;
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.meses,
+                    datasets: [
+                        { label: 'PPM', data: data.ppm, backgroundColor: cores },
+                        { label: 'META', data: data.meta, type: 'line', borderColor: '#c0392b', fill: false, borderWidth: 2 }
+                    ]
+                },
+                options: { responsive: true, scales: { y: { beginAtZero: true } } }
             });
         });
 </script>
