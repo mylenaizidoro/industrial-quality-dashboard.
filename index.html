@@ -2,61 +2,53 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard de Qualidade - Curitiba</title>
+    <title>PPM Interno - Curitiba</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 40px; }
-        .dashboard-container { max-width: 900px; margin: auto; }
-        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 300px; margin-bottom: 30px; }
-        .valor { font-size: 2.5em; font-weight: bold; color: #4e44ce; margin: 10px 0; }
-        canvas { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #6a5acd; padding: 20px; color: #333; }
+        .header { color: white; margin-bottom: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .valor { font-size: 24px; font-weight: bold; margin-top: 10px; }
+        canvas { background: white; padding: 20px; border-radius: 12px; }
     </style>
 </head>
 <body>
 
-<div class="dashboard-container">
-    <h1>Qualidade - Unidade Curitiba</h1>
-    <div class="card">
-        <h3>PPM ATUAL</h3>
-        <div class="valor" id="ppm-valor">Carregando...</div>
-        <p id="data-referencia">Buscando...</p>
+    <div class="header"><h1>PPM Interno - Dashboard de Qualidade</h1></div>
+    
+    <div class="grid">
+        <div class="card"><h3>PPM ATUAL</h3><div id="ppm" class="valor">-</div></div>
+        <div class="card"><h3>META PPM</h3><div id="meta" class="valor">-</div></div>
+        <div class="card"><h3>PRODUZIDO</h3><div id="prod" class="valor">-</div></div>
+        <div class="card"><h3>REFUGO</h3><div id="refugo" class="valor">-</div></div>
     </div>
-    <canvas id="meuGrafico"></canvas>
-</div>
 
-<script>
-    // Substitua pelo SEU link do Web App (o que termina em /exec)
-    const url = 'https://script.google.com/macros/s/AKfycbwbAjpnaunGvkqpd-IPjvI7QtisgyLJspHiWgna4CK63W9ayvR1jaX-MaI7GYY3-xln4g/exec';
+    <canvas id="grafico"></canvas>
 
-    fetch(url)
-        .then(res => res.json())
-        .then(data => {
-            // Assume que a linha 1 (index 0) são os meses e linha 2 (index 1) são os PPM
-            const meses = data[0].slice(1);
-            const valores = data[1].slice(1);
-            
-            // Atualiza o Card com o último dado
-            const ultimoIndice = valores.length - 1;
-            document.getElementById('ppm-valor').innerText = valores[ultimoIndice];
-            document.getElementById('data-referencia').innerText = "Ref: " + meses[ultimoIndice];
+    <script>
+        const url = 'https://script.google.com/macros/s/AKfycbzqbL1U5RKs0N9LFxomtPnmTT6iEK2Bc7AxwmLHjGbHtWAngVNQ9IRvpHqwqSEQTxdjlg/exec';
 
-            // Renderiza o gráfico
-            new Chart(document.getElementById('meuGrafico'), {
-                type: 'line',
-                data: {
-                    labels: meses,
-                    datasets: [{
-                        label: 'PPM Realizado',
-                        data: valores,
-                        borderColor: '#4e44ce',
-                        backgroundColor: 'rgba(78, 68, 206, 0.1)',
-                        fill: true,
-                        tension: 0.3
-                    }]
-                },
-                options: { responsive: true }
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                const i = data.ppm.length - 1;
+                document.getElementById('ppm').innerText = data.ppm[i];
+                document.getElementById('meta').innerText = data.meta[i];
+                document.getElementById('prod').innerText = data.produzido[i];
+                document.getElementById('refugo').innerText = data.refugo[i];
+
+                new Chart(document.getElementById('grafico'), {
+                    type: 'line',
+                    data: {
+                        labels: data.meses,
+                        datasets: [
+                            { label: 'PPM Realizado', data: data.ppm, borderColor: '#6a5acd', tension: 0.3 },
+                            { label: 'Meta', data: data.meta, borderColor: '#ff6384', borderDash: [5, 5] }
+                        ]
+                    }
+                });
             });
-        });
-</script>
+    </script>
 </body>
 </html>
