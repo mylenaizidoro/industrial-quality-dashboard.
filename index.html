@@ -36,6 +36,9 @@
         #graficoPPM { max-height: 250px !important; }
         #graficoDefeitos, #graficoSetor { max-height: 300px !important; }
 
+        /* Estilo da área de exibição fixa */
+        #displayPlano { background: #f9f9f9; border-left: 5px solid #27ae60; padding: 15px; white-space: pre-wrap; font-size: 14px; color: #333; min-height: 50px; }
+
         /* Modal do Plano de Ação */
         #areaPlanoAcao { display:none; position:fixed; top:50px; left:10%; width:80%; background:white; padding:20px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.5); z-index:1000; }
     </style>
@@ -49,6 +52,7 @@
     <button class="btn-plano" onclick="abrirPlano()">PLANO DE AÇÃO</button>
 </div>
 
+<!-- Modal -->
 <div id="areaPlanoAcao">
     <h2 style="color: #2c3e50;">PLANO DE AÇÃO - ANÁLISE DE DADOS</h2>
     <textarea id="textoPlano" style="width:100%; height:200px; padding:10px; border:1px solid #ccc; box-sizing:border-box;" placeholder="Digite aqui as ações corretivas e responsáveis..."></textarea>
@@ -73,16 +77,25 @@
         <h2 class="header">PPM POR SETOR</h2>
         <canvas id="graficoSetor"></canvas>
     </div>
+
+    <!-- Quadro fixo onde o texto vai aparecer -->
+    <div class="container full-width">
+        <h2 class="header">RESUMO DO PLANO DE AÇÃO</h2>
+        <div id="displayPlano">Nenhuma análise salva até o momento.</div>
+    </div>
 </div>
 
 <script>
     const url = 'https://script.google.com/macros/s/AKfycbx5eihq6v75T79HB7HWhGfK23f4WSTsiE8cksqTlPCyuqLcFd88_KhYkvbBa5p7VCjLbA/exec';
     Chart.register(ChartDataLabels);
 
-    // Carrega o plano salvo ao abrir a página
+    // Carrega o plano salvo e exibe no quadro ao abrir a página
     window.onload = () => {
         const salvo = localStorage.getItem('planoAcaoCoplac');
-        if (salvo) document.getElementById('textoPlano').value = salvo;
+        if (salvo) {
+            document.getElementById('textoPlano').value = salvo;
+            document.getElementById('displayPlano').innerText = salvo;
+        }
     };
 
     fetch(url).then(r => r.json()).then(data => {
@@ -133,10 +146,11 @@
     function abrirPlano() { document.getElementById('areaPlanoAcao').style.display = 'block'; }
     function fecharPlano() { document.getElementById('areaPlanoAcao').style.display = 'none'; }
     
-    // Função para salvar no navegador
+    // Função para salvar no navegador e atualizar o quadro
     function salvarPlano() { 
-        const texto = document.getElementById('textoPlano').value;
-        localStorage.setItem('planoAcaoCoplac', texto);
+        const conteudo = document.getElementById('textoPlano').value;
+        localStorage.setItem('planoAcaoCoplac', conteudo);
+        document.getElementById('displayPlano').innerText = conteudo; // Atualiza o quadro fixo
         alert("Plano de Ação salvo com sucesso!");
         fecharPlano();
     }
