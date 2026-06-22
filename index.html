@@ -7,25 +7,39 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; padding: 20px; }
-        .container { max-width: 1000px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 30px; }
-        .header { text-align: center; color: #2c3e50; margin-bottom: 25px; text-transform: uppercase; font-weight: bold; }
+        
+        /* Layout em grade */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            max-width: 1400px;
+            margin: auto;
+        }
+
+        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .full-width { grid-column: span 2; }
+        
+        .header { text-align: center; color: #2c3e50; margin-bottom: 15px; text-transform: uppercase; font-weight: bold; font-size: 18px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2 class="header">INDICADOR PPM INTERNO - ÚLTIMOS 12 MESES</h2>
-    <canvas id="graficoPPM"></canvas>
-</div>
+<div class="dashboard">
+    <div class="container full-width">
+        <h2 class="header">INDICADOR PPM INTERNO - ÚLTIMOS 12 MESES</h2>
+        <canvas id="graficoPPM" height="80"></canvas>
+    </div>
 
-<div class="container">
-    <h2 class="header">AS PEÇAS QUE APRESENTARAM MAIS PROBLEMAS NESSE MÊS</h2>
-    <canvas id="graficoDefeitos"></canvas>
-</div>
+    <div class="container">
+        <h2 class="header">AS PEÇAS QUE APRESENTARAM MAIS PROBLEMAS</h2>
+        <canvas id="graficoDefeitos"></canvas>
+    </div>
 
-<div class="container">
-    <h2 class="header">PPM POR SETOR</h2>
-    <canvas id="graficoSetor"></canvas>
+    <div class="container">
+        <h2 class="header">PPM POR SETOR</h2>
+        <canvas id="graficoSetor"></canvas>
+    </div>
 </div>
 
 <script>
@@ -38,34 +52,24 @@
         .then(data => {
             
             // 1. Gráfico PPM
-            const ctxPPM = document.getElementById('graficoPPM').getContext('2d');
-            const coresPPM = data.ppm.map((v, i) => v <= data.meta[i] ? '#27ae60' : '#e74c3c');
-
-            new Chart(ctxPPM, {
+            new Chart(document.getElementById('graficoPPM').getContext('2d'), {
                 type: 'bar',
                 data: {
                     labels: data.meses,
                     datasets: [
-                        { label: 'PPM', data: data.ppm, backgroundColor: coresPPM },
+                        { label: 'PPM', data: data.ppm, backgroundColor: data.ppm.map((v, i) => v <= data.meta[i] ? '#27ae60' : '#e74c3c') },
                         { label: 'META', data: data.meta, type: 'line', borderColor: '#c0392b', borderWidth: 2, datalabels: { display: false } }
                     ]
                 },
-                options: {
-                    plugins: { datalabels: { anchor: 'end', align: 'top', color: '#333', font: { size: 16, weight: 'bold' } } }
-                }
+                options: { plugins: { datalabels: { anchor: 'end', align: 'top', color: '#333', font: { size: 16, weight: 'bold' } } } }
             });
 
             // 2. Gráfico Defeitos
-            const ctxDefeitos = document.getElementById('graficoDefeitos').getContext('2d');
-            new Chart(ctxDefeitos, {
+            new Chart(document.getElementById('graficoDefeitos').getContext('2d'), {
                 type: 'bar',
                 data: {
                     labels: data.defeitos.map(d => d[0]),
-                    datasets: [{
-                        label: 'Quantidade',
-                        data: data.defeitos.map(d => d[1]),
-                        backgroundColor: '#3498db'
-                    }]
+                    datasets: [{ label: 'Quantidade', data: data.defeitos.map(d => d[1]), backgroundColor: '#3498db' }]
                 },
                 options: {
                     plugins: { datalabels: { anchor: 'end', align: 'top', color: '#333', font: { size: 16, weight: 'bold' } } },
@@ -73,33 +77,20 @@
                 }
             });
 
-            // 3. Gráfico Pizza (Setores) - ATUALIZADO
-            const ctxSetor = document.getElementById('graficoSetor').getContext('2d');
-            new Chart(ctxSetor, {
+            // 3. Gráfico Setor
+            new Chart(document.getElementById('graficoSetor').getContext('2d'), {
                 type: 'doughnut',
                 data: {
                     labels: data.ppmPorSetor.map(d => d[0]),
                     datasets: [{
                         data: data.ppmPorSetor.map(d => d[1]),
-                        backgroundColor: [
-                            '#3498db', '#e74c3c', '#27ae60', '#f1c40f', '#9b59b6', 
-                            '#34495e', '#e67e22', '#1abc9c', '#7f8c8d', '#2ecc71', '#d35400'
-                        ]
+                        backgroundColor: ['#3498db', '#e74c3c', '#27ae60', '#f1c40f', '#9b59b6', '#34495e', '#e67e22', '#1abc9c', '#7f8c8d', '#2ecc71', '#d35400']
                     }]
                 },
                 options: {
-                    responsive: true,
                     plugins: {
-                        // Exibe os números dentro das fatias
-                        datalabels: {
-                            color: '#000000', // Fonte preta
-                            font: { size: 16, weight: 'bold' }, // Fonte maior e em negrito
-                            formatter: (value) => value // Exibe o valor numérico
-                        },
-                        legend: { 
-                            position: 'right', 
-                            labels: { font: { size: 14, weight: 'bold' }, color: '#000000' } // Legenda preta
-                        }
+                        datalabels: { color: '#000000', font: { size: 16, weight: 'bold' } },
+                        legend: { position: 'right', labels: { font: { size: 14, weight: 'bold' }, color: '#000000' } }
                     }
                 }
             });
