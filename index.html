@@ -16,10 +16,9 @@
         
         .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; max-width: 1200px; margin: auto; }
         
-        /* Containers agora centralizam o conteúdo verticalmente */
         .container { 
             background: white; 
-            padding: 20px; 
+            padding: 15px; 
             border-radius: 8px; 
             box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
             display: flex; 
@@ -29,11 +28,11 @@
         
         .full-width { grid-column: span 2; }
         
-        .header { text-align: center; color: #2c3e50; margin-bottom: 15px; text-transform: uppercase; font-weight: bold; font-size: 16px; }
+        .header { text-align: center; color: #2c3e50; margin-bottom: 10px; text-transform: uppercase; font-weight: bold; font-size: 16px; }
         
-        /* Ajuste de tamanho específico para os gráficos */
-        canvas { width: 100% !important; }
-        #graficoSetor { max-height: 300px !important; margin: 0 auto; }
+        /* Ajuste de altura específico para dar respiro ao gráfico superior */
+        #graficoPPM { max-height: 250px !important; }
+        #graficoDefeitos, #graficoSetor { max-height: 300px !important; }
     </style>
 </head>
 <body>
@@ -44,7 +43,7 @@
 <div class="dashboard">
     <div class="container full-width">
         <h2 class="header">INDICADOR PPM INTERNO - ÚLTIMOS 12 MESES</h2>
-        <canvas id="graficoPPM" height="80"></canvas>
+        <canvas id="graficoPPM" height="120"></canvas>
     </div>
 
     <div class="container">
@@ -74,7 +73,11 @@
                     { label: 'META', data: data.meta, type: 'line', borderColor: '#c0392b', borderWidth: 2, datalabels: { display: false } }
                 ]
             },
-            options: { plugins: { datalabels: { anchor: 'end', align: 'top', color: '#333', font: { size: 14, weight: 'bold' } } } }
+            options: { 
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { datalabels: { anchor: 'end', align: 'top', color: '#333', font: { size: 14, weight: 'bold' } } } 
+            }
         });
 
         // 2. Gráfico Defeitos
@@ -85,12 +88,14 @@
                 datasets: [{ label: 'Quantidade', data: data.defeitos.map(d => d[1]), backgroundColor: '#3498db' }]
             },
             options: {
+                responsive: true,
+                maintainAspectRatio: false,
                 plugins: { datalabels: { anchor: 'end', align: 'top', color: '#333', font: { size: 14, weight: 'bold' } } },
                 scales: { x: { ticks: { color: '#000000', font: { size: 12, weight: 'bold' } } } }
             }
         });
 
-        // 3. Gráfico Setor (Ajustado)
+        // 3. Gráfico Setor
         new Chart(document.getElementById('graficoSetor').getContext('2d'), {
             type: 'doughnut',
             data: {
@@ -101,6 +106,7 @@
                 }]
             },
             options: {
+                responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
                     datalabels: { color: '#000000', font: { size: 14, weight: 'bold' } },
