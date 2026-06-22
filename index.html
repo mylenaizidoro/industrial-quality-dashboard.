@@ -2,31 +2,31 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard de Qualidade - Curitiba</title>
+    <title>PPM Interno - Dashboard de Qualidade</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; padding: 30px; margin: 0; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; padding: 20px; color: #333; }
         .container { max-width: 1000px; margin: auto; }
         
-        /* Cabeçalho */
-        .header { background: #4e44ce; color: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        /* Cabeçalho como no DHO */
+        .header { background: #002b5b; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
         
-        /* Grid dos 4 Cards */
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center; border: 1px solid #e0e0e0; }
-        .card h3 { font-size: 0.75em; color: #666; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
-        .valor { font-size: 1.5em; font-weight: bold; color: #333; margin: 10px 0; }
+        /* Grid de Cards */
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
+        .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; border-left: 5px solid #0056b3; }
+        .card h3 { font-size: 0.7em; color: #777; margin: 0; text-transform: uppercase; }
+        .valor { font-size: 1.4em; font-weight: bold; margin-top: 5px; }
         
-        /* Área do Gráfico */
-        .chart-box { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #e0e0e0; }
+        /* Gráfico */
+        .chart-box { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header">
-        <h1>PPM Interno - Dashboard de Qualidade</h1>
-        <p>Grupo Coplac - Curitiba | Gestão de Indicadores</p>
+        <h1>QUALIDADE - UNIDADE CURITIBA</h1>
+        <p>Grupo Coplac | Performance</p>
     </div>
 
     <div class="grid">
@@ -37,27 +37,24 @@
     </div>
 
     <div class="chart-box">
-        <h3>Evolução Mensal (Realizado vs Meta)</h3>
+        <h3>Evolução Mensal (PPM)</h3>
         <canvas id="graficoBarra"></canvas>
     </div>
 </div>
 
 <script>
-    // URL do seu Web App
     const url = 'https://script.google.com/macros/s/AKfycbzqbL1U5RKs0N9LFxomtPnmTT6iEK2Bc7AxwmLHjGbHtWAngVNQ9IRvpHqwqSEQTxdjlg/exec';
 
     fetch(url)
         .then(res => res.json())
         .then(data => {
             const i = data.ppm.length - 1;
-            
-            // Preenche os cards com o dado mais recente
-            document.getElementById('ppm').innerText = data.ppm[i].toLocaleString();
-            document.getElementById('meta').innerText = data.meta[i].toLocaleString();
-            document.getElementById('prod').innerText = data.produzido[i].toLocaleString();
-            document.getElementById('refugo').innerText = data.refugo[i].toLocaleString();
+            document.getElementById('ppm').innerText = data.ppm[i];
+            document.getElementById('meta').innerText = data.meta[i];
+            document.getElementById('prod').innerText = data.produzido[i];
+            document.getElementById('refugo').innerText = data.refugo[i];
 
-            // Lógica de cores: Vermelho (pior que a meta) ou Verde (dentro da meta)
+            // Cores: Verde (abaixo da meta) e Vermelho (acima)
             const cores = data.ppm.map((v, idx) => v > data.meta[idx] ? '#e63946' : '#2a9d8f');
 
             new Chart(document.getElementById('graficoBarra'), {
@@ -65,11 +62,11 @@
                 data: {
                     labels: data.meses,
                     datasets: [
-                        { label: 'PPM Realizado', data: data.ppm, backgroundColor: cores },
-                        { label: 'Meta', data: data.meta, type: 'line', borderColor: '#f4a261', borderDash: [5, 5], fill: false }
+                        { label: 'Realizado', data: data.ppm, backgroundColor: cores },
+                        { label: 'Meta', data: data.meta, type: 'line', borderColor: '#f4a261', borderDash: [5, 5] }
                     ]
                 },
-                options: { responsive: true }
+                options: { responsive: true, scales: { y: { beginAtZero: true } } }
             });
         });
 </script>
