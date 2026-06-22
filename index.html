@@ -2,66 +2,50 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>PPM Interno - Relatório Técnico</title>
+    <title>Dashboard PPM - Unidade Curitiba</title>
     <style>
         :root {
-            --bg-color: #f8f9fa;
-            --border-color: #dee2e6;
-            --header-bg: #343a40;
-            --text-color: #212529;
+            --bg-color: #f4f6f8;
+            --header-bg: #2c3e50;
+            --border: #dcdcdc;
         }
-
-        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-color); padding: 40px; color: var(--text-color); }
-        .table-container { max-width: 1100px; margin: auto; background: white; border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid var(--border-color); }
-        
-        .titulo-tabela { background-color: var(--header-bg); color: #ffffff; padding: 15px 20px; font-weight: 600; text-align: left; font-size: 1.1em; letter-spacing: 0.5px; }
-        
-        table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
-        th, td { border: 1px solid var(--border-color); padding: 12px; text-align: center; }
-        
-        thead th { background-color: #f1f3f5; font-weight: 700; color: #495057; }
-        
-        .row-ppm { background-color: #fffaf0; color: #856404; font-weight: 600; }
-        .row-produzido { background-color: #e7f5ff; color: #1c7ed6; font-weight: 600; }
-        .row-refugo { background-color: #fff5f5; color: #c92a2a; font-weight: 600; }
-        
-        tr:hover { background-color: #f8f9fa; transition: 0.2s; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-color); padding: 20px; }
+        .container { max-width: 1100px; margin: auto; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden; }
+        .titulo { background-color: var(--header-bg); color: white; padding: 15px; font-weight: bold; text-align: center; letter-spacing: 1px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid var(--border); padding: 10px; text-align: center; }
+        thead th { background-color: #ecf0f1; font-weight: 700; color: #34495e; }
+        .row-ppm { background-color: #fdf2e9; color: #d35400; font-weight: bold; }
+        .row-prod { background-color: #e8f8f5; color: #16a085; font-weight: bold; }
+        .row-ref { background-color: #fdedec; color: #c0392b; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="table-container">
-    <div class="titulo-tabela">PPM INTERNO - RELATÓRIO DE QUALIDADE</div>
-    <table id="tabela-final">
-        <thead><tr id="meses"><th>MÊS</th></tr></thead>
+<div class="container">
+    <div class="titulo">RELATÓRIO DE QUALIDADE - PPM INTERNO</div>
+    <table id="tabela-dados">
+        <thead><tr id="linha-meses"><th>MÊS</th></tr></thead>
         <tbody>
-            <tr id="ppm" class="row-ppm"><td>PPM</td></tr>
-            <tr id="meta"><td>META</td></tr>
-            <tr id="prod" class="row-produzido"><td>PRODUZIDO</td></tr>
-            <tr id="ref" class="row-refugo"><td>REFUGO</td></tr>
+            <tr id="linha-ppm" class="row-ppm"><td>PPM</td></tr>
+            <tr id="linha-meta"><td>META</td></tr>
+            <tr id="linha-prod" class="row-prod"><td>PRODUZIDO</td></tr>
+            <tr id="linha-ref" class="row-ref"><td>REFUGO</td></tr>
         </tbody>
     </table>
 </div>
 
 <script>
-    // URL do seu Web App (Verifique se é a versão mais recente após a Implantação)
     const url = 'https://script.google.com/macros/s/AKfycbzTHdWHlgjzInG4PEt2SLwhXrifRcCqQV-DFVauYf-0RgmNy6nqio192oXEg9ZPMuiqhg/exec';
 
     fetch(url)
-        .then(res => res.json())
+        .then(r => r.json())
         .then(data => {
-            const meses = document.getElementById('meses');
-            const ppm = document.getElementById('ppm');
-            const meta = document.getElementById('meta');
-            const prod = document.getElementById('prod');
-            const ref = document.getElementById('ref');
-
-            // Limpa antes de preencher para evitar duplicação em recarregamentos
-            meses.innerHTML = '<th>MÊS</th>';
-            ppm.innerHTML = '<td>PPM</td>';
-            meta.innerHTML = '<td>META</td>';
-            prod.innerHTML = '<td>PRODUZIDO</td>';
-            ref.innerHTML = '<td>REFUGO</td>';
+            const meses = document.getElementById('linha-meses');
+            const ppm = document.getElementById('linha-ppm');
+            const meta = document.getElementById('linha-meta');
+            const prod = document.getElementById('linha-prod');
+            const ref = document.getElementById('linha-ref');
 
             data.meses.forEach((m, i) => {
                 meses.innerHTML += `<th>${m}</th>`;
