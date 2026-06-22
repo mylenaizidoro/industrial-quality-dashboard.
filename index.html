@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Dashboard PPM - Qualidade</title>
-    <!-- Carregando a biblioteca de gráficos -->
+    <!-- Carregando Chart.js e o plugin Datalabels -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; padding: 20px; }
         .container { max-width: 1000px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
@@ -21,12 +22,13 @@
 <script>
     const url = 'https://script.google.com/macros/s/AKfycbzTHdWHlgjzInG4PEt2SLwhXrifRcCqQV-DFVauYf-0RgmNy6nqio192oXEg9ZPMuiqhg/exec';
 
+    // Registra o plugin globalmente
+    Chart.register(ChartDataLabels);
+
     fetch(url)
         .then(r => r.json())
         .then(data => {
             const ctx = document.getElementById('meuGrafico').getContext('2d');
-            
-            // Lógica para pintar barras: Verde se menor que meta, Vermelho se maior
             const cores = data.ppm.map((valor, i) => valor <= data.meta[i] ? '#27ae60' : '#e74c3c');
 
             new Chart(ctx, {
@@ -34,11 +36,34 @@
                 data: {
                     labels: data.meses,
                     datasets: [
-                        { label: 'PPM', data: data.ppm, backgroundColor: cores },
-                        { label: 'META', data: data.meta, type: 'line', borderColor: '#c0392b', fill: false, borderWidth: 2 }
+                        { 
+                            label: 'PPM', 
+                            data: data.ppm, 
+                            backgroundColor: cores 
+                        },
+                        { 
+                            label: 'META', 
+                            data: data.meta, 
+                            type: 'line', 
+                            borderColor: '#c0392b', 
+                            fill: false, 
+                            borderWidth: 2,
+                            datalabels: { display: false } // Esconde o rótulo da linha de meta
+                        }
                     ]
                 },
-                options: { responsive: true, scales: { y: { beginAtZero: true } } }
+                options: {
+                    responsive: true,
+                    plugins: {
+                        datalabels: {
+                            anchor: 'end', // Coloca no topo
+                            align: 'top',  // Alinha acima da barra
+                            color: '#333',
+                            font: { weight: 'bold' }
+                        }
+                    },
+                    scales: { y: { beginAtZero: true } }
+                }
             });
         });
 </script>
