@@ -24,7 +24,6 @@
 </div>
 
 <script>
-    // URL do seu Google Apps Script
     const url = 'https://script.google.com/macros/s/AKfycbwtl2DP02fR67wNIZRw7eE4lasbdnuBO7E9RPcyW-q3aYnEU1Xfsn2z_f6GBX3UYIig-w/exec';
 
     Chart.register(ChartDataLabels);
@@ -48,15 +47,12 @@
                 },
                 options: {
                     plugins: { 
-                        datalabels: { 
-                            anchor: 'end', align: 'top', color: '#333', 
-                            font: { size: 16, weight: 'bold' } // Fonte aumentada
-                        } 
+                        datalabels: { anchor: 'end', align: 'top', color: '#333', font: { size: 16, weight: 'bold' } } 
                     }
                 }
             });
 
-            // 2. Gráfico Defeitos
+            // 2. Gráfico Defeitos (Com nomes das peças aumentados e pretos)
             const ctxDefeitos = document.getElementById('graficoDefeitos').getContext('2d');
             new Chart(ctxDefeitos, {
                 type: 'bar',
@@ -70,10 +66,15 @@
                 },
                 options: {
                     plugins: { 
-                        datalabels: { 
-                            anchor: 'end', align: 'top', color: '#333', 
-                            font: { size: 16, weight: 'bold' } // Fonte aumentada
-                        } 
+                        datalabels: { anchor: 'end', align: 'top', color: '#333', font: { size: 16, weight: 'bold' } } 
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: '#000000', // Cor preta
+                                font: { size: 14, weight: 'bold' } // Fonte maior e em negrito
+                            }
+                        }
                     }
                 }
             });
