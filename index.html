@@ -2,46 +2,61 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>PPM Curitiba - Dashboard de Qualidade</title>
+    <title>Dashboard de Qualidade - Curitiba</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { background: #f0f2f5; font-family: sans-serif; padding: 20px; }
-        .card { background: white; padding: 20px; border-radius: 12px; width: 300px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h1 { color: #333; }
-        .valor { font-size: 2em; font-weight: bold; color: #6a5acd; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 40px; }
+        .dashboard-container { max-width: 900px; margin: auto; }
+        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 300px; margin-bottom: 30px; }
+        .valor { font-size: 2.5em; font-weight: bold; color: #4e44ce; margin: 10px 0; }
+        canvas { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
 
+<div class="dashboard-container">
     <h1>Qualidade - Unidade Curitiba</h1>
     <div class="card">
-        <h3>PPM ATUAL (Mai/26)</h3>
-        <p class="valor" id="ppm-valor">Carregando...</p>
+        <h3>PPM ATUAL</h3>
+        <div class="valor" id="ppm-valor">Carregando...</div>
+        <p id="data-referencia">Buscando...</p>
     </div>
+    <canvas id="meuGrafico"></canvas>
+</div>
 
-    <canvas id="meuGrafico" width="400" height="200"></canvas>
+<script>
+    // Substitua pelo SEU link do Web App (o que termina em /exec)
+    const url = 'https://script.google.com/macros/s/AKfycbwbAjpnaunGvkqpd-IPjvI7QtisgyLJspHiWgna4CK63W9ayvR1jaX-MaI7GYY3-xln4g/exec';
 
-    <script>
-        // Substitua pelo SEU link do Web App (o que termina em /exec)
-        const url = 'https://script.google.com/macros/s/AKfycbwbAjpnaunGvkqpd-IPjvI7QtisgyLJspHiWgna4CK63W9ayvR1jaX-MaI7GYY3-xln4g/exec';
+    fetch(url)
+        .then(res => res.json())
+        .then(data => {
+            // Assume que a linha 1 (index 0) são os meses e linha 2 (index 1) são os PPM
+            const meses = data[0].slice(1);
+            const valores = data[1].slice(1);
+            
+            // Atualiza o Card com o último dado
+            const ultimoIndice = valores.length - 1;
+            document.getElementById('ppm-valor').innerText = valores[ultimoIndice];
+            document.getElementById('data-referencia').innerText = "Ref: " + meses[ultimoIndice];
 
-        fetch(url)
-            .then(res => res.json())
-            .then(data => {
-                // 'data' é a matriz vinda do Google Sheets
-                const valorPPM = data[1][12]; // Coluna 13 (mai-26) da linha 2 (PPM)
-                document.getElementById('ppm-valor').innerText = valorPPM;
-
-                // Configuração do Gráfico
-                const ctx = document.getElementById('meuGrafico').getContext('2d');
-                new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: data[0].slice(1),
-                        datasets: [{ label: 'PPM Realizado', data: data[1].slice(1), borderColor: '#6a5acd' }]
-                    }
-                });
+            // Renderiza o gráfico
+            new Chart(document.getElementById('meuGrafico'), {
+                type: 'line',
+                data: {
+                    labels: meses,
+                    datasets: [{
+                        label: 'PPM Realizado',
+                        data: valores,
+                        borderColor: '#4e44ce',
+                        backgroundColor: 'rgba(78, 68, 206, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: { responsive: true }
             });
-    </script>
+        });
+</script>
 </body>
 </html>
