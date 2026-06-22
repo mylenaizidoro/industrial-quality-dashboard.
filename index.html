@@ -1,8 +1,8 @@
 name: Atualizar Indicador PPM
 on:
   schedule:
-    - cron: '0 9 * * *' # Executa todo dia às 09:00 UTC
-  workflow_dispatch: # Permite rodar manualmente no botão "Run workflow"
+    - cron: '0 9 * * *'
+  workflow_dispatch:
 
 jobs:
   update-readme:
@@ -12,40 +12,37 @@ jobs:
       
       - name: Executar script de atualização
         env:
-          # A URL está escondida nos Secrets do seu repositório
           GOOGLE_SCRIPT_URL: ${{ secrets.GOOGLE_SCRIPT_URL }}
         run: |
           python3 -c "
-import urllib.request, json, re
-# Busca os dados da sua API do Google Apps Script
-url = '${{ secrets.GOOGLE_SCRIPT_URL }}'
-with urllib.request.urlopen(url) as response:
-    data = json.loads(response.read().decode())
-
-# Formata os dados da planilha em tabela Markdown
-# A primeira linha (data[0]) são os cabeçalhos
-header = '| ' + ' | '.join(map(str, data[0])) + ' |'
-sep = '| ' + ' | '.join(['---'] * len(data[0])) + ' |'
-rows = ''
-for row in data[1:]:
-    rows += '| ' + ' | '.join(map(str, row)) + ' |\n'
-
-table = f'{header}\n{sep}\n{rows}'
-
-# Abre o seu README e substitui a tabela entre as tags de marcação
-with open('README.md', 'r') as f:
-    content = f.read()
-
-new_content = re.sub(r'<!-- INICIO_DADOS -->.*<!-- FIM_DADOS -->', f'<!-- INICIO_DADOS -->\n{table}\n<!-- FIM_DADOS -->', content, flags=re.DOTALL)
-
-with open('README.md', 'w') as f:
-    f.write(new_content)
-"
+          import urllib.request, json, re
+          url = '${{ secrets.GOOGLE_SCRIPT_URL }}'
+          with urllib.request.urlopen(url) as response:
+              data = json.loads(response.read().decode())
+          
+          # Formata a tabela Markdown
+          header = '| ' + ' | '.join(map(str, data[0])) + ' |'
+          sep = '| ' + ' | '.join(['---'] * len(data[0])) + ' |'
+          rows = ''
+          for row in data[1:]:
+              rows += '| ' + ' | '.join(map(str, row)) + ' |\n'
+          
+          table = f'{header}\n{sep}\n{rows}'
+          
+          # Atualiza o README
+          with open('README.md', 'r') as f:
+              content = f.read()
+          
+          new_content = re.sub(r'.*', f'\n{table}\n', content, flags=re.DOTALL)
+          
+          with open('README.md', 'w') as f:
+              f.write(new_content)
+          "
       
       - name: Commit e Push das alterações
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add README.md
-          git commit -m 'Atualização automática do indicador de PPM Interno' || exit 0
+          git commit -m 'Atualização automática de dados de qualidade' || exit 0
           git push
