@@ -51,10 +51,10 @@
 
 <div id="areaPlanoAcao">
     <h2 style="color: #2c3e50;">PLANO DE AÇÃO - ANÁLISE DE DADOS</h2>
-    <textarea style="width:100%; height:200px; padding:10px; border:1px solid #ccc; box-sizing:border-box;" placeholder="Digite aqui as ações corretivas e responsáveis..."></textarea>
+    <textarea id="inputPlano" style="width:100%; height:200px; padding:10px; border:1px solid #ccc; box-sizing:border-box;" placeholder="Digite aqui as ações corretivas e responsáveis..."></textarea>
     <div style="margin-top:15px; text-align:right;">
         <button onclick="fecharPlano()" style="padding:10px 20px; background:#95a5a6; color:white; border:none; cursor:pointer;">FECHAR</button>
-        <button style="padding:10px 20px; background:#27ae60; color:white; border:none; cursor:pointer;">SALVAR</button>
+        <button onclick="salvarPlano()" style="padding:10px 20px; background:#27ae60; color:white; border:none; cursor:pointer;">SALVAR</button>
     </div>
 </div>
 
@@ -127,6 +127,10 @@
 
     function abrirPlano() { document.getElementById('areaPlanoAcao').style.display = 'block'; }
     function fecharPlano() { document.getElementById('areaPlanoAcao').style.display = 'none'; }
+    function salvarPlano() { 
+        alert("Plano de Ação salvo com sucesso!");
+        fecharPlano(); 
+    }
 
     function gerarPDF() {
         const btns = document.querySelectorAll('.btn-export, .btn-plano');
