@@ -24,7 +24,7 @@
 </div>
 
 <script>
-    // --- COLE AQUI SUA NOVA URL DO GOOGLE APPS SCRIPT ---
+    // URL do seu Google Apps Script
     const url = 'https://script.google.com/macros/s/AKfycbwtl2DP02fR67wNIZRw7eE4lasbdnuBO7E9RPcyW-q3aYnEU1Xfsn2z_f6GBX3UYIig-w/exec';
 
     Chart.register(ChartDataLabels);
@@ -47,7 +47,12 @@
                     ]
                 },
                 options: {
-                    plugins: { datalabels: { anchor: 'end', align: 'top', color: '#333', font: { weight: 'bold' } } }
+                    plugins: { 
+                        datalabels: { 
+                            anchor: 'end', align: 'top', color: '#333', 
+                            font: { size: 16, weight: 'bold' } // Fonte aumentada
+                        } 
+                    }
                 }
             });
 
@@ -64,7 +69,12 @@
                     }]
                 },
                 options: {
-                    plugins: { datalabels: { anchor: 'end', align: 'top', color: '#333', font: { weight: 'bold' } } }
+                    plugins: { 
+                        datalabels: { 
+                            anchor: 'end', align: 'top', color: '#333', 
+                            font: { size: 16, weight: 'bold' } // Fonte aumentada
+                        } 
+                    }
                 }
             });
         });
