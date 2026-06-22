@@ -51,9 +51,7 @@
                     ]
                 },
                 options: {
-                    plugins: { 
-                        datalabels: { anchor: 'end', align: 'top', color: '#333', font: { size: 16, weight: 'bold' } } 
-                    }
+                    plugins: { datalabels: { anchor: 'end', align: 'top', color: '#333', font: { size: 16, weight: 'bold' } } }
                 }
             });
 
@@ -70,16 +68,12 @@
                     }]
                 },
                 options: {
-                    plugins: { 
-                        datalabels: { anchor: 'end', align: 'top', color: '#333', font: { size: 16, weight: 'bold' } } 
-                    },
-                    scales: {
-                        x: { ticks: { color: '#000000', font: { size: 14, weight: 'bold' } } }
-                    }
+                    plugins: { datalabels: { anchor: 'end', align: 'top', color: '#333', font: { size: 16, weight: 'bold' } } },
+                    scales: { x: { ticks: { color: '#000000', font: { size: 14, weight: 'bold' } } } }
                 }
             });
 
-            // 3. Gráfico Pizza (Setores)
+            // 3. Gráfico Pizza (Setores) - ATUALIZADO
             const ctxSetor = document.getElementById('graficoSetor').getContext('2d');
             new Chart(ctxSetor, {
                 type: 'doughnut',
@@ -96,9 +90,15 @@
                 options: {
                     responsive: true,
                     plugins: {
+                        // Exibe os números dentro das fatias
+                        datalabels: {
+                            color: '#000000', // Fonte preta
+                            font: { size: 16, weight: 'bold' }, // Fonte maior e em negrito
+                            formatter: (value) => value // Exibe o valor numérico
+                        },
                         legend: { 
                             position: 'right', 
-                            labels: { font: { size: 14, weight: 'bold' }, color: '#000000' } 
+                            labels: { font: { size: 14, weight: 'bold' }, color: '#000000' } // Legenda preta
                         }
                     }
                 }
