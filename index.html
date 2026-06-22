@@ -51,10 +51,10 @@
 
 <div id="areaPlanoAcao">
     <h2 style="color: #2c3e50;">PLANO DE AÇÃO - ANÁLISE DE DADOS</h2>
-    <textarea style="width:100%; height:200px; padding:10px; border:1px solid #ccc; box-sizing:border-box;" placeholder="Digite aqui as ações corretivas e responsáveis..."></textarea>
+    <textarea id="textoPlano" style="width:100%; height:200px; padding:10px; border:1px solid #ccc; box-sizing:border-box;" placeholder="Digite aqui as ações corretivas e responsáveis..."></textarea>
     <div style="margin-top:15px; text-align:right;">
         <button onclick="fecharPlano()" style="padding:10px 20px; background:#95a5a6; color:white; border:none; cursor:pointer;">FECHAR</button>
-        <button style="padding:10px 20px; background:#27ae60; color:white; border:none; cursor:pointer;">SALVAR</button>
+        <button onclick="salvarPlano()" style="padding:10px 20px; background:#27ae60; color:white; border:none; cursor:pointer;">SALVAR</button>
     </div>
 </div>
 
@@ -79,8 +79,13 @@
     const url = 'https://script.google.com/macros/s/AKfycbx5eihq6v75T79HB7HWhGfK23f4WSTsiE8cksqTlPCyuqLcFd88_KhYkvbBa5p7VCjLbA/exec';
     Chart.register(ChartDataLabels);
 
+    // Carrega o plano salvo ao abrir a página
+    window.onload = () => {
+        const salvo = localStorage.getItem('planoAcaoCoplac');
+        if (salvo) document.getElementById('textoPlano').value = salvo;
+    };
+
     fetch(url).then(r => r.json()).then(data => {
-        
         new Chart(document.getElementById('graficoPPM').getContext('2d'), {
             type: 'bar',
             data: {
@@ -127,6 +132,14 @@
 
     function abrirPlano() { document.getElementById('areaPlanoAcao').style.display = 'block'; }
     function fecharPlano() { document.getElementById('areaPlanoAcao').style.display = 'none'; }
+    
+    // Função para salvar no navegador
+    function salvarPlano() { 
+        const texto = document.getElementById('textoPlano').value;
+        localStorage.setItem('planoAcaoCoplac', texto);
+        alert("Plano de Ação salvo com sucesso!");
+        fecharPlano();
+    }
 
     function gerarPDF() {
         const btns = document.querySelectorAll('.btn-export, .btn-plano');
