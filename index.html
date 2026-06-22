@@ -11,8 +11,11 @@
         
         .main-title { text-align: center; color: #2c3e50; margin: 10px 0; text-transform: uppercase; font-size: 24px; font-weight: bold; }
         
-        @media print { .btn-export { display: none; } }
-        .btn-export { display: block; margin: 0 auto 15px auto; padding: 10px 20px; font-size: 16px; font-weight: bold; background-color: #2c3e50; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        @media print { .btn-export, .btn-plano { display: none; } }
+        
+        .btn-group { text-align: center; margin-bottom: 15px; }
+        .btn-export { padding: 10px 20px; font-size: 16px; font-weight: bold; background-color: #2c3e50; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .btn-plano { padding: 10px 20px; font-size: 16px; font-weight: bold; background-color: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px; }
         
         .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; max-width: 1200px; margin: auto; }
         
@@ -32,12 +35,28 @@
         
         #graficoPPM { max-height: 250px !important; }
         #graficoDefeitos, #graficoSetor { max-height: 300px !important; }
+
+        /* Modal do Plano de Ação */
+        #areaPlanoAcao { display:none; position:fixed; top:50px; left:10%; width:80%; background:white; padding:20px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.5); z-index:1000; }
     </style>
 </head>
 <body>
 
 <h1 class="main-title">INDICADORES DE QUALIDADE COPLAC CURITIBA</h1>
-<button class="btn-export" onclick="gerarPDF()">EXPORTAR PDF</button>
+
+<div class="btn-group">
+    <button class="btn-export" onclick="gerarPDF()">EXPORTAR PDF</button>
+    <button class="btn-plano" onclick="abrirPlano()">PLANO DE AÇÃO</button>
+</div>
+
+<div id="areaPlanoAcao">
+    <h2 style="color: #2c3e50;">PLANO DE AÇÃO - ANÁLISE DE DADOS</h2>
+    <textarea style="width:100%; height:200px; padding:10px; border:1px solid #ccc; box-sizing:border-box;" placeholder="Digite aqui as ações corretivas e responsáveis..."></textarea>
+    <div style="margin-top:15px; text-align:right;">
+        <button onclick="fecharPlano()" style="padding:10px 20px; background:#95a5a6; color:white; border:none; cursor:pointer;">FECHAR</button>
+        <button style="padding:10px 20px; background:#27ae60; color:white; border:none; cursor:pointer;">SALVAR</button>
+    </div>
+</div>
 
 <div class="dashboard">
     <div class="container full-width">
@@ -71,11 +90,7 @@
                     { label: 'META', data: data.meta, type: 'line', borderColor: '#c0392b', borderWidth: 2, datalabels: { display: false } }
                 ]
             },
-            options: { 
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { datalabels: { anchor: 'end', align: 'top', color: '#333', font: { size: 14, weight: 'bold' } } } 
-            }
+            options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { anchor: 'end', align: 'top', color: '#333', font: { size: 14, weight: 'bold' } } } }
         });
 
         new Chart(document.getElementById('graficoDefeitos').getContext('2d'), {
@@ -85,8 +100,7 @@
                 datasets: [{ label: 'Quantidade', data: data.defeitos.map(d => d[1]), backgroundColor: '#3498db' }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false,
                 plugins: { datalabels: { anchor: 'end', align: 'top', color: '#333', font: { size: 14, weight: 'bold' } } },
                 scales: { x: { ticks: { color: '#000000', font: { size: 12, weight: 'bold' } } } }
             }
@@ -102,8 +116,7 @@
                 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false,
                 plugins: {
                     datalabels: { color: '#000000', font: { size: 14, weight: 'bold' } },
                     legend: { position: 'right', labels: { font: { size: 12, weight: 'bold' }, color: '#000000' } }
@@ -112,9 +125,12 @@
         });
     });
 
+    function abrirPlano() { document.getElementById('areaPlanoAcao').style.display = 'block'; }
+    function fecharPlano() { document.getElementById('areaPlanoAcao').style.display = 'none'; }
+
     function gerarPDF() {
-        const btn = document.querySelector('.btn-export');
-        btn.style.display = 'none';
+        const btns = document.querySelectorAll('.btn-export, .btn-plano');
+        btns.forEach(b => b.style.display = 'none');
         const opt = {
             margin: 2,
             filename: 'Indicadores_Qualidade_Coplac.pdf',
@@ -123,7 +139,7 @@
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
         };
         html2pdf().set(opt).from(document.body).save().then(() => {
-            btn.style.display = 'block';
+            btns.forEach(b => b.style.display = 'inline-block');
         });
     }
 </script>
