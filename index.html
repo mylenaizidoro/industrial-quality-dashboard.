@@ -2,76 +2,73 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard PPM - Qualidade</title>
+    <title>Dashboard de Qualidade - Coplac</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; padding: 20px; }
-        .container { max-width: 1000px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .header { 
-            text-align: center; 
-            color: #2c3e50; 
-            margin-bottom: 25px; 
-            text-transform: uppercase; 
-            font-size: 1.5rem; 
-            font-weight: bold;
-        }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        .header { text-align: center; color: #2c3e50; margin-bottom: 25px; text-transform: uppercase; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h2 class="header">INDICADOR PPM INTERNO - ÚLTIMOS 12 MESES</h2>
-    <canvas id="meuGrafico"></canvas>
+    <canvas id="graficoPPM"></canvas>
+</div>
+
+<div class="container">
+    <h2 class="header">AS PEÇAS QUE APRESENTARAM MAIS PROBLEMAS NESSE MÊS</h2>
+    <canvas id="graficoDefeitos"></canvas>
 </div>
 
 <script>
-    // URL do seu script do Google Apps
+    // Insira aqui a sua URL do Apps Script
     const url = 'https://script.google.com/macros/s/AKfycbzTHdWHlgjzInG4PEt2SLwhXrifRcCqQV-DFVauYf-0RgmNy6nqio192oXEg9ZPMuiqhg/exec';
 
-    // Registra o plugin globalmente
     Chart.register(ChartDataLabels);
 
     fetch(url)
         .then(r => r.json())
         .then(data => {
-            const ctx = document.getElementById('meuGrafico').getContext('2d');
             
-            // Lógica: Verde se menor ou igual à meta, Vermelho se maior
-            const cores = data.ppm.map((valor, i) => valor <= data.meta[i] ? '#27ae60' : '#e74c3c');
+            // 1. Renderizar Gráfico PPM
+            const ctxPPM = document.getElementById('graficoPPM').getContext('2d');
+            const coresPPM = data.ppm.map((v, i) => v <= data.meta[i] ? '#27ae60' : '#e74c3c');
 
-            new Chart(ctx, {
+            new Chart(ctxPPM, {
                 type: 'bar',
                 data: {
                     labels: data.meses,
                     datasets: [
-                        { 
-                            label: 'PPM', 
-                            data: data.ppm, 
-                            backgroundColor: cores 
-                        },
-                        { 
-                            label: 'META', 
-                            data: data.meta, 
-                            type: 'line', 
-                            borderColor: '#c0392b', 
-                            fill: false, 
-                            borderWidth: 2,
-                            datalabels: { display: false } // Oculta o valor da meta no topo
-                        }
+                        { label: 'PPM', data: data.ppm, backgroundColor: coresPPM },
+                        { label: 'META', data: data.meta, type: 'line', borderColor: '#c0392b', borderWidth: 2, datalabels: { display: false } }
                     ]
                 },
                 options: {
-                    responsive: true,
-                    plugins: {
-                        datalabels: {
-                            anchor: 'end', 
-                            align: 'top',  
-                            color: '#333',
-                            font: { weight: 'bold' }
-                        }
-                    },
-                    scales: { y: { beginAtZero: true } }
+                    plugins: { 
+                        datalabels: { anchor: 'end', align: 'top', color: '#333', font: { weight: 'bold' } } 
+                    }
+                }
+            });
+
+            // 2. Renderizar Gráfico de Defeitos
+            const ctxDefeitos = document.getElementById('graficoDefeitos').getContext('2d');
+            new Chart(ctxDefeitos, {
+                type: 'bar',
+                data: {
+                    labels: data.defeitos.map(d => d[0]),
+                    datasets: [{
+                        label: 'Quantidade',
+                        data: data.defeitos.map(d => d[1]),
+                        backgroundColor: '#3498db'
+                    }]
+                },
+                options: {
+                    plugins: { 
+                        datalabels: { anchor: 'end', align: 'top', color: '#333', font: { weight: 'bold' } } 
+                    }
                 }
             });
         });
