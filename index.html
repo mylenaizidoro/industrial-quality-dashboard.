@@ -7,9 +7,10 @@ on:
 jobs:
   update-readme:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v3
-      
       - name: Executar script de atualização
         env:
           GOOGLE_SCRIPT_URL: ${{ secrets.GOOGLE_SCRIPT_URL }}
@@ -19,26 +20,18 @@ jobs:
           url = '${{ secrets.GOOGLE_SCRIPT_URL }}'
           with urllib.request.urlopen(url) as response:
               data = json.loads(response.read().decode())
-          
-          # Formata a tabela Markdown
           header = '| ' + ' | '.join(map(str, data[0])) + ' |'
           sep = '| ' + ' | '.join(['---'] * len(data[0])) + ' |'
           rows = ''
           for row in data[1:]:
               rows += '| ' + ' | '.join(map(str, row)) + ' |\n'
-          
           table = f'{header}\n{sep}\n{rows}'
-          
-          # Atualiza o README
           with open('README.md', 'r') as f:
               content = f.read()
-          
           new_content = re.sub(r'.*', f'\n{table}\n', content, flags=re.DOTALL)
-          
           with open('README.md', 'w') as f:
               f.write(new_content)
           "
-      
       - name: Commit e Push das alterações
         run: |
           git config --global user.name 'github-actions[bot]'
