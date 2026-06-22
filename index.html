@@ -23,8 +23,13 @@
     <canvas id="graficoDefeitos"></canvas>
 </div>
 
+<div class="container">
+    <h2 class="header">PPM POR SETOR</h2>
+    <canvas id="graficoSetor"></canvas>
+</div>
+
 <script>
-    const url = 'https://script.google.com/macros/s/AKfycbwtl2DP02fR67wNIZRw7eE4lasbdnuBO7E9RPcyW-q3aYnEU1Xfsn2z_f6GBX3UYIig-w/exec';
+    const url = 'https://script.google.com/macros/s/AKfycbx5eihq6v75T79HB7HWhGfK23f4WSTsiE8cksqTlPCyuqLcFd88_KhYkvbBa5p7VCjLbA/exec';
 
     Chart.register(ChartDataLabels);
 
@@ -52,7 +57,7 @@
                 }
             });
 
-            // 2. Gráfico Defeitos (Com nomes das peças aumentados e pretos)
+            // 2. Gráfico Defeitos
             const ctxDefeitos = document.getElementById('graficoDefeitos').getContext('2d');
             new Chart(ctxDefeitos, {
                 type: 'bar',
@@ -69,11 +74,31 @@
                         datalabels: { anchor: 'end', align: 'top', color: '#333', font: { size: 16, weight: 'bold' } } 
                     },
                     scales: {
-                        x: {
-                            ticks: {
-                                color: '#000000', // Cor preta
-                                font: { size: 14, weight: 'bold' } // Fonte maior e em negrito
-                            }
+                        x: { ticks: { color: '#000000', font: { size: 14, weight: 'bold' } } }
+                    }
+                }
+            });
+
+            // 3. Gráfico Pizza (Setores)
+            const ctxSetor = document.getElementById('graficoSetor').getContext('2d');
+            new Chart(ctxSetor, {
+                type: 'doughnut',
+                data: {
+                    labels: data.ppmPorSetor.map(d => d[0]),
+                    datasets: [{
+                        data: data.ppmPorSetor.map(d => d[1]),
+                        backgroundColor: [
+                            '#3498db', '#e74c3c', '#27ae60', '#f1c40f', '#9b59b6', 
+                            '#34495e', '#e67e22', '#1abc9c', '#7f8c8d', '#2ecc71', '#d35400'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { 
+                            position: 'right', 
+                            labels: { font: { size: 14, weight: 'bold' }, color: '#000000' } 
                         }
                     }
                 }
