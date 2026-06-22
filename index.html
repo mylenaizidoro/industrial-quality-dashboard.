@@ -2,66 +2,61 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard de Qualidade</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>PPM Interno - Relatório Técnico</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 20px; }
-        .container { max-width: 1000px; margin: auto; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f4f4; padding: 20px; }
+        .table-container { max-width: 1000px; margin: auto; background: white; padding: 10px; border: 1px solid #999; }
         
-        /* Grid dos 4 Cards */
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; border-bottom: 4px solid #0056b3; }
-        .card h3 { font-size: 0.8em; color: #666; margin: 0; text-transform: uppercase; }
-        .valor { font-size: 1.5em; font-weight: bold; margin-top: 10px; color: #333; }
+        /* Cabeçalho da Tabela */
+        .titulo-tabela { background-color: #999; color: black; text-align: center; font-weight: bold; padding: 10px; border: 1px solid #000; }
         
-        /* Container do Gráfico */
-        .chart-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        /* Estilo da Tabela */
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #000; padding: 8px; text-align: center; }
+        
+        /* Cores das Linhas (Iguais à foto) */
+        .header-row { background-color: #fff; }
+        .row-ppm { background-color: #a67c52; color: #000; }
+        .row-meta { background-color: #fff; color: #000; }
+        .row-produzido { background-color: #0ff; color: #000; font-weight: bold; }
+        .row-refugo { background-color: #f00; color: #000; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="grid">
-        <div class="card"><h3>PPM</h3><div id="ppm-val" class="valor">-</div></div>
-        <div class="card"><h3>META</h3><div id="meta-val" class="valor">-</div></div>
-        <div class="card"><h3>PRODUZIDO</h3><div id="prod-val" class="valor">-</div></div>
-        <div class="card"><h3>REFUGO</h3><div id="ref-val" class="valor">-</div></div>
-    </div>
-
-    <div class="chart-container">
-        <canvas id="meuGrafico"></canvas>
-    </div>
+<div class="table-container">
+    <div class="titulo-tabela">PPM INTERNO</div>
+    <table id="tabela-final">
+        <thead>
+            <tr id="meses" class="header-row"><th>MÊS</th></tr>
+        </thead>
+        <tbody>
+            <tr id="ppm" class="row-ppm"><td>PPM</td></tr>
+            <tr id="meta" class="row-meta"><td>META</td></tr>
+            <tr id="produzido" class="row-produzido"><td>PRODUZIDO</td></tr>
+            <tr id="refugo" class="row-refugo"><td>REFUGO</td></tr>
+        </tbody>
+    </table>
 </div>
 
 <script>
-    // URL do seu Web App
     const url = 'https://script.google.com/macros/s/AKfycbzXzhiMJg9nAcFuSIX-jtBELHK5OcB9LWwXaxd1uN3hUUoQmIEc-BLI8zoIwSnWtFmDnA/exec';
 
     fetch(url)
         .then(res => res.json())
         .then(data => {
-            const i = data.ppm.length - 1;
-            
-            // Atualiza os Cards com o último mês disponível
-            document.getElementById('ppm-val').innerText = data.ppm[i];
-            document.getElementById('meta-val').innerText = data.meta[i];
-            document.getElementById('prod-val').innerText = data.produzido[i];
-            document.getElementById('ref-val').innerText = data.refugo[i];
+            const meses = document.getElementById('meses');
+            const ppm = document.getElementById('ppm');
+            const meta = document.getElementById('meta');
+            const prod = document.getElementById('produzido');
+            const ref = document.getElementById('refugo');
 
-            // Define cor das barras: Vermelho se PPM > Meta, Verde se <= Meta
-            const cores = data.ppm.map((v, idx) => v > data.meta[idx] ? '#d9534f' : '#5cb85c');
-
-            // Cria o gráfico
-            new Chart(document.getElementById('meuGrafico'), {
-                type: 'bar',
-                data: {
-                    labels: data.meses,
-                    datasets: [
-                        { label: 'PPM Realizado', data: data.ppm, backgroundColor: cores },
-                        { label: 'Meta', data: data.meta, type: 'line', borderColor: '#f0ad4e', borderDash: [5, 5], fill: false }
-                    ]
-                },
-                options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            data.meses.forEach((m, i) => {
+                meses.innerHTML += `<th>${m}</th>`;
+                ppm.innerHTML += `<td>${data.ppm[i]}</td>`;
+                meta.innerHTML += `<td>${data.meta[i]}</td>`;
+                prod.innerHTML += `<td>${data.produzido[i]}</td>`;
+                ref.innerHTML += `<td>${data.refugo[i]}</td>`;
             });
         });
 </script>
