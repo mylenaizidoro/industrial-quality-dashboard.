@@ -2,40 +2,55 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard PPM - Unidade Curitiba</title>
+    <title>Indicadores - Qualidade Coplac Curitiba</title>
     <style>
-        :root {
-            --bg-color: #f4f6f8;
-            --header-bg: #2c3e50;
-            --border: #dcdcdc;
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
+        
+        /* Cabeçalho no padrão DHO */
+        .header-dho { 
+            background-color: #2c3e50; 
+            color: #ffffff; 
+            text-align: center; 
+            padding: 25px; 
+            font-size: 1.8rem; 
+            font-weight: bold; 
+            margin-bottom: 20px; 
+            border-bottom: 5px solid #3498db;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-color); padding: 20px; }
-        .container { max-width: 1100px; margin: auto; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden; }
-        .titulo { background-color: var(--header-bg); color: white; padding: 15px; font-weight: bold; text-align: center; letter-spacing: 1px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid var(--border); padding: 10px; text-align: center; }
-        thead th { background-color: #ecf0f1; font-weight: 700; color: #34495e; }
-        .row-ppm { background-color: #fdf2e9; color: #d35400; font-weight: bold; }
-        .row-prod { background-color: #e8f8f5; color: #16a085; font-weight: bold; }
-        .row-ref { background-color: #fdedec; color: #c0392b; font-weight: bold; }
+
+        .container { max-width: 1200px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #bdc3c7; padding: 12px; text-align: center; }
+        
+        /* Cores fiéis à sua tabela original */
+        thead th { background-color: #ecf0f1; }
+        .row-ppm { background-color: #a67c52; color: #000; font-weight: bold; }
+        .row-meta { background-color: #ffffff; color: #000; }
+        .row-produzido { background-color: #00ffff; color: #000; font-weight: bold; }
+        .row-refugo { background-color: #ff0000; color: #000; font-weight: bold; }
     </style>
 </head>
 <body>
 
+<div class="header-dho">INDICADORES DE QUALIDADE - COPLAC CURITIBA</div>
+
 <div class="container">
-    <div class="titulo">RELATÓRIO DE QUALIDADE - PPM INTERNO</div>
     <table id="tabela-dados">
         <thead><tr id="linha-meses"><th>MÊS</th></tr></thead>
         <tbody>
             <tr id="linha-ppm" class="row-ppm"><td>PPM</td></tr>
-            <tr id="linha-meta"><td>META</td></tr>
-            <tr id="linha-prod" class="row-prod"><td>PRODUZIDO</td></tr>
-            <tr id="linha-ref" class="row-ref"><td>REFUGO</td></tr>
+            <tr id="linha-meta" class="row-meta"><td>META</td></tr>
+            <tr id="linha-prod" class="row-produzido"><td>PRODUZIDO</td></tr>
+            <tr id="linha-ref" class="row-refugo"><td>REFUGO</td></tr>
         </tbody>
     </table>
 </div>
 
 <script>
+    // Substitua pelo link do seu Web App
     const url = 'https://script.google.com/macros/s/AKfycbzTHdWHlgjzInG4PEt2SLwhXrifRcCqQV-DFVauYf-0RgmNy6nqio192oXEg9ZPMuiqhg/exec';
 
     fetch(url)
