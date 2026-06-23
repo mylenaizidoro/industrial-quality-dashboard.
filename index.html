@@ -24,9 +24,9 @@
         #graficoPPM { max-height: 250px !important; }
         #graficoDefeitos, #graficoSetor { max-height: 300px !important; }
 
-        /* Estilo da lista acumulativa com botão de excluir */
-        .item-historico { background: #f9f9f9; border-left: 5px solid #27ae60; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px; }
-        .btn-del { cursor: pointer; background: #e74c3c; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; margin-left: 10px; }
+        /* Estilo da lista com botão de exclusão */
+        .item-historico { background: #fff; border-left: 5px solid #27ae60; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px; border: 1px solid #ddd; }
+        .btn-del { cursor: pointer; background: #e74c3c; color: white; border: none; padding: 2px 8px; border-radius: 3px; font-size: 12px; font-weight: bold; }
 
         #areaPlanoAcao { display:none; position:fixed; top:50px; left:10%; width:80%; background:white; padding:20px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.5); z-index:1000; }
     </style>
@@ -75,6 +75,7 @@
     const url = 'https://script.google.com/macros/s/AKfycbx5eihq6v75T79HB7HWhGfK23f4WSTsiE8cksqTlPCyuqLcFd88_KhYkvbBa5p7VCjLbA/exec';
     Chart.register(ChartDataLabels);
 
+    // Carrega o histórico ao iniciar
     window.onload = renderizarHistorico;
 
     function renderizarHistorico() {
@@ -89,7 +90,7 @@
                 const div = document.createElement('div');
                 div.className = 'item-historico';
                 div.innerHTML = `<span><strong>${item.data}</strong>: ${item.texto}</span> 
-                                 <span class="btn-del" onclick="excluirItem(${index})">X</span>`;
+                                 <button class="btn-del" onclick="excluirItem(${index})">X</button>`;
                 divDisplay.appendChild(div);
             });
         }
@@ -97,7 +98,7 @@
 
     function salvarPlano() { 
         const texto = document.getElementById('textoPlano').value;
-        if (!texto) return alert("Por favor, preencha a ação.");
+        if (!texto) return alert("Por favor, digite uma ação.");
         
         const historico = JSON.parse(localStorage.getItem('planoAcaoCoplac') || "[]");
         historico.push({ data: new Date().toLocaleDateString(), texto: texto });
@@ -115,9 +116,6 @@
         renderizarHistorico();
     }
 
-    function abrirPlano() { document.getElementById('areaPlanoAcao').style.display = 'block'; }
-    function fecharPlano() { document.getElementById('areaPlanoAcao').style.display = 'none'; }
-
     // Gráficos mantidos
     fetch(url).then(r => r.json()).then(data => {
         new Chart(document.getElementById('graficoPPM').getContext('2d'), { type: 'bar', data: { labels: data.meses, datasets: [{ label: 'PPM', data: data.ppm, backgroundColor: data.ppm.map((v, i) => v <= data.meta[i] ? '#27ae60' : '#e74c3c') }, { label: 'META', data: data.meta, type: 'line', borderColor: '#c0392b', borderWidth: 2, datalabels: { display: false } }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { anchor: 'end', align: 'top', color: '#333', font: { size: 14, weight: 'bold' } } } } });
@@ -125,6 +123,9 @@
         new Chart(document.getElementById('graficoSetor').getContext('2d'), { type: 'doughnut', data: { labels: data.ppmPorSetor.map(d => d[0]), datasets: [{ data: data.ppmPorSetor.map(d => d[1]), backgroundColor: ['#3498db', '#e74c3c', '#27ae60', '#f1c40f', '#9b59b6', '#34495e', '#e67e22', '#1abc9c', '#7f8c8d', '#2ecc71', '#d35400'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { color: '#000000', font: { size: 14, weight: 'bold' } }, legend: { position: 'right' } } } });
     });
 
+    function abrirPlano() { document.getElementById('areaPlanoAcao').style.display = 'block'; }
+    function fecharPlano() { document.getElementById('areaPlanoAcao').style.display = 'none'; }
+    
     function gerarPDF() { 
         const btns = document.querySelectorAll('.btn-export, .btn-plano, .btn-del'); 
         btns.forEach(b => b.style.display = 'none'); 
