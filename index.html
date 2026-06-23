@@ -10,7 +10,7 @@
         body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; padding: 10px; margin: 0; }
         .main-title { text-align: center; color: #2c3e50; margin: 10px 0; text-transform: uppercase; font-size: 24px; font-weight: bold; }
         
-        @media print { .btn-export, .btn-plano, .btn-del { display: none; } }
+        @media print { .btn-export, .btn-plano { display: none; } }
         
         .btn-group { text-align: center; margin-bottom: 15px; }
         .btn-export { padding: 10px 20px; font-size: 16px; font-weight: bold; background-color: #2c3e50; color: white; border: none; border-radius: 5px; cursor: pointer; }
@@ -24,10 +24,10 @@
         #graficoPPM { max-height: 250px !important; }
         #graficoDefeitos, #graficoSetor { max-height: 300px !important; }
 
-        /* Estilo da lista acumulativa com exclusão */
-        .item-historico { background: #f9f9f9; border-left: 5px solid #27ae60; padding: 10px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
-        .btn-del { cursor: pointer; color: #e74c3c; font-weight: bold; margin-left: 10px; border: 1px solid #e74c3c; padding: 2px 6px; border-radius: 3px; }
+        /* Estilo da área de exibição acumulativa */
+        #displayPlano { background: #f9f9f9; border-left: 5px solid #27ae60; padding: 15px; white-space: pre-wrap; font-size: 14px; color: #333; min-height: 50px; }
 
+        /* Modal do Plano de Ação */
         #areaPlanoAcao { display:none; position:fixed; top:50px; left:10%; width:80%; background:white; padding:20px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.5); z-index:1000; }
     </style>
 </head>
@@ -50,13 +50,24 @@
 </div>
 
 <div class="dashboard">
-    <div class="container full-width"><h2 class="header">INDICADOR PPM INTERNO</h2><canvas id="graficoPPM" height="120"></canvas></div>
-    <div class="container"><h2 class="header">MAIORES DEFEITOS</h2><canvas id="graficoDefeitos"></canvas></div>
-    <div class="container"><h2 class="header">PPM POR SETOR</h2><canvas id="graficoSetor"></canvas></div>
+    <div class="container full-width">
+        <h2 class="header">INDICADOR PPM INTERNO - ÚLTIMOS 12 MESES</h2>
+        <canvas id="graficoPPM" height="120"></canvas>
+    </div>
+
+    <div class="container">
+        <h2 class="header">AS PEÇAS QUE APRESENTARAM MAIS DEFEITOS NO MÊS</h2>
+        <canvas id="graficoDefeitos"></canvas>
+    </div>
+
+    <div class="container">
+        <h2 class="header">PPM POR SETOR</h2>
+        <canvas id="graficoSetor"></canvas>
+    </div>
 
     <div class="container full-width">
         <h2 class="header">RESUMO DO PLANO DE AÇÃO</h2>
-        <div id="displayPlano"></div>
+        <div id="displayPlano">Nenhuma análise salva até o momento.</div>
     </div>
 </div>
 
@@ -64,52 +75,65 @@
     const url = 'https://script.google.com/macros/s/AKfycbx5eihq6v75T79HB7HWhGfK23f4WSTsiE8cksqTlPCyuqLcFd88_KhYkvbBa5p7VCjLbA/exec';
     Chart.register(ChartDataLabels);
 
-    window.onload = renderizarHistorico;
+    // Carrega o histórico ao iniciar
+    window.onload = () => {
+        const historico = localStorage.getItem('planoAcaoCoplac');
+        if (historico) {
+            document.getElementById('displayPlano').innerText = historico;
+        }
+    };
 
-    function renderizarHistorico() {
-        const historico = JSON.parse(localStorage.getItem('planoAcaoCoplac') || "[]");
-        const divDisplay = document.getElementById('displayPlano');
-        divDisplay.innerHTML = "";
-        
-        if (historico.length === 0) divDisplay.innerText = "Nenhuma análise salva.";
-        
-        historico.forEach((item, index) => {
-            const div = document.createElement('div');
-            div.className = 'item-historico';
-            div.innerHTML = `<span><strong>${item.data}</strong>: ${item.texto}</span> 
-                             <span class="btn-del" onclick="excluirItem(${index})">X</span>`;
-            divDisplay.appendChild(div);
-        });
-    }
-
-    function salvarPlano() { 
-        const texto = document.getElementById('textoPlano').value;
-        if (!texto) return;
-        const historico = JSON.parse(localStorage.getItem('planoAcaoCoplac') || "[]");
-        historico.push({ data: new Date().toLocaleDateString(), texto: texto });
-        localStorage.setItem('planoAcaoCoplac', JSON.stringify(historico));
-        document.getElementById('textoPlano').value = "";
-        renderizarHistorico();
-        fecharPlano();
-    }
-
-    function excluirItem(index) {
-        const historico = JSON.parse(localStorage.getItem('planoAcaoCoplac') || "[]");
-        historico.splice(index, 1);
-        localStorage.setItem('planoAcaoCoplac', JSON.stringify(historico));
-        renderizarHistorico();
-    }
-
-    // Gráficos (Mantidos)
     fetch(url).then(r => r.json()).then(data => {
-        new Chart(document.getElementById('graficoPPM').getContext('2d'), { type: 'bar', data: { labels: data.meses, datasets: [{ label: 'PPM', data: data.ppm, backgroundColor: data.ppm.map((v, i) => v <= data.meta[i] ? '#27ae60' : '#e74c3c') }, { label: 'META', data: data.meta, type: 'line', borderColor: '#c0392b', borderWidth: 2, datalabels: { display: false } }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { anchor: 'end', align: 'top', color: '#333', font: { size: 14, weight: 'bold' } } } } });
-        new Chart(document.getElementById('graficoDefeitos').getContext('2d'), { type: 'bar', data: { labels: data.defeitos.map(d => d[0]), datasets: [{ label: 'Quantidade', data: data.defeitos.map(d => d[1]), backgroundColor: '#3498db' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { anchor: 'end', align: 'top', color: '#333', font: { size: 14, weight: 'bold' } } } } });
-        new Chart(document.getElementById('graficoSetor').getContext('2d'), { type: 'doughnut', data: { labels: data.ppmPorSetor.map(d => d[0]), datasets: [{ data: data.ppmPorSetor.map(d => d[1]), backgroundColor: ['#3498db', '#e74c3c', '#27ae60', '#f1c40f', '#9b59b6', '#34495e', '#e67e22', '#1abc9c', '#7f8c8d', '#2ecc71', '#d35400'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { color: '#000000', font: { size: 14, weight: 'bold' } }, legend: { position: 'right' } } } });
+        new Chart(document.getElementById('graficoPPM').getContext('2d'), {
+            type: 'bar',
+            data: { labels: data.meses, datasets: [
+                { label: 'PPM', data: data.ppm, backgroundColor: data.ppm.map((v, i) => v <= data.meta[i] ? '#27ae60' : '#e74c3c') },
+                { label: 'META', data: data.meta, type: 'line', borderColor: '#c0392b', borderWidth: 2, datalabels: { display: false } }
+            ]},
+            options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { anchor: 'end', align: 'top', color: '#333', font: { size: 14, weight: 'bold' } } } }
+        });
+
+        new Chart(document.getElementById('graficoDefeitos').getContext('2d'), {
+            type: 'bar',
+            data: { labels: data.defeitos.map(d => d[0]), datasets: [{ label: 'Quantidade', data: data.defeitos.map(d => d[1]), backgroundColor: '#3498db' }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { anchor: 'end', align: 'top', color: '#333', font: { size: 14, weight: 'bold' } } } }
+        });
+
+        new Chart(document.getElementById('graficoSetor').getContext('2d'), {
+            type: 'doughnut',
+            data: { labels: data.ppmPorSetor.map(d => d[0]), datasets: [{ data: data.ppmPorSetor.map(d => d[1]), backgroundColor: ['#3498db', '#e74c3c', '#27ae60', '#f1c40f', '#9b59b6', '#34495e', '#e67e22', '#1abc9c', '#7f8c8d', '#2ecc71', '#d35400'] }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { color: '#000000', font: { size: 14, weight: 'bold' } } } }
+        });
     });
 
     function abrirPlano() { document.getElementById('areaPlanoAcao').style.display = 'block'; }
     function fecharPlano() { document.getElementById('areaPlanoAcao').style.display = 'none'; }
-    function gerarPDF() { const btns = document.querySelectorAll('.btn-export, .btn-plano, .btn-del'); btns.forEach(b => b.style.display = 'none'); const opt = { margin: 2, filename: 'Indicadores_Qualidade_Coplac.pdf', html2canvas: { scale: 1.8, useCORS: true }, jsPDF: { orientation: 'landscape' } }; html2pdf().set(opt).from(document.body).save().then(() => { btns.forEach(b => b.style.display = 'inline-block'); }); }
+    
+    // Função acumulativa
+    function salvarPlano() { 
+        const novoTexto = document.getElementById('textoPlano').value;
+        if (!novoTexto) return;
+
+        const data = new Date().toLocaleDateString();
+        const historicoAntigo = localStorage.getItem('planoAcaoCoplac') || "";
+        const novoHistorico = historicoAntigo + "\n[" + data + "] " + novoTexto;
+        
+        localStorage.setItem('planoAcaoCoplac', novoHistorico);
+        document.getElementById('displayPlano').innerText = novoHistorico;
+        
+        document.getElementById('textoPlano').value = ""; // Limpa o modal
+        alert("Plano de Ação salvo no histórico!");
+        fecharPlano();
+    }
+
+    function gerarPDF() {
+        const btns = document.querySelectorAll('.btn-export, .btn-plano');
+        btns.forEach(b => b.style.display = 'none');
+        const opt = { margin: 2, filename: 'Indicadores_Qualidade_Coplac.pdf', html2canvas: { scale: 1.8, useCORS: true }, jsPDF: { orientation: 'landscape' } };
+        html2pdf().set(opt).from(document.body).save().then(() => {
+            btns.forEach(b => b.style.display = 'inline-block');
+        });
+    }
 </script>
 </body>
 </html>
