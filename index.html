@@ -9,98 +9,137 @@
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; padding: 10px; margin: 0; }
         .main-title { text-align: center; color: #2c3e50; margin: 10px 0; text-transform: uppercase; font-size: 24px; font-weight: bold; }
-        @media print { .btn-export, .btn-plano, .btn-del { display: none; } }
+        
+        @media print { .btn-export, .btn-plano, .btn-limpar { display: none; } }
+        
         .btn-group { text-align: center; margin-bottom: 15px; }
         .btn-export { padding: 10px 20px; font-size: 16px; font-weight: bold; background-color: #2c3e50; color: white; border: none; border-radius: 5px; cursor: pointer; }
         .btn-plano { padding: 10px 20px; font-size: 16px; font-weight: bold; background-color: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px; }
+        
         .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; max-width: 1200px; margin: auto; }
-        .container { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .container { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; justify-content: center; }
         .full-width { grid-column: span 2; }
         .header { text-align: center; color: #2c3e50; margin-bottom: 10px; text-transform: uppercase; font-weight: bold; font-size: 16px; }
         
-        .item-historico { background: #fff; border-left: 5px solid #27ae60; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #ddd; }
-        .btn-del { cursor: pointer; background: #e74c3c; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+        #graficoPPM { max-height: 250px !important; }
+        #graficoDefeitos, #graficoSetor { max-height: 300px !important; }
+
+        #displayPlano { background: #f9f9f9; border-left: 5px solid #27ae60; padding: 15px; white-space: pre-wrap; font-size: 14px; color: #333; min-height: 50px; }
+
         #areaPlanoAcao { display:none; position:fixed; top:50px; left:10%; width:80%; background:white; padding:20px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.5); z-index:1000; }
+        .btn-limpar { padding: 5px 10px; font-size: 12px; background-color: #e74c3c; color: white; border: none; border-radius: 3px; cursor: pointer; margin-left: 10px; }
     </style>
 </head>
 <body>
 
 <h1 class="main-title">INDICADORES DE QUALIDADE COPLAC CURITIBA</h1>
+
 <div class="btn-group">
     <button class="btn-export" onclick="gerarPDF()">EXPORTAR PDF</button>
     <button class="btn-plano" onclick="abrirPlano()">PLANO DE AÇÃO</button>
 </div>
 
 <div id="areaPlanoAcao">
-    <h2>PLANO DE AÇÃO - ANÁLISE DE DADOS</h2>
-    <textarea id="textoPlano" style="width:100%; height:200px; padding:10px; border:1px solid #ccc;"></textarea>
+    <h2 style="color: #2c3e50;">PLANO DE AÇÃO - ANÁLISE DE DADOS</h2>
+    <textarea id="textoPlano" style="width:100%; height:200px; padding:10px; border:1px solid #ccc; box-sizing:border-box;" placeholder="Digite aqui a ação corretiva..."></textarea>
     <div style="margin-top:15px; text-align:right;">
-        <button onclick="fecharPlano()">FECHAR</button>
-        <button onclick="salvarPlano()" style="background:#27ae60; color:white;">SALVAR</button>
+        <button onclick="fecharPlano()" style="padding:10px 20px; background:#95a5a6; color:white; border:none; cursor:pointer;">FECHAR</button>
+        <button onclick="salvarPlano()" style="padding:10px 20px; background:#27ae60; color:white; border:none; cursor:pointer;">SALVAR</button>
     </div>
 </div>
 
 <div class="dashboard">
-    <div class="container full-width"><canvas id="graficoPPM" height="120"></canvas></div>
-    <div class="container"><canvas id="graficoDefeitos"></canvas></div>
-    <div class="container"><canvas id="graficoSetor"></canvas></div>
     <div class="container full-width">
-        <h2 class="header">RESUMO DO PLANO DE AÇÃO</h2>
-        <div id="displayPlano"></div>
+        <h2 class="header">INDICADOR PPM INTERNO - ÚLTIMOS 12 MESES</h2>
+        <canvas id="graficoPPM" height="120"></canvas>
+    </div>
+
+    <div class="container">
+        <h2 class="header">AS PEÇAS QUE APRESENTARAM MAIS DEFEITOS NO MÊS</h2>
+        <canvas id="graficoDefeitos"></canvas>
+    </div>
+
+    <div class="container">
+        <h2 class="header">PPM POR SETOR</h2>
+        <canvas id="graficoSetor"></canvas>
+    </div>
+
+    <div class="container full-width">
+        <h2 class="header">
+            RESUMO DO PLANO DE AÇÃO 
+            <button class="btn-limpar" onclick="limparPlano()">LIMPAR TUDO</button>
+        </h2>
+        <div id="displayPlano">Nenhuma análise salva até o momento.</div>
     </div>
 </div>
 
 <script>
-    // Carrega ao abrir a página
-    window.onload = carregarDados;
+    const url = 'https://script.google.com/macros/s/AKfycbx5eihq6v75T79HB7HWhGfK23f4WSTsiE8cksqTlPCyuqLcFd88_KhYkvbBa5p7VCjLbA/exec';
+    Chart.register(ChartDataLabels);
 
-    function carregarDados() {
-        const historico = JSON.parse(localStorage.getItem('planoAcaoCoplac') || "[]");
-        const div = document.getElementById('displayPlano');
-        div.innerHTML = "";
-        
-        if (historico.length === 0) {
-            div.innerText = "Nenhuma análise salva.";
-        } else {
-            historico.forEach((item, index) => {
-                const linha = document.createElement('div');
-                linha.className = 'item-historico';
-                linha.innerHTML = `<span>${item}</span> <button class="btn-del" onclick="deletar(${index})">EXCLUIR</button>`;
-                div.appendChild(linha);
-            });
+    window.onload = () => {
+        const historico = localStorage.getItem('planoAcaoCoplac');
+        if (historico) {
+            document.getElementById('displayPlano').innerText = historico;
         }
-    }
+    };
 
-    function salvarPlano() {
-        const txt = document.getElementById('textoPlano').value;
-        if (!txt) return alert("Digite algo!");
-        
-        const data = new Date().toLocaleDateString();
-        const lista = JSON.parse(localStorage.getItem('planoAcaoCoplac') || "[]");
-        lista.push(`[${data}] ${txt}`);
-        
-        localStorage.setItem('planoAcaoCoplac', JSON.stringify(lista));
-        document.getElementById('textoPlano').value = "";
-        carregarDados();
-        fecharPlano();
-    }
+    fetch(url).then(r => r.json()).then(data => {
+        new Chart(document.getElementById('graficoPPM').getContext('2d'), {
+            type: 'bar',
+            data: { labels: data.meses, datasets: [
+                { label: 'PPM', data: data.ppm, backgroundColor: data.ppm.map((v, i) => v <= data.meta[i] ? '#27ae60' : '#e74c3c') },
+                { label: 'META', data: data.meta, type: 'line', borderColor: '#c0392b', borderWidth: 2, datalabels: { display: false } }
+            ]},
+            options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { anchor: 'end', align: 'top', color: '#333', font: { size: 14, weight: 'bold' } } } }
+        });
 
-    function deletar(index) {
-        const lista = JSON.parse(localStorage.getItem('planoAcaoCoplac') || "[]");
-        lista.splice(index, 1);
-        localStorage.setItem('planoAcaoCoplac', JSON.stringify(lista));
-        carregarDados();
-    }
+        new Chart(document.getElementById('graficoDefeitos').getContext('2d'), {
+            type: 'bar',
+            data: { labels: data.defeitos.map(d => d[0]), datasets: [{ label: 'Quantidade', data: data.defeitos.map(d => d[1]), backgroundColor: '#3498db' }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { anchor: 'end', align: 'top', color: '#333', font: { size: 14, weight: 'bold' } } } }
+        });
+
+        new Chart(document.getElementById('graficoSetor').getContext('2d'), {
+            type: 'doughnut',
+            data: { labels: data.ppmPorSetor.map(d => d[0]), datasets: [{ data: data.ppmPorSetor.map(d => d[1]), backgroundColor: ['#3498db', '#e74c3c', '#27ae60', '#f1c40f', '#9b59b6', '#34495e', '#e67e22', '#1abc9c', '#7f8c8d', '#2ecc71', '#d35400'] }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { color: '#000000', font: { size: 14, weight: 'bold' } } } }
+        });
+    });
 
     function abrirPlano() { document.getElementById('areaPlanoAcao').style.display = 'block'; }
     function fecharPlano() { document.getElementById('areaPlanoAcao').style.display = 'none'; }
-    function gerarPDF() { window.print(); }
+    
+    function salvarPlano() { 
+        const novoTexto = document.getElementById('textoPlano').value;
+        if (!novoTexto) return;
 
-    // Gráficos (mantidos conforme original)
-    const url = 'https://script.google.com/macros/s/AKfycbx5eihq6v75T79HB7HWhGfK23f4WSTsiE8cksqTlPCyuqLcFd88_KhYkvbBa5p7VCjLbA/exec';
-    fetch(url).then(r => r.json()).then(data => {
-        // ... (seu código de gráficos aqui)
-    });
+        const data = new Date().toLocaleDateString();
+        const historicoAntigo = localStorage.getItem('planoAcaoCoplac') || "";
+        const novoHistorico = historicoAntigo + "\n[" + data + "] " + novoTexto;
+        
+        localStorage.setItem('planoAcaoCoplac', novoHistorico);
+        document.getElementById('displayPlano').innerText = novoHistorico;
+        document.getElementById('textoPlano').value = ""; 
+        alert("Plano de Ação salvo!");
+        fecharPlano();
+    }
+
+    function limparPlano() {
+        if (confirm("Tem certeza que deseja excluir todo o histórico do plano de ação?")) {
+            localStorage.removeItem('planoAcaoCoplac');
+            document.getElementById('displayPlano').innerText = "Nenhuma análise salva até o momento.";
+        }
+    }
+
+    function gerarPDF() {
+        const btns = document.querySelectorAll('.btn-export, .btn-plano, .btn-limpar');
+        btns.forEach(b => b.style.display = 'none');
+        const opt = { margin: 2, filename: 'Indicadores_Qualidade_Coplac.pdf', html2canvas: { scale: 1.8, useCORS: true }, jsPDF: { orientation: 'landscape' } };
+        html2pdf().set(opt).from(document.body).save().then(() => {
+            btns.forEach(b => b.style.display = 'inline-block');
+        });
+    }
 </script>
 </body>
 </html>
