@@ -9,7 +9,7 @@
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; padding: 10px; margin: 0; }
         .main-title { text-align: center; color: #2c3e50; margin: 10px 0; text-transform: uppercase; font-size: 24px; font-weight: bold; }
-        @media print { .btn-export, .btn-plano, .btn-limpar { display: none; } }
+        @media print { .btn-export, .btn-plano, .btn-limpar, .btn-excluir { display: none; } }
         .btn-group { text-align: center; margin-bottom: 15px; }
         .btn-export { padding: 10px 20px; font-size: 16px; font-weight: bold; background-color: #2c3e50; color: white; border: none; border-radius: 5px; cursor: pointer; }
         .btn-plano { padding: 10px 20px; font-size: 16px; font-weight: bold; background-color: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px; }
@@ -17,14 +17,13 @@
         .container { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; justify-content: center; }
         .full-width { grid-column: span 2; }
         .header { text-align: center; color: #2c3e50; margin-bottom: 10px; text-transform: uppercase; font-weight: bold; font-size: 16px; }
-        
         #graficoPPM { max-height: 250px !important; }
         #graficoDefeitos, #graficoSetor { max-height: 300px !important; }
-        #displayPlano { background: #f9f9f9; border-left: 5px solid #27ae60; padding: 15px; white-space: pre-wrap; font-size: 14px; color: #333; min-height: 50px; }
+        #displayPlano { background: #f9f9f9; border-left: 5px solid #27ae60; padding: 15px; font-size: 14px; color: #333; min-height: 50px; }
         #areaPlanoAcao { display:none; position:fixed; top:20px; left:10%; width:80%; background:white; padding:20px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.5); z-index:1000; }
-        .btn-limpar { padding: 5px 10px; font-size: 12px; background-color: #e74c3c; color: white; border: none; border-radius: 3px; cursor: pointer; margin-left: 10px; }
         .input-campo { margin-bottom: 10px; }
         .input-campo label { display: block; font-weight: bold; font-size: 14px; }
+        .btn-limpar { padding: 5px 10px; font-size: 12px; background-color: #e74c3c; color: white; border: none; border-radius: 3px; cursor: pointer; margin-left: 10px; }
     </style>
 </head>
 <body>
@@ -40,15 +39,15 @@
     <h2 style="color: #2c3e50;">NOVO PLANO DE AÇÃO</h2>
     <div class="input-campo">
         <label>Responsável:</label>
-        <input type="text" id="respPlano" style="width:100%; padding:8px;">
+        <input type="text" id="respPlano" style="width:100%; padding:8px; box-sizing:border-box;">
     </div>
     <div class="input-campo">
         <label>Data Limite:</label>
-        <input type="date" id="dataPlano" style="width:100%; padding:8px;">
+        <input type="date" id="dataPlano" style="width:100%; padding:8px; box-sizing:border-box;">
     </div>
     <div class="input-campo">
         <label>Ação Corretiva:</label>
-        <textarea id="textoPlano" style="width:100%; height:100px; padding:10px; border:1px solid #ccc;"></textarea>
+        <textarea id="textoPlano" style="width:100%; height:100px; padding:10px; box-sizing:border-box;"></textarea>
     </div>
     <div style="margin-top:15px; text-align:right;">
         <button onclick="fecharPlano()" style="padding:10px 20px; background:#95a5a6; color:white; border:none; cursor:pointer;">FECHAR</button>
@@ -79,10 +78,7 @@
     const url = 'https://script.google.com/macros/s/AKfycbx5eihq6v75T79HB7HWhGfK23f4WSTsiE8cksqTlPCyuqLcFd88_KhYkvbBa5p7VCjLbA/exec';
     Chart.register(ChartDataLabels);
 
-    window.onload = () => {
-        const historico = localStorage.getItem('planoAcaoCoplac');
-        if (historico) document.getElementById('displayPlano').innerText = historico;
-    };
+    window.onload = () => { carregarDados(); };
 
     fetch(url).then(r => r.json()).then(data => {
         new Chart(document.getElementById('graficoPPM').getContext('2d'), {
@@ -91,53 +87,68 @@
                 { label: 'META', data: data.meta, type: 'line', borderColor: '#c0392b', borderWidth: 2, datalabels: { display: false } }
             ]}, options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { anchor: 'end', align: 'top', color: '#333', font: { size: 14, weight: 'bold' } } } }
         });
-
         new Chart(document.getElementById('graficoDefeitos').getContext('2d'), {
             type: 'bar', data: { labels: data.defeitos.map(d => d[0]), datasets: [{ label: 'Quantidade', data: data.defeitos.map(d => d[1]), backgroundColor: '#3498db' }] },
             options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { anchor: 'end', align: 'top', color: '#333', font: { size: 14, weight: 'bold' } } } }
         });
-
         new Chart(document.getElementById('graficoSetor').getContext('2d'), {
             type: 'doughnut', data: { labels: data.ppmPorSetor.map(d => d[0]), datasets: [{ data: data.ppmPorSetor.map(d => d[1]), backgroundColor: ['#3498db', '#e74c3c', '#27ae60', '#f1c40f', '#9b59b6', '#34495e', '#e67e22', '#1abc9c', '#7f8c8d', '#2ecc71', '#d35400'] }] },
             options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { color: '#000000', font: { size: 14, weight: 'bold' } } } }
         });
     });
 
-    function abrirPlano() { document.getElementById('areaPlanoAcao').style.display = 'block'; }
-    function fecharPlano() { document.getElementById('areaPlanoAcao').style.display = 'none'; }
-    
+    function carregarDados() {
+        const planos = JSON.parse(localStorage.getItem('planoAcaoCoplac') || "[]");
+        const container = document.getElementById('displayPlano');
+        if (planos.length === 0) return container.innerHTML = "Nenhuma análise salva até o momento.";
+        
+        container.innerHTML = "";
+        planos.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.style.borderBottom = "1px solid #ddd";
+            div.style.padding = "10px 0";
+            div.style.display = "flex";
+            div.style.justifyContent = "space-between";
+            div.style.alignItems = "center";
+            div.innerHTML = `
+                <div><strong>Resp:</strong> ${item.resp} | <strong>Data:</strong> ${item.data} | <strong>Ação:</strong> ${item.texto}</div>
+                <button onclick="excluirItem(${index})" class="btn-excluir" style="background:#e74c3c; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:3px;">X</button>
+            `;
+            container.appendChild(div);
+        });
+    }
+
     function salvarPlano() {
         const resp = document.getElementById('respPlano').value;
         const data = document.getElementById('dataPlano').value;
         const texto = document.getElementById('textoPlano').value;
-        
         if (!resp || !data || !texto) return alert("Preencha todos os campos!");
-
-        const registro = `\n[${new Date().toLocaleDateString()}] Resp: ${resp} | Data Limite: ${data} | Ação: ${texto}`;
-        const historicoAntigo = localStorage.getItem('planoAcaoCoplac') || "";
-        const novoHistorico = historicoAntigo + registro;
         
-        localStorage.setItem('planoAcaoCoplac', novoHistorico);
-        document.getElementById('displayPlano').innerText = novoHistorico;
+        const planos = JSON.parse(localStorage.getItem('planoAcaoCoplac') || "[]");
+        planos.push({ resp, data: data.split('-').reverse().join('/'), texto });
+        localStorage.setItem('planoAcaoCoplac', JSON.stringify(planos));
         
         document.getElementById('respPlano').value = "";
         document.getElementById('dataPlano').value = "";
         document.getElementById('textoPlano').value = "";
         fecharPlano();
+        carregarDados();
     }
 
-    function limparPlano() {
-        if (confirm("Deseja apagar tudo?")) {
-            localStorage.removeItem('planoAcaoCoplac');
-            document.getElementById('displayPlano').innerText = "Nenhuma análise salva até o momento.";
-        }
+    function excluirItem(index) {
+        const planos = JSON.parse(localStorage.getItem('planoAcaoCoplac') || "[]");
+        planos.splice(index, 1);
+        localStorage.setItem('planoAcaoCoplac', JSON.stringify(planos));
+        carregarDados();
     }
 
+    function limparPlano() { if (confirm("Tem certeza que deseja apagar TODOS os planos?")) { localStorage.removeItem('planoAcaoCoplac'); carregarDados(); } }
+    function abrirPlano() { document.getElementById('areaPlanoAcao').style.display = 'block'; }
+    function fecharPlano() { document.getElementById('areaPlanoAcao').style.display = 'none'; }
     function gerarPDF() {
-        const btns = document.querySelectorAll('.btn-export, .btn-plano, .btn-limpar');
+        const btns = document.querySelectorAll('.btn-export, .btn-plano, .btn-limpar, .btn-excluir');
         btns.forEach(b => b.style.display = 'none');
-        const opt = { margin: 2, filename: 'Indicadores_Qualidade_Coplac.pdf', html2canvas: { scale: 1.8, useCORS: true }, jsPDF: { orientation: 'landscape' } };
-        html2pdf().set(opt).from(document.body).save().then(() => {
+        html2pdf().set({ margin: 2, filename: 'Indicadores_Qualidade_Coplac.pdf', html2canvas: { scale: 1.8 }, jsPDF: { orientation: 'landscape' } }).from(document.body).save().then(() => {
             btns.forEach(b => b.style.display = 'inline-block');
         });
     }
