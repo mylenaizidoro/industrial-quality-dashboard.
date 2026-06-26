@@ -100,7 +100,11 @@
     function carregarDados() {
         const planos = JSON.parse(localStorage.getItem('planoAcaoCoplac') || "[]");
         const container = document.getElementById('displayPlano');
-        if (planos.length === 0) return container.innerHTML = "Nenhuma análise salva até o momento.";
+        
+        if (planos.length === 0) {
+            container.innerHTML = "Nenhuma análise salva até o momento.";
+            return;
+        }
         
         container.innerHTML = "";
         planos.forEach((item, index) => {
@@ -111,8 +115,8 @@
             div.style.justifyContent = "space-between";
             div.style.alignItems = "center";
             div.innerHTML = `
-                <div><strong>Resp:</strong> ${item.resp} | <strong>Data:</strong> ${item.data} | <strong>Ação:</strong> ${item.texto}</div>
-                <button onclick="excluirItem(${index})" class="btn-excluir" style="background:#e74c3c; color:white; border:none; padding:5px 10px; cursor:pointer; border-radius:3px;">X</button>
+                <div style="flex-grow: 1;"><strong>Resp:</strong> ${item.resp} | <strong>Data:</strong> ${item.data} | <strong>Ação:</strong> ${item.texto}</div>
+                <button onclick="excluirItem(${index})" class="btn-excluir" style="background:#e74c3c; color:white; border:none; padding:5px 12px; cursor:pointer; border-radius:3px; margin-left:10px;">X</button>
             `;
             container.appendChild(div);
         });
@@ -136,10 +140,12 @@
     }
 
     function excluirItem(index) {
-        const planos = JSON.parse(localStorage.getItem('planoAcaoCoplac') || "[]");
-        planos.splice(index, 1);
-        localStorage.setItem('planoAcaoCoplac', JSON.stringify(planos));
-        carregarDados();
+        if(confirm("Excluir este item?")) {
+            const planos = JSON.parse(localStorage.getItem('planoAcaoCoplac') || "[]");
+            planos.splice(index, 1);
+            localStorage.setItem('planoAcaoCoplac', JSON.stringify(planos));
+            carregarDados();
+        }
     }
 
     function limparPlano() { if (confirm("Tem certeza que deseja apagar TODOS os planos?")) { localStorage.removeItem('planoAcaoCoplac'); carregarDados(); } }
