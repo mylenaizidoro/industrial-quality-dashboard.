@@ -7,70 +7,116 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; padding: 10px; margin: 0; }
-        .main-title { text-align: center; color: #2c3e50; margin: 10px 0; text-transform: uppercase; font-size: 24px; font-weight: bold; }
-        @media print { .btn-export, .btn-plano, .btn-limpar, .btn-excluir { display: none; } }
-        .btn-group { text-align: center; margin-bottom: 15px; }
-        .btn-export { padding: 10px 20px; font-size: 16px; font-weight: bold; background-color: #2c3e50; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        .btn-plano { padding: 10px 20px; font-size: 16px; font-weight: bold; background-color: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px; }
-        .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; max-width: 1200px; margin: auto; }
-        .container { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; justify-content: center; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Layout estrutural baseado no Portal da imagem */
+        .sidebar { width: 280px; background-color: #111d31; color: white; display: flex; flex-direction: column; padding: 20px 0; box-sizing: border-box; }
+        .main-content { flex: 1; padding: 20px; overflow-y: auto; box-sizing: border-box; background-color: #f4f7f6; }
+        
+        /* Identidade visual da Barra Lateral */
+        .sidebar-header { text-align: center; padding: 0 20px 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-title { font-size: 22px; font-weight: bold; color: #00a2ff; margin: 0; text-transform: uppercase; }
+        .sidebar-subtitle { font-size: 11px; color: #a0aec0; margin: 5px 0 0 0; letter-spacing: 1px; }
+        
+        .sidebar-menu { display: flex; flex-direction: column; gap: 5px; padding: 20px 15px; }
+        .menu-item { display: flex; align-items: center; padding: 12px 15px; color: #a0aec0; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px; transition: all 0.3s; background: transparent; border: none; width: 100%; text-align: left; cursor: pointer; }
+        .menu-item:hover { color: white; background-color: rgba(255,255,255,0.05); }
+        .menu-item.active { background-color: #0080cc; color: white; }
+        .menu-icon { margin-right: 12px; font-size: 16px; }
+
+        /* Estilização do Conteúdo Principal */
+        .main-title { color: #2c3e50; margin: 0 0 20px 0; text-transform: uppercase; font-size: 24px; font-weight: bold; }
+        
+        @media print { .sidebar, .btn-group, .btn-limpar, .btn-excluir { display: none !important; } .main-content { padding: 0; overflow: visible; } }
+        
+        .btn-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        .btn-export { padding: 10px 20px; font-size: 14px; font-weight: bold; background-color: #2c3e50; color: white; border: none; border-radius: 5px; cursor: pointer; display: flex; align-items: center; }
+        .btn-plano { padding: 10px 20px; font-size: 14px; font-weight: bold; background-color: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; display: flex; align-items: center; }
+        
+        /* Grid dos Gráficos */
+        .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; max-width: 1200px; }
+        .container { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: center; }
         .full-width { grid-column: span 2; }
-        .header { text-align: center; color: #2c3e50; margin-bottom: 10px; text-transform: uppercase; font-weight: bold; font-size: 16px; }
+        .header { text-align: center; color: #2c3e50; margin-top: 0; margin-bottom: 15px; text-transform: uppercase; font-weight: bold; font-size: 15px; letter-spacing: 0.5px; }
+        
         #graficoPPM { max-height: 250px !important; }
         #graficoDefeitos, #graficoSetor { max-height: 300px !important; }
-        #displayPlano { background: #f9f9f9; border-left: 5px solid #27ae60; padding: 15px; font-size: 14px; color: #333; min-height: 50px; }
-        #areaPlanoAcao { display:none; position:fixed; top:20px; left:10%; width:80%; background:white; padding:20px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.5); z-index:1000; }
+        
+        #displayPlano { background: #f9f9f9; border-left: 5px solid #27ae60; padding: 15px; font-size: 14px; color: #333; min-height: 50px; border-radius: 0 4px 4px 0; }
+        #areaPlanoAcao { display:none; position:fixed; top:20px; left:25%; width:50%; background:white; padding:20px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.3); z-index:1000; }
         .input-campo { margin-bottom: 10px; }
-        .input-campo label { display: block; font-weight: bold; font-size: 14px; }
+        .input-campo label { display: block; font-weight: bold; font-size: 14px; margin-bottom: 5px; }
         .btn-limpar { padding: 5px 10px; font-size: 12px; background-color: #e74c3c; color: white; border: none; border-radius: 3px; cursor: pointer; margin-left: 10px; }
     </style>
 </head>
 <body>
 
-<h1 class="main-title">INDICADORES DE QUALIDADE COPLAC CURITIBA</h1>
-
-<div class="btn-group">
-    <button class="btn-export" onclick="gerarPDF()">EXPORTAR PDF</button>
-    <button class="btn-plano" onclick="abrirPlano()">PLANO DE AÇÃO</button>
-</div>
-
-<div id="areaPlanoAcao">
-    <h2 style="color: #2c3e50;">NOVO PLANO DE AÇÃO</h2>
-    <div class="input-campo">
-        <label>Responsável:</label>
-        <input type="text" id="respPlano" style="width:100%; padding:8px; box-sizing:border-box;">
+<div class="sidebar">
+    <div class="sidebar-header">
+        <h2 class="sidebar-title">Portal GQ</h2>
+        <p class="sidebar-subtitle">GESTÃO DA QUALIDADE - CURITIBA</p>
     </div>
-    <div class="input-campo">
-        <label>Data Limite:</label>
-        <input type="date" id="dataPlano" style="width:100%; padding:8px; box-sizing:border-box;">
-    </div>
-    <div class="input-campo">
-        <label>Ação Corretiva:</label>
-        <textarea id="textoPlano" style="width:100%; height:100px; padding:10px; box-sizing:border-box;"></textarea>
-    </div>
-    <div style="margin-top:15px; text-align:right;">
-        <button onclick="fecharPlano()" style="padding:10px 20px; background:#95a5a6; color:white; border:none; cursor:pointer;">FECHAR</button>
-        <button onclick="salvarPlano()" style="padding:10px 20px; background:#27ae60; color:white; border:none; cursor:pointer;">SALVAR</button>
+    <div class="sidebar-menu">
+        <button class="menu-item active">
+            <span class="menu-icon">📊</span> Indicadores & BI
+        </button>
+        <button class="menu-item" onclick="abrirPlano()">
+            <span class="menu-icon">📋</span> Planos de Ação
+        </button>
+        <button class="menu-item">
+            <span class="menu-icon">📝</span> Rotinas & Checklists
+        </button>
+        <button class="menu-item">
+            <span class="menu-icon">🔗</span> Links Úteis
+        </button>
     </div>
 </div>
 
-<div class="dashboard">
-    <div class="container full-width">
-        <h2 class="header">INDICADOR PPM INTERNO - ÚLTIMOS 12 MESES</h2>
-        <canvas id="graficoPPM" height="120"></canvas>
+<div class="main-content">
+    <h1 class="main-title">INDICADORES DE QUALIDADE COPLAC CURITIBA</h1>
+
+    <div class="btn-group">
+        <button class="btn-export" onclick="gerarPDF()">📄 EXPORTAR PDF</button>
+        <button class="btn-plano" onclick="abrirPlano()">➕ NOVO PLANO DE AÇÃO</button>
     </div>
-    <div class="container">
-        <h2 class="header">AS PEÇAS QUE APRESENTARAM MAIS DEFEITOS NO MÊS</h2>
-        <canvas id="graficoDefeitos"></canvas>
+
+    <div id="areaPlanoAcao">
+        <h2 style="color: #2c3e50; margin-top: 0;">NOVO PLANO DE AÇÃO</h2>
+        <div class="input-campo">
+            <label>Responsável:</label>
+            <input type="text" id="respPlano" style="width:100%; padding:8px; box-sizing:border-box;">
+        </div>
+        <div class="input-campo">
+            <label>Data Limite:</label>
+            <input type="date" id="dataPlano" style="width:100%; padding:8px; box-sizing:border-box;">
+        </div>
+        <div class="input-campo">
+            <label>Ação Corretiva:</label>
+            <textarea id="textoPlano" style="width:100%; height:100px; padding:10px; box-sizing:border-box;"></textarea>
+        </div>
+        <div style="margin-top:15px; text-align:right;">
+            <button onclick="fecharPlano()" style="padding:10px 20px; background:#95a5a6; color:white; border:none; cursor:pointer; border-radius:4px;">FECHAR</button>
+            <button onclick="salvarPlano()" style="padding:10px 20px; background:#27ae60; color:white; border:none; cursor:pointer; border-radius:4px;">SALVAR</button>
+        </div>
     </div>
-    <div class="container">
-        <h2 class="header">PPM POR SETOR</h2>
-        <canvas id="graficoSetor"></canvas>
-    </div>
-    <div class="container full-width">
-        <h2 class="header">RESUMO DO PLANO DE AÇÃO <button class="btn-limpar" onclick="limparPlano()">LIMPAR TUDO</button></h2>
-        <div id="displayPlano">Nenhuma análise salva até o momento.</div>
+
+    <div class="dashboard">
+        <div class="container full-width">
+            <h2 class="header">INDICADOR PPM INTERNO - ÚLTIMOS 12 MESES</h2>
+            <canvas id="graficoPPM" height="120"></canvas>
+        </div>
+        <div class="container">
+            <h2 class="header">AS PEÇAS QUE APRESENTARAM MAIS DEFEITOS NO MÊS</h2>
+            <canvas id="graficoDefeitos"></canvas>
+        </div>
+        <div class="container">
+            <h2 class="header">PPM POR SETOR</h2>
+            <canvas id="graficoSetor"></canvas>
+        </div>
+        <div class="container full-width">
+            <h2 class="header">RESUMO DO PLANO DE AÇÃO <button class="btn-limpar" onclick="limparPlano()">LIMPAR TUDO</button></h2>
+            <div id="displayPlano">Nenhuma análise salva até o momento.</div>
+        </div>
     </div>
 </div>
 
@@ -152,11 +198,8 @@
     function abrirPlano() { document.getElementById('areaPlanoAcao').style.display = 'block'; }
     function fecharPlano() { document.getElementById('areaPlanoAcao').style.display = 'none'; }
     function gerarPDF() {
-        const btns = document.querySelectorAll('.btn-export, .btn-plano, .btn-limpar, .btn-excluir');
-        btns.forEach(b => b.style.display = 'none');
-        html2pdf().set({ margin: 2, filename: 'Indicadores_Qualidade_Coplac.pdf', html2canvas: { scale: 1.8 }, jsPDF: { orientation: 'landscape' } }).from(document.body).save().then(() => {
-            btns.forEach(b => b.style.display = 'inline-block');
-        });
+        const content = document.querySelector('.main-content');
+        html2pdf().set({ margin: 2, filename: 'Indicadores_Qualidade_Coplac.pdf', html2canvas: { scale: 1.8 }, jsPDF: { orientation: 'landscape' } }).from(content).save();
     }
 </script>
 </body>
