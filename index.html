@@ -121,7 +121,6 @@
             font-weight: bold;
             text-transform: uppercase;
         }
-        /* Cor ajustada para o perfil técnico de Analista */
         .tag-analista { background-color: #00b4d8; color: #0b132b; }
         .profile-desc {
             font-size: 12px;
@@ -133,14 +132,56 @@
         }
 
         /* ==========================================================================
-           ESTILIZAÇÃO DO DASHBOARD ORIGINAL (MANTIDO IDÊNTICO)
+           ESTILIZAÇÃO DO DASHBOARD ORIGINAL (MANTIDO E APERFEIÇOADO)
            ========================================================================== */
         .dashboard-screen {
             display: none; /* Inicia oculto até selecionar a Janete */
             padding: 10px;
         }
-        .main-title { text-align: center; color: #2c3e50; margin: 10px 0; text-transform: uppercase; font-size: 24px; font-weight: bold; }
-        @media print { .btn-export, .btn-plano, .btn-limpar, .btn-excluir { display: none; } }
+        
+        /* Estrutura para alinhar o novo botão na esquerda e manter o título centralizado */
+        .dashboard-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 10px auto;
+            position: relative;
+        }
+        
+        .main-title { 
+            text-align: center; 
+            color: #2c3e50; 
+            margin: 0; 
+            text-transform: uppercase; 
+            font-size: 24px; 
+            font-weight: bold; 
+            flex-grow: 1;
+        }
+        
+        /* Botão posicionado exatamente na marca amarela */
+        .btn-voltar {
+            padding: 10px 15px;
+            font-size: 14px;
+            font-weight: bold;
+            background-color: #e67e22; /* Cor em destaque para a área riscada */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-voltar:hover {
+            background-color: #d35400;
+        }
+        
+        /* Div invisível na direita apenas para equilibrar a centralização do título com o Flexbox */
+        .header-spacer {
+            width: 145px; 
+        }
+
+        @media print { .btn-export, .btn-plano, .btn-limpar, .btn-excluir, .btn-voltar, .header-spacer { display: none !important; } }
+        
         .btn-group { text-align: center; margin-bottom: 15px; }
         .btn-export { padding: 10px 20px; font-size: 16px; font-weight: bold; background-color: #2c3e50; color: white; border: none; border-radius: 5px; cursor: pointer; }
         .btn-plano { padding: 10px 20px; font-size: 16px; font-weight: bold; background-color: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px; }
@@ -188,7 +229,13 @@
 
 
 <div id="telaDashboard" class="dashboard-screen">
-    <h1 class="main-title">INDICADORES DE QUALIDADE COPLAC CURITIBA</h1>
+    
+    <!-- CABEÇALHO COM O BOTÃO NA MARCA AMRELA -->
+    <div class="dashboard-header">
+        <button class="btn-voltar" onclick="voltarParaLogin()">◀ VOLTAR PERFIS</button>
+        <h1 class="main-title">INDICADORES DE QUALIDADE COPLAC CURITIBA</h1>
+        <div class="header-spacer"></div> <!-- Mantém o equilíbrio visual do título -->
+    </div>
 
     <div class="btn-group">
         <button class="btn-export" onclick="gerarPDF()">EXPORTAR PDF</button>
@@ -207,7 +254,7 @@
         </div>
         <div class="input-campo">
             <label>Ação Corretiva:</label>
-            <textarea id="textoPlano" style="width:100%; height:100px; padding:10px; box-sizing:border-box;"></textarea>
+            <textarea id="textoPlano" style="width:100%; height:100px; padding:10px; box-sizing:border-box("></textarea>
         </div>
         <div style="margin-top:15px; text-align:right;">
             <button onclick="fecharPlano()" style="padding:10px 20px; background:#95a5a6; color:white; border:none; cursor:pointer;">FECHAR</button>
@@ -239,6 +286,10 @@
     const url = 'https://script.google.com/macros/s/AKfycbx5eihq6v75T79HB7HWhGfK23f4WSTsiE8cksqTlPCyuqLcFd88_KhYkvbBa5p7VCjLbA/exec';
     Chart.register(ChartDataLabels);
 
+    let graficoPPMInstance = null;
+    let graficoDefeitosInstance = null;
+    let graficoSetorInstance = null;
+
     function entrarNoDashboard() {
         document.getElementById('telaLogin').style.display = 'none';
         document.getElementById('telaDashboard').style.display = 'block';
@@ -246,19 +297,32 @@
         inicializarGraficos();
     }
 
+    // Nova função para voltar para a tela de usuários de demonstração
+    function voltarParaLogin() {
+        document.getElementById('telaDashboard').style.display = 'none';
+        document.getElementById('telaLogin').style.display = 'flex';
+    }
+
     function inicializarGraficos() {
         fetch(url).then(r => r.json()).then(data => {
-            new Chart(document.getElementById('graficoPPM').getContext('2d'), {
+            // Destrói os gráficos antigos se eles já existirem para evitar bugs de sobreposição ao reentrar
+            if (graficoPPMInstance) graficoPPMInstance.destroy();
+            if (graficoDefeitosInstance) graficoDefeitosInstance.destroy();
+            if (graficoSetorInstance) graficoSetorInstance.destroy();
+
+            graficoPPMInstance = new Chart(document.getElementById('graficoPPM').getContext('2d'), {
                 type: 'bar', data: { labels: data.meses, datasets: [
                     { label: 'PPM', data: data.ppm, backgroundColor: data.ppm.map((v, i) => v <= data.meta[i] ? '#27ae60' : '#e74c3c') },
                     { label: 'META', data: data.meta, type: 'line', borderColor: '#c0392b', borderWidth: 2, datalabels: { display: false } }
                 ]}, options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { anchor: 'end', align: 'top', color: '#333', font: { size: 14, weight: 'bold' } } } }
             });
-            new Chart(document.getElementById('graficoDefeitos').getContext('2d'), {
+            
+            graficoDefeitosInstance = new Chart(document.getElementById('graficoDefeitos').getContext('2d'), {
                 type: 'bar', data: { labels: data.defeitos.map(d => d[0]), datasets: [{ label: 'Quantidade', data: data.defeitos.map(d => d[1]), backgroundColor: '#3498db' }] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { anchor: 'end', align: 'top', color: '#333', font: { size: 14, weight: 'bold' } } } }
             });
-            new Chart(document.getElementById('graficoSetor').getContext('2d'), {
+            
+            graficoSetorInstance = new Chart(document.getElementById('graficoSetor').getContext('2d'), {
                 type: 'doughnut', data: { labels: data.ppmPorSetor.map(d => d[0]), datasets: [{ data: data.ppmPorSetor.map(d => d[1]), backgroundColor: ['#3498db', '#e74c3c', '#27ae60', '#f1c40f', '#9b59b6', '#34495e', '#e67e22', '#1abc9c', '#7f8c8d', '#2ecc71', '#d35400'] }] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { color: '#000000', font: { size: 14, weight: 'bold' } } } }
             });
@@ -320,7 +384,7 @@
     function abrirPlano() { document.getElementById('areaPlanoAcao').style.display = 'block'; }
     function fecharPlano() { document.getElementById('areaPlanoAcao').style.display = 'none'; }
     function gerarPDF() {
-        const btns = document.querySelectorAll('.btn-export, .btn-plano, .btn-limpar, .btn-excluir');
+        const btns = document.querySelectorAll('.btn-export, .btn-plano, .btn-limpar, .btn-excluir, .btn-voltar');
         btns.forEach(b => b.style.display = 'none');
         html2pdf().set({ margin: 2, filename: 'Indicadores_Qualidade_Coplac.pdf', html2canvas: { scale: 1.8 }, jsPDF: { orientation: 'landscape' } }).from(document.getElementById('telaDashboard')).save().then(() => {
             btns.forEach(b => b.style.display = 'inline-block');
