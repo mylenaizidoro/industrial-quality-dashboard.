@@ -37,7 +37,7 @@
         }
         
         /* ==========================================================================
-           TELA DE SELEÇÃO DE PERFIL (INSPIRADA NA IMAGEM image_f6ec94.png)
+           TELA DE SELEÇÃO DE PERFIL
            ========================================================================== */
         .login-screen {
             background-color: #0b132b;
@@ -229,6 +229,7 @@
         
         canvas { max-height: 280px !important; }
         #graficoPPM { max-height: 220px !important; }
+        #graficoPPMWemilly { max-height: 220px !important; }
 
         #displayPlano { background: var(--bg-body); border-left: 5px solid #27ae60; padding: 15px; font-size: 14px; color: var(--text-main); min-height: 50px; }
         #areaPlanoAcao { display:none; position:fixed; top:20px; left:10%; width:80%; background:var(--bg-card); color: var(--text-main); padding:20px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.5); z-index:1000; }
@@ -239,7 +240,6 @@
 </head>
 <body>
 
-<!-- TELA DE LOGIN (BASEADA EM image_f6ec94.png) -->
 <div id="telaLogin" class="login-screen">
     <div class="login-logo">RC</div>
     <p class="login-company">Coplac - Curitiba</p>
@@ -248,10 +248,9 @@
 
     <div class="profile-container">
         <div class="profile-section-title">
-            <span>👥</span> Usuários de demonstração
+            <span>👥</span> Usuários da Qualidade
         </div>
 
-        <!-- PERFIL 1: JANETE (ANALISTA DE QUALIDADE) -->
         <div class="profile-card" onclick="entrarNoDashboard('Janete Qualidade', 'Analista', 'analise_qualidade')">
             <div class="profile-left">
                 <div class="profile-avatar" style="background-color: #0077b6;">J</div>
@@ -260,13 +259,12 @@
                         <span class="profile-name">Janete Qualidade</span>
                         <span class="profile-tag tag-analista">Analista</span>
                     </div>
-                    <span class="profile-desc">Visão operacional — Indicadores de Qualidade</span>
+                    <span class="profile-desc">Visão operacional — Aba 'PPM Interno'</span>
                 </div>
             </div>
             <div class="profile-arrow">➔</div>
         </div>
 
-        <!-- PERFIL 2: WEMILLY (INSPETORA DE QUALIDADE) -->
         <div class="profile-card" onclick="entrarNoDashboard('Wemilly', 'Inspetora', 'inspecao_qualidade')">
             <div class="profile-left">
                 <div class="profile-avatar" style="background-color: #27ae60;">W</div>
@@ -275,7 +273,7 @@
                         <span class="profile-name">Wemilly</span>
                         <span class="profile-tag tag-inspetora">Inspetora</span>
                     </div>
-                    <span class="profile-desc">Visão de chão de fábrica — Monitoramento de Não Conformidades</span>
+                    <span class="profile-desc">Visão de chão de fábrica — Aba 'Wemilly'</span>
                 </div>
             </div>
             <div class="profile-arrow">➔</div>
@@ -283,10 +281,8 @@
     </div>
 </div>
 
-<!-- TELA PRINCIPAL DO DASHBOARD -->
 <div id="telaDashboard" class="dashboard-screen">
     
-    <!-- BARRA SUPERIOR DINÂMICA -->
     <div class="topbar">
         <div class="topbar-left">
             <span>COPLAC — SISTEMA INTEGRADO</span>
@@ -306,7 +302,6 @@
         </div>
     </div>
 
-    <!-- CONTEÚDO PRINCIPAL -->
     <div class="dashboard-content">
         <h1 class="main-title" id="tituloDashboard">INDICADORES COPLAC CURITIBA</h1>
 
@@ -315,7 +310,6 @@
             <button class="btn-plano" id="btnPlanoAcaoView" onclick="abrirPlano()">PLANO DE AÇÃO</button>
         </div>
 
-        <!-- MODAL PLANO DE AÇÃO (EXCLUSIVO DA JANETE) -->
         <div id="areaPlanoAcao">
             <h2>NOVO PLANO DE AÇÃO</h2>
             <div class="input-campo"><label>Responsável:</label><input type="text" id="respPlano" style="width:100%; padding:8px; box-sizing:border-box;"></div>
@@ -327,9 +321,6 @@
             </div>
         </div>
 
-        <!-- ==========================================================================
-           1. GRÁFICOS DA JANETE (ANÁLISE DA QUALIDADE)
-           ========================================================================== -->
         <div class="dashboard" id="blocoJanete" style="display: none;">
             <div class="container full-width">
                 <h2 class="header">INDICADOR PPM INTERNO - ÚLTIMOS 12 MESES</h2>
@@ -349,25 +340,18 @@
             </div>
         </div>
 
-        <!-- ==========================================================================
-           2. GRÁFICOS DA WEMILLY (INSPEÇÃO DE CHÃO DE FÁBRICA)
-           ========================================================================== -->
         <div class="dashboard" id="blocoWemilly" style="display: none;">
             <div class="container full-width">
-                <h2 class="header">NÃO CONFORMIDADES RETIDAS POR TURNO (MÊS ATUAL)</h2>
-                <canvas id="graficoInspecaoTurno"></canvas>
+                <h2 class="header">INDICADOR PPM INTERNO — WEMILLY</h2>
+                <canvas id="graficoPPMWemilly"></canvas>
             </div>
             <div class="container">
-                <h2 class="header">DEFEITOS RECORRENTES DETECTADOS NA INSPEÇÃO</h2>
-                <canvas id="graficoDefeitosRetidos"></canvas>
+                <h2 class="header">DEFEITOS RECORRENTES DETECTADOS NO MÊS</h2>
+                <canvas id="graficoDefeitosWemilly"></canvas>
             </div>
             <div class="container">
-                <div style="text-align: center; padding: 20px; color: var(--text-main);">
-                    <h3 style="margin-top:0; color: var(--text-header);">STATUS DE LIBERAÇÃO DE LOTES</h3>
-                    <p style="font-size: 48px; font-weight: bold; margin: 10px 0; color: #27ae60;">98.1%</p>
-                    <p>Lotes Aprovados sem Restrição</p>
-                    <span style="font-size: 13px; color: #e74c3c; font-weight: bold;">1.9% Retidos para Reinspeção</span>
-                </div>
+                <h2 class="header">PPM POR SETOR — WEMILLY</h2>
+                <canvas id="graficoSetorWemilly"></canvas>
             </div>
         </div>
 
@@ -389,7 +373,7 @@
         document.getElementById('labelCargoUsuario').innerText = cargo;
         document.getElementById('iconeAvatarUsuario').innerText = nome.charAt(0);
         
-        // Chaveamento dinâmico de telas e títulos
+        // Chaveamento dinâmico de blocos na tela
         if(area === 'analise_qualidade') {
             document.getElementById('tituloDashboard').innerText = `INDICADORES OPERACIONAIS — JANETE`;
             document.getElementById('blocoJanete').style.display = 'grid';
@@ -397,18 +381,22 @@
             document.getElementById('btnPlanoAcaoView').style.display = 'inline-block';
             carregarDadosPlano();
         } else {
-            document.getElementById('tituloDashboard').innerText = `MONITORAMENTO DE INSPEÇÃO — WEMILLY`;
+            document.getElementById('tituloDashboard').innerText = `INDICADORES OPERACIONAIS — WEMILLY`;
             document.getElementById('blocoJanete').style.display = 'none';
             document.getElementById('blocoWemilly').style.display = 'grid';
-            document.getElementById('btnPlanoAcaoView').style.display = 'none'; // Chão de fábrica foca em monitorar
+            document.getElementById('btnPlanoAcaoView').style.display = 'none';
         }
 
         document.getElementById('telaLogin').style.display = 'none';
         document.getElementById('telaDashboard').style.display = 'block';
         
+        // Requisição para buscar os dados unificados do Google Sheets
         fetch(url).then(r => r.json()).then(data => {
             dadosGlobais = data;
             inicializarGraficos();
+        }).catch(err => {
+            alert("Erro ao ler dados da Planilha. Certifique-se de que fez a nova Implantação no Apps Script.");
+            console.error(err);
         });
     }
 
@@ -428,61 +416,73 @@
         const corTexto = isDarkMode ? '#ffffff' : '#333333';
         const corGrid = isDarkMode ? '#444444' : '#eeeeee';
 
-        // Reseta todas as instâncias existentes antes de recriar
+        // Reseta as instâncias antigas de gráficos
         Object.keys(charts).forEach(key => { if(charts[key]) charts[key].destroy(); });
 
         if(usuarioAtual.area === 'analise_qualidade') {
             // ==========================================
-            // GRÁFICOS DA JANETE
+            // ALIMENTA GRÁFICOS DA JANETE (Aba: janete)
             // ==========================================
+            const dJanete = dadosGlobais.janete;
+            if(!dJanete) return;
+
             charts.ppm = new Chart(document.getElementById('graficoPPM').getContext('2d'), {
                 type: 'bar',
-                data: { labels: dadosGlobais.meses, datasets: [
-                    { label: 'PPM', data: dadosGlobais.ppm, backgroundColor: dadosGlobais.ppm.map((v, i) => v <= dadosGlobais.meta[i] ? '#27ae60' : '#e74c3c') },
-                    { label: 'META', data: dadosGlobais.meta, type: 'line', borderColor: '#c0392b', borderWidth: 2, datalabels: { display: false } }
+                data: { labels: dJanete.meses, datasets: [
+                    { label: 'PPM', data: dJanete.ppm, backgroundColor: dJanete.ppm.map((v, i) => parseFloat(v) <= parseFloat(dJanete.meta[i]) ? '#27ae60' : '#e74c3c') },
+                    { label: 'META', data: dJanete.meta, type: 'line', borderColor: '#c0392b', borderWidth: 2, datalabels: { display: false } }
                 ]},
                 options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { color: corGrid }, ticks: { color: corTexto } }, y: { grid: { color: corGrid }, ticks: { color: corTexto } } }, plugins: { datalabels: { anchor: 'end', align: 'top', color: corTexto, font: { size: 11, weight: 'bold' } }, legend: { labels: { color: corTexto } } } }
             });
 
             charts.defeitos = new Chart(document.getElementById('graficoDefeitos').getContext('2d'), {
                 type: 'bar',
-                data: { labels: dadosGlobais.defeitos.map(d => d[0]), datasets: [{ label: 'Quantidade', data: dadosGlobais.defeitos.map(d => d[1]), backgroundColor: '#3498db' }] },
+                data: { labels: dJanete.defeitos.map(d => d[0]), datasets: [{ label: 'Quantidade', data: dJanete.defeitos.map(d => d[1]), backgroundColor: '#3498db' }] },
                 options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { color: corGrid }, ticks: { color: corTexto } }, y: { grid: { color: corGrid }, ticks: { color: corTexto } } }, plugins: { datalabels: { anchor: 'end', align: 'top', color: corTexto, font: { size: 11, weight: 'bold' } }, legend: { labels: { color: corTexto } } } }
             });
 
             charts.setor = new Chart(document.getElementById('graficoSetor').getContext('2d'), {
                 type: 'doughnut',
-                data: { labels: dadosGlobais.ppmPorSetor.map(d => d[0]), datasets: [{ data: dadosGlobais.ppmPorSetor.map(d => d[1]), backgroundColor: ['#3498db', '#e74c3c', '#27ae60', '#f1c40f', '#9b59b6', '#34495e'] }] },
+                data: { labels: dJanete.ppmPorSetor.map(d => d[0]), datasets: [{ data: dJanete.ppmPorSetor.map(d => d[1]), backgroundColor: ['#3498db', '#e74c3c', '#27ae60', '#f1c40f', '#9b59b6', '#34495e', '#16a085', '#2c3e50'] }] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { color: '#ffffff', font: { size: 11, weight: 'bold' }, textShadowColor: '#000000', textShadowBlur: 4 }, legend: { labels: { color: corTexto } } } }
             });
 
         } else {
             // ==========================================
-            // GRÁFICOS DA WEMILLY
+            // ALIMENTA GRÁFICOS DA WEMILLY (Aba: wemilly)
             // ==========================================
-            charts.inspecaoTurno = new Chart(document.getElementById('graficoInspecaoTurno').getContext('2d'), {
-                type: 'line',
-                data: { 
-                    labels: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'], 
-                    datasets: [
-                        { label: 'Turno A', data: [12, 19, 8, 15], borderColor: '#00b4d8', tension: 0.2, fill: false },
-                        { label: 'Turno B', data: [8, 11, 14, 9], borderColor: '#e67e22', tension: 0.2, fill: false }
-                    ] 
-                },
-                options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { color: corGrid }, ticks: { color: corTexto } }, y: { grid: { color: corGrid }, ticks: { color: corTexto } } }, plugins: { datalabels: { color: corTexto, font: { weight: 'bold' } }, legend: { labels: { color: corTexto } } } }
+            const dWemilly = dadosGlobais.wemilly;
+            if(!dWemilly) {
+                alert("A aba da Wemilly está sem dados cadastrados na Planilha.");
+                return;
+            }
+
+            charts.ppmWemilly = new Chart(document.getElementById('graficoPPMWemilly').getContext('2d'), {
+                type: 'bar',
+                data: { labels: dWemilly.meses, datasets: [
+                    { label: 'PPM', data: dWemilly.ppm, backgroundColor: dWemilly.ppm.map((v, i) => parseFloat(v) <= parseFloat(dWemilly.meta[i]) ? '#27ae60' : '#e74c3c') },
+                    { label: 'META', data: dWemilly.meta, type: 'line', borderColor: '#c0392b', borderWidth: 2, datalabels: { display: false } }
+                ]},
+                options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { color: corGrid }, ticks: { color: corTexto } }, y: { grid: { color: corGrid }, ticks: { color: corTexto } } }, plugins: { datalabels: { anchor: 'end', align: 'top', color: corTexto, font: { size: 11, weight: 'bold' } }, legend: { labels: { color: corTexto } } } }
             });
 
-            charts.defeitosRetidos = new Chart(document.getElementById('graficoDefeitosRetidos').getContext('2d'), {
+            charts.defeitosWemilly = new Chart(document.getElementById('graficoDefeitosWemilly').getContext('2d'), {
                 type: 'bar',
-                data: { 
-                    labels: ['Risco/Arranhão', 'Rebarba Excessiva', 'Porosidade', 'Falha Dimensional'], 
-                    datasets: [{ label: 'Ocorrências', data: [45, 32, 18, 12], backgroundColor: '#e74c3c' }] 
-                },
-                options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { color: corGrid }, ticks: { color: corTexto } }, y: { grid: { color: corGrid }, ticks: { color: corTexto } } }, plugins: { datalabels: { anchor: 'end', align: 'top', color: corTexto }, legend: { labels: { color: corTexto } } } }
+                data: { labels: dWemilly.defeitos.map(d => d[0]), datasets: [{ label: 'Quantidade', data: dWemilly.defeitos.map(d => d[1]), backgroundColor: '#27ae60' }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { color: corGrid }, ticks: { color: corTexto } }, y: { grid: { color: corGrid }, ticks: { color: corTexto } } }, plugins: { datalabels: { anchor: 'end', align: 'top', color: corTexto, font: { size: 11, weight: 'bold' } }, legend: { labels: { color: corTexto } } } }
+            });
+
+            charts.setorWemilly = new Chart(document.getElementById('graficoSetorWemilly').getContext('2d'), {
+                type: 'doughnut',
+                data: { labels: dWemilly.ppmPorSetor.map(d => d[0]), datasets: [{ data: dWemilly.ppmPorSetor.map(d => d[1]), backgroundColor: ['#27ae60', '#3498db', '#e74c3c', '#f1c40f', '#9b59b6', '#34495e', '#16a085', '#2c3e50'] }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { color: '#ffffff', font: { size: 11, weight: 'bold' }, textShadowColor: '#000000', textShadowBlur: 4 }, legend: { labels: { color: corTexto } } } }
             });
         }
     }
 
+    // ==========================================
+    // FUNÇÕES DO PLANO DE AÇÃO (LOCALSTORAGE)
+    // ==========================================
     function carregarDadosPlano() {
         const planos = JSON.parse(localStorage.getItem('planoAcaoCoplac') || "[]");
         const container = document.getElementById('displayPlano');
