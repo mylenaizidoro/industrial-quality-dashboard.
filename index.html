@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard de Qualidade - Coplac</title>
+    <title>Sistema Integrado - Coplac</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -18,7 +18,7 @@
             --shadow: rgba(0, 0, 0, 0.1);
         }
 
-        /* VARIÁVEIS PARA O MODO ESCURO (ATIVADO VIA CLASS) */
+        /* VARIÁVEIS PARA O MODO ESCURO */
         body.dark-mode {
             --bg-body: #0b132b;
             --bg-card: #1c2541;
@@ -37,7 +37,7 @@
         }
         
         /* ==========================================================================
-           TELA DE SELEÇÃO DE PERFIL
+           TELA DE SELEÇÃO DE PERFIL (INSPIRADA NA IMAGEM image_f6ec94.png)
            ========================================================================== */
         .login-screen {
             background-color: #0b132b;
@@ -119,7 +119,6 @@
             width: 45px;
             height: 45px;
             border-radius: 10px;
-            background-color: #0077b6;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -150,6 +149,7 @@
             text-transform: uppercase;
         }
         .tag-analista { background-color: #00b4d8; color: #0b132b; }
+        .tag-inspetora { background-color: #e2b13c; color: #0b132b; }
         .profile-desc {
             font-size: 12px;
             color: #a2a8d3;
@@ -160,7 +160,7 @@
         }
 
         /* ==========================================================================
-           ESTILIZAÇÃO DA TOPBAR (ESTILO POSIGRAF)
+           TOPBAR ESTILO POSIGRAF
            ========================================================================== */
         .dashboard-screen {
             display: none;
@@ -190,7 +190,6 @@
             gap: 25px;
         }
 
-        /* BOTÃO MODO CLARO / ESCURO (ESTILO POSIGRAF) */
         .btn-theme-toggle {
             background: none;
             border: none;
@@ -203,123 +202,35 @@
             justify-content: center;
             transition: color 0.2s, transform 0.2s;
         }
-        .btn-theme-toggle:hover {
-            color: #00b4d8;
-            transform: scale(1.1);
-        }
+        .btn-theme-toggle:hover { color: #00b4d8; transform: scale(1.1); }
 
-        .topbar-user-area {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .user-info-text {
-            text-align: right;
-        }
-
-        .user-name {
-            font-size: 14px;
-            font-weight: bold;
-            color: #ffffff;
-            margin: 0;
-        }
-
-        .user-role {
-            font-size: 11px;
-            color: #6c757d;
-            margin: 0;
-        }
-
-        .user-avatar-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background-color: #112240;
-            border: 1px solid #00b4d8;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #00b4d8;
-            font-size: 14px;
-        }
-
-        .btn-logout {
-            background: none;
-            border: none;
-            color: #6c757d;
-            font-size: 20px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 5px;
-            transition: color 0.2s;
-        }
-
-        .btn-logout:hover {
-            color: #e74c3c;
-        }
+        .topbar-user-area { display: flex; align-items: center; gap: 12px; }
+        .user-info-text { text-align: right; }
+        .user-name { font-size: 14px; font-weight: bold; color: #ffffff; margin: 0; }
+        .user-role { font-size: 11px; color: #6c757d; margin: 0; }
+        .user-avatar-icon { width: 32px; height: 32px; border-radius: 50%; background-color: #112240; border: 1px solid #00b4d8; display: flex; align-items: center; justify-content: center; color: #00b4d8; font-size: 14px; }
+        .btn-logout { background: none; border: none; color: #6c757d; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 5px; transition: color 0.2s; }
+        .btn-logout:hover { color: #e74c3c; }
 
         /* ==========================================================================
-           ÁREA DE CONTEÚDO DO DASHBOARD
+           CONTEÚDO E BLOCOS DE VISUALIZAÇÃO
            ========================================================================== */
-        .dashboard-content {
-            padding: 20px;
-        }
-        
-        .main-title { 
-            text-align: center; 
-            color: var(--text-main); 
-            margin: 15px 0 5px 0; 
-            text-transform: uppercase; 
-            font-size: 24px; 
-            font-weight: bold; 
-        }
-        
-        @media print { .topbar, .btn-export, .btn-plano, .btn-limpar, .btn-excluir { display: none !important; } }
+        .dashboard-content { padding: 20px; }
+        .main-title { text-align: center; color: var(--text-main); margin: 15px 0 5px 0; text-transform: uppercase; font-size: 24px; font-weight: bold; }
         
         .btn-group { text-align: center; margin-bottom: 20px; }
         .btn-export { padding: 10px 20px; font-size: 16px; font-weight: bold; background-color: #2c3e50; color: white; border: none; border-radius: 5px; cursor: pointer; }
         .btn-plano { padding: 10px 20px; font-size: 16px; font-weight: bold; background-color: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px; }
         
-        /* CONTAINER DOS CARDS DINÂMICOS */
         .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; max-width: 1200px; margin: auto; }
-        
-        .container { 
-            background: var(--bg-card); 
-            padding: 15px; 
-            border-radius: 8px; 
-            box-shadow: 0 2px 5px var(--shadow); 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-            transition: background-color 0.3s, box-shadow 0.3s;
-        }
-        
+        .container { background: var(--bg-card); padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px var(--shadow); display: flex; flex-direction: column; justify-content: center; transition: background-color 0.3s, box-shadow 0.3s; }
         .full-width { grid-column: span 2; }
+        .header { text-align: center; color: var(--text-header); margin-bottom: 10px; text-transform: uppercase; font-weight: bold; font-size: 16px; }
         
-        .header { 
-            text-align: center; 
-            color: var(--text-header); 
-            margin-bottom: 10px; 
-            text-transform: uppercase; 
-            font-weight: bold; 
-            font-size: 16px; 
-        }
-        
-        #graficoPPM { max-height: 250px !important; }
-        #graficoDefeitos, #graficoSetor { max-height: 300px !important; }
-        
-        #displayPlano { 
-            background: var(--bg-body); 
-            border-left: 5px solid #27ae60; 
-            padding: 15px; 
-            font-size: 14px; 
-            color: var(--text-main); 
-            min-height: 50px; 
-        }
-        
+        canvas { max-height: 280px !important; }
+        #graficoPPM { max-height: 220px !important; }
+
+        #displayPlano { background: var(--bg-body); border-left: 5px solid #27ae60; padding: 15px; font-size: 14px; color: var(--text-main); min-height: 50px; }
         #areaPlanoAcao { display:none; position:fixed; top:20px; left:10%; width:80%; background:var(--bg-card); color: var(--text-main); padding:20px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.5); z-index:1000; }
         .input-campo { margin-bottom: 10px; }
         .input-campo label { display: block; font-weight: bold; font-size: 14px; margin-bottom: 5px; }
@@ -328,7 +239,7 @@
 </head>
 <body>
 
-<!-- TELA DE LOGIN -->
+<!-- TELA DE LOGIN (BASEADA EM image_f6ec94.png) -->
 <div id="telaLogin" class="login-screen">
     <div class="login-logo">RC</div>
     <p class="login-company">Coplac - Curitiba</p>
@@ -340,9 +251,10 @@
             <span>👥</span> Usuários de demonstração
         </div>
 
-        <div class="profile-card" onclick="entrarNoDashboard()">
+        <!-- PERFIL 1: JANETE (QUALIDADE) -->
+        <div class="profile-card" onclick="entrarNoDashboard('Janete Qualidade', 'Analista', 'qualidade')">
             <div class="profile-left">
-                <div class="profile-avatar">J</div>
+                <div class="profile-avatar" style="background-color: #0077b6;">J</div>
                 <div class="profile-info">
                     <div class="profile-name-row">
                         <span class="profile-name">Janete Qualidade</span>
@@ -353,70 +265,73 @@
             </div>
             <div class="profile-arrow">➔</div>
         </div>
+
+        <!-- PERFIL 2: WEMILLY (INSPETORA DE QUALIDADE) -->
+        <div class="profile-card" onclick="entrarNoDashboard('Wemilly', 'Inspetora', 'qualidade')">
+            <div class="profile-left">
+                <div class="profile-avatar" style="background-color: #27ae60;">W</div>
+                <div class="profile-info">
+                    <div class="profile-name-row">
+                        <span class="profile-name">Wemilly</span>
+                        <span class="profile-tag tag-inspetora">Inspetora</span>
+                    </div>
+                    <span class="profile-desc">Visão de chão de fábrica — Monitoramento de Não Conformidades</span>
+                </div>
+            </div>
+            <div class="profile-arrow">➔</div>
+        </div>
     </div>
 </div>
 
-<!-- TELA DO DASHBOARD -->
+<!-- TELA PRINCIPAL DO DASHBOARD -->
 <div id="telaDashboard" class="dashboard-screen">
     
-    <!-- BARRA SUPERIOR ESTILO POSIGRAF COM SELETOR DE MODO -->
+    <!-- BARRA SUPERIOR DINÂMICA -->
     <div class="topbar">
         <div class="topbar-left">
             <span>COPLAC — SISTEMA INTEGRADO</span>
         </div>
         
         <div class="topbar-right-controls">
-            <!-- BOTÃO ALTERNADOR DE TEMA (LUA/SOL) -->
-            <button id="themeToggle" class="btn-theme-toggle" onclick="toggleTheme()" title="Alternar Modo Claro/Escuro">
-                🌙
-            </button>
+            <button id="themeToggle" class="btn-theme-toggle" onclick="toggleTheme()" title="Alternar Modo Claro/Escuro">🌙</button>
 
             <div class="topbar-user-area">
                 <div class="user-info-text">
-                    <p class="user-name">Janete Qualidade</p>
-                    <p class="user-role">Analista</p>
+                    <p class="user-name" id="labelNomeUsuario">Nome</p>
+                    <p class="user-role" id="labelCargoUsuario">Cargo</p>
                 </div>
-                <div class="user-avatar-icon">👤</div>
-                <button class="btn-logout" onclick="voltarParaLogin()" title="Alternar Usuário">➔</button>
+                <div class="user-avatar-icon" id="iconeAvatarUsuario">👤</div>
+                <button class="btn-logout" onclick="voltarParaLogin()" title="Sair do Perfil">➔</button>
             </div>
         </div>
     </div>
 
-    <!-- CONTEÚDO DO DASHBOARD -->
+    <!-- CONTEÚDO PRINCIPAL -->
     <div class="dashboard-content">
-        <h1 class="main-title">INDICADORES DE QUALIDADE COPLAC CURITIBA</h1>
+        <h1 class="main-title" id="tituloDashboard">INDICADORES COPLAC CURITIBA</h1>
 
         <div class="btn-group">
             <button class="btn-export" onclick="gerarPDF()">EXPORTAR PDF</button>
-            <button class="btn-plano" onclick="abrirPlano()">PLANO DE AÇÃO</button>
+            <button class="btn-plano" id="btnPlanoAcaoView" onclick="abrirPlano()">PLANO DE AÇÃO</button>
         </div>
 
         <!-- MODAL PLANO DE AÇÃO -->
         <div id="areaPlanoAcao">
             <h2>NOVO PLANO DE AÇÃO</h2>
-            <div class="input-campo">
-                <label>Responsável:</label>
-                <input type="text" id="respPlano" style="width:100%; padding:8px; box-sizing:border-box;">
-            </div>
-            <div class="input-campo">
-                <label>Data Limite:</label>
-                <input type="date" id="dataPlano" style="width:100%; padding:8px; box-sizing:border-box;">
-            </div>
-            <div class="input-campo">
-                <label>Ação Corretiva:</label>
-                <textarea id="textoPlano" style="width:100%; height:100px; padding:10px; box-sizing:border-box;"></textarea>
-            </div>
+            <div class="input-campo"><label>Responsável:</label><input type="text" id="respPlano" style="width:100%; padding:8px; box-sizing:border-box;"></div>
+            <div class="input-campo"><label>Data Limite:</label><input type="date" id="dataPlano" style="width:100%; padding:8px; box-sizing:border-box;"></div>
+            <div class="input-campo"><label>Ação Corretiva:</label><textarea id="textoPlano" style="width:100%; height:100px; padding:10px; box-sizing:border-box;"></textarea></div>
             <div style="margin-top:15px; text-align:right;">
                 <button onclick="fecharPlano()" style="padding:10px 20px; background:#95a5a6; color:white; border:none; cursor:pointer;">FECHAR</button>
                 <button onclick="salvarPlano()" style="padding:10px 20px; background:#27ae60; color:white; border:none; cursor:pointer;">SALVAR</button>
             </div>
         </div>
 
-        <!-- GRIDS DOS GRÁFICOS -->
-        <div class="dashboard">
+        <!-- GRID DE GRÁFICOS COMPARTILHADO DA QUALIDADE -->
+        <div class="dashboard" id="blocoQualidade" style="display: none;">
             <div class="container full-width">
                 <h2 class="header">INDICADOR PPM INTERNO - ÚLTIMOS 12 MESES</h2>
-                <canvas id="graficoPPM" height="120"></canvas>
+                <canvas id="graficoPPM"></canvas>
             </div>
             <div class="container">
                 <h2 class="header">AS PEÇAS QUE APRESENTARAM MAIS DEFEITOS NO MÊS</h2>
@@ -431,6 +346,7 @@
                 <div id="displayPlano">Nenhuma análise salva até o momento.</div>
             </div>
         </div>
+
     </div>
 </div>
 
@@ -438,17 +354,25 @@
     const url = 'https://script.google.com/macros/s/AKfycbx5eihq6v75T79HB7HWhGfK23f4WSTsiE8cksqTlPCyuqLcFd88_KhYkvbBa5p7VCjLbA/exec';
     Chart.register(ChartDataLabels);
 
-    let graficoPPMInstance = null;
-    let graficoDefeitosInstance = null;
-    let graficoSetorInstance = null;
-    let dadosGlobais = null; // Guarda os dados do fetch para redesenhar no toggle
+    let charts = {};
+    let dadosGlobais = null;
+    let usuarioAtual = { nome: '', cargo: '', area: '' };
 
-    function entrarNoDashboard() {
+    function entrarNoDashboard(nome, cargo, area) {
+        usuarioAtual = { nome, cargo, area };
+        
+        document.getElementById('labelNomeUsuario').innerText = nome;
+        document.getElementById('labelCargoUsuario').innerText = cargo;
+        document.getElementById('iconeAvatarUsuario').innerText = nome.charAt(0);
+        document.getElementById('tituloDashboard').innerText = `INDICADORES DE ${area.toUpperCase()} - COPLAC`;
+
+        document.getElementById('blocoQualidade').style.display = 'grid';
+        document.getElementById('btnPlanoAcaoView').style.display = 'inline-block';
+        carregarDadosPlano();
+
         document.getElementById('telaLogin').style.display = 'none';
         document.getElementById('telaDashboard').style.display = 'block';
-        carregarDados();
         
-        // Faz a requisição inicial dos dados
         fetch(url).then(r => r.json()).then(data => {
             dadosGlobais = data;
             inicializarGraficos();
@@ -460,156 +384,73 @@
         document.getElementById('telaLogin').style.display = 'flex';
     }
 
-    /* FUNÇÃO MODO ESCURO / MODO CLARO */
     function toggleTheme() {
-        const body = document.body;
-        const btn = document.getElementById('themeToggle');
-        
-        body.classList.toggle('dark-mode');
-        
-        if(body.classList.contains('dark-mode')){
-            btn.innerHTML = '☀️'; // Mostra Sol na tela escura (clique para clarear)
-        } else {
-            btn.innerHTML = '🌙'; // Mostra Lua na tela clara (clique para escurecer)
-        }
-        
-        // Redesenha os gráficos adaptando a cor dos textos internos imediatamente
-        if(dadosGlobais) {
-            inicializarGraficos();
-        }
+        document.body.classList.toggle('dark-mode');
+        document.getElementById('themeToggle').innerHTML = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
+        if(dadosGlobais) inicializarGraficos();
     }
 
     function inicializarGraficos() {
         const isDarkMode = document.body.classList.contains('dark-mode');
-        const corTextoEtiquetas = isDarkMode ? '#ffffff' : '#333333';
-        const corEixosApoio = isDarkMode ? '#444444' : '#eeeeee';
+        const corTexto = isDarkMode ? '#ffffff' : '#333333';
+        const corGrid = isDarkMode ? '#444444' : '#eeeeee';
 
-        if (graficoPPMInstance) graficoPPMInstance.destroy();
-        if (graficoDefeitosInstance) graficoDefeitosInstance.destroy();
-        if (graficoSetorInstance) graficoSetorInstance.destroy();
+        Object.keys(charts).forEach(key => { if(charts[key]) charts[key].destroy(); });
 
-        // 1. GRÁFICO PPM
-        graficoPPMInstance = new Chart(document.getElementById('graficoPPM').getContext('2d'), {
-            type: 'bar', 
-            data: { 
-                labels: dadosGlobais.meses, 
-                datasets: [
-                    { label: 'PPM', data: dadosGlobais.ppm, backgroundColor: dadosGlobais.ppm.map((v, i) => v <= dadosGlobais.meta[i] ? '#27ae60' : '#e74c3c') },
-                    { label: 'META', data: dadosGlobais.meta, type: 'line', borderColor: '#c0392b', borderWidth: 2, datalabels: { display: false } }
-                ]
-            }, 
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false, 
-                scales: {
-                    x: { grid: { color: corEixosApoio }, ticks: { color: corTextoEtiquetas } },
-                    y: { grid: { color: corEixosApoio }, ticks: { color: corTextoEtiquetas } }
-                },
-                plugins: { 
-                    datalabels: { anchor: 'end', align: 'top', color: corTextoEtiquetas, font: { size: 12, weight: 'bold' } },
-                    legend: { labels: { color: corTextoEtiquetas } }
-                } 
-            }
+        charts.ppm = new Chart(document.getElementById('graficoPPM').getContext('2d'), {
+            type: 'bar',
+            data: { labels: dadosGlobais.meses, datasets: [
+                { label: 'PPM', data: dadosGlobais.ppm, backgroundColor: dadosGlobais.ppm.map((v, i) => v <= dadosGlobais.meta[i] ? '#27ae60' : '#e74c3c') },
+                { label: 'META', data: dadosGlobais.meta, type: 'line', borderColor: '#c0392b', borderWidth: 2, datalabels: { display: false } }
+            ]},
+            options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { color: corGrid }, ticks: { color: corTexto } }, y: { grid: { color: corGrid }, ticks: { color: corTexto } } }, plugins: { datalabels: { anchor: 'end', align: 'top', color: corTexto, font: { size: 11, weight: 'bold' } }, legend: { labels: { color: corTexto } } } }
         });
-        
-        // 2. GRÁFICO DEFEITOS
-        graficoDefeitosInstance = new Chart(document.getElementById('graficoDefeitos').getContext('2d'), {
-            type: 'bar', 
-            data: { 
-                labels: dadosGlobais.defeitos.map(d => d[0]), 
-                datasets: [{ label: 'Quantidade', data: dadosGlobais.defeitos.map(d => d[1]), backgroundColor: '#3498db' }] 
-            },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false, 
-                scales: {
-                    x: { grid: { color: corEixosApoio }, ticks: { color: corTextoEtiquetas } },
-                    y: { grid: { color: corEixosApoio }, ticks: { color: corTextoEtiquetas } }
-                },
-                plugins: { 
-                    datalabels: { anchor: 'end', align: 'top', color: corTextoEtiquetas, font: { size: 12, weight: 'bold' } },
-                    legend: { labels: { color: corTextoEtiquetas } }
-                } 
-            }
+
+        charts.defeitos = new Chart(document.getElementById('graficoDefeitos').getContext('2d'), {
+            type: 'bar',
+            data: { labels: dadosGlobais.defeitos.map(d => d[0]), datasets: [{ label: 'Quantidade', data: dadosGlobais.defeitos.map(d => d[1]), backgroundColor: '#3498db' }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { color: corGrid }, ticks: { color: corTexto } }, y: { grid: { color: corGrid }, ticks: { color: corTexto } } }, plugins: { datalabels: { anchor: 'end', align: 'top', color: corTexto, font: { size: 11, weight: 'bold' } }, legend: { labels: { color: corTexto } } } }
         });
-        
-        // 3. GRÁFICO SETOR
-        graficoSetorInstance = new Chart(document.getElementById('graficoSetor').getContext('2d'), {
-            type: 'doughnut', 
-            data: { 
-                labels: dadosGlobais.ppmPorSetor.map(d => d[0]), 
-                datasets: [{ data: dadosGlobais.ppmPorSetor.map(d => d[1]), backgroundColor: ['#3498db', '#e74c3c', '#27ae60', '#f1c40f', '#9b59b6', '#34495e', '#e67e22', '#1abc9c', '#7f8c8d', '#2ecc71', '#d35400'] }] 
-            },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false, 
-                plugins: { 
-                    datalabels: { color: '#ffffff', font: { size: 11, weight: 'bold' }, textShadowColor: '#000000', textShadowBlur: 4 },
-                    legend: { labels: { color: corTextoEtiquetas } }
-                } 
-            }
+
+        charts.setor = new Chart(document.getElementById('graficoSetor').getContext('2d'), {
+            type: 'doughnut',
+            data: { labels: dadosGlobais.ppmPorSetor.map(d => d[0]), datasets: [{ data: dadosGlobais.ppmPorSetor.map(d => d[1]), backgroundColor: ['#3498db', '#e74c3c', '#27ae60', '#f1c40f', '#9b59b6', '#34495e'] }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { color: '#ffffff', font: { size: 11, weight: 'bold' }, textShadowColor: '#000000', textShadowBlur: 4 }, legend: { labels: { color: corTexto } } } }
         });
     }
 
-    function carregarDados() {
+    function carregarDadosPlano() {
         const planos = JSON.parse(localStorage.getItem('planoAcaoCoplac') || "[]");
         const container = document.getElementById('displayPlano');
-        
-        if (planos.length === 0) {
-            container.innerHTML = "Nenhuma análise salva até o momento.";
-            return;
-        }
-        
+        if (planos.length === 0) { container.innerHTML = "Nenhuma análise salva até o momento."; return; }
         container.innerHTML = "";
         planos.forEach((item, index) => {
             const div = document.createElement('div');
-            div.style.borderBottom = "1px solid #ddd";
-            div.style.padding = "10px 0";
-            div.style.display = "flex";
-            div.style.justifyContent = "space-between";
-            div.style.alignItems = "center";
-            div.innerHTML = `
-                <div style="flex-grow: 1;"><strong>Resp:</strong> ${item.resp} | <strong>Data:</strong> ${item.data} | <strong>Ação:</strong> ${item.texto}</div>
-                <button onclick="excluirItem(${index})" class="btn-excluir" style="background:#e74c3c; color:white; border:none; padding:5px 12px; cursor:pointer; border-radius:3px; margin-left:10px;">X</button>
-            `;
+            div.style.borderBottom = "1px solid #ddd"; div.style.padding = "10px 0"; div.style.display = "flex"; div.style.justifyContent = "space-between"; div.style.alignItems = "center";
+            div.innerHTML = `<div><strong>Resp:</strong> ${item.resp} | <strong>Data:</strong> ${item.data} | <strong>Ação:</strong> ${item.texto}</div><button onclick="excluirItem(${index})" class="btn-excluir" style="background:#e74c3c; color:white; border:none; padding:5px 12px; cursor:pointer; border-radius:3px; margin-left:10px;">X</button>`;
             container.appendChild(div);
         });
     }
 
     function salvarPlano() {
-        const resp = document.getElementById('respPlano').value;
-        const data = document.getElementById('dataPlano').value;
-        const texto = document.getElementById('textoPlano').value;
+        const resp = document.getElementById('respPlano').value; const data = document.getElementById('dataPlano').value; const texto = document.getElementById('textoPlano').value;
         if (!resp || !data || !texto) return alert("Preencha todos os campos!");
-        
         const planos = JSON.parse(localStorage.getItem('planoAcaoCoplac') || "[]");
         planos.push({ resp, data: data.split('-').reverse().join('/'), texto });
         localStorage.setItem('planoAcaoCoplac', JSON.stringify(planos));
-        
-        document.getElementById('respPlano').value = "";
-        document.getElementById('dataPlano').value = "";
-        document.getElementById('textoPlano').value = "";
-        fecharPlano();
-        carregarDados();
+        document.getElementById('respPlano').value = ""; document.getElementById('dataPlano').value = ""; document.getElementById('textoPlano').value = "";
+        fecharPlano(); carregarDadosPlano();
     }
 
-    function excluirItem(index) {
-        if(confirm("Excluir este item?")) {
-            const planos = JSON.parse(localStorage.getItem('planoAcaoCoplac') || "[]");
-            planos.splice(index, 1);
-            localStorage.setItem('planoAcaoCoplac', JSON.stringify(planos));
-            carregarDados();
-        }
-    }
-
-    function limparPlano() { if (confirm("Tem certeza que deseja apagar TODOS os planos?")) { localStorage.removeItem('planoAcaoCoplac'); carregarDados(); } }
+    function excluirItem(index) { if(confirm("Excluir este item?")) { const planos = JSON.parse(localStorage.getItem('planoAcaoCoplac') || "[]"); planos.splice(index, 1); localStorage.setItem('planoAcaoCoplac', JSON.stringify(planos)); carregarDadosPlano(); } }
+    function limparPlano() { if (confirm("Tem certeza que deseja apagar TODOS os planos?")) { localStorage.removeItem('planoAcaoCoplac'); carregarDadosPlano(); } }
     function abrirPlano() { document.getElementById('areaPlanoAcao').style.display = 'block'; }
     function fecharPlano() { document.getElementById('areaPlanoAcao').style.display = 'none'; }
     
     function gerarPDF() {
         const btns = document.querySelectorAll('.btn-export, .btn-plano, .btn-limpar, .btn-excluir, .btn-theme-toggle');
         btns.forEach(b => b.style.display = 'none');
-        html2pdf().set({ margin: 2, filename: 'Indicadores_Qualidade_Coplac.pdf', html2canvas: { scale: 1.8 }, jsPDF: { orientation: 'landscape' } }).from(document.getElementById('telaDashboard')).save().then(() => {
+        html2pdf().set({ margin: 2, filename: `Indicadores_Qualidade_${usuarioAtual.nome}.pdf`, html2canvas: { scale: 1.8 }, jsPDF: { orientation: 'landscape' } }).from(document.getElementById('telaDashboard')).save().then(() => {
             btns.forEach(b => b.style.display = 'inline-block');
         });
     }
