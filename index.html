@@ -240,6 +240,7 @@
 </head>
 <body>
 
+<!-- TELA DE LOGIN -->
 <div id="telaLogin" class="login-screen">
     <div class="login-logo">RC</div>
     <p class="login-company">Coplac - Curitiba</p>
@@ -251,6 +252,7 @@
             <span>👥</span> Usuários da Qualidade
         </div>
 
+        <!-- PERFIL 1: JANETE -->
         <div class="profile-card" onclick="entrarNoDashboard('Janete Qualidade', 'Analista', 'analise_qualidade')">
             <div class="profile-left">
                 <div class="profile-avatar" style="background-color: #0077b6;">J</div>
@@ -265,6 +267,7 @@
             <div class="profile-arrow">➔</div>
         </div>
 
+        <!-- PERFIL 2: WEMILLY -->
         <div class="profile-card" onclick="entrarNoDashboard('Wemilly', 'Inspetora', 'inspecao_qualidade')">
             <div class="profile-left">
                 <div class="profile-avatar" style="background-color: #27ae60;">W</div>
@@ -281,8 +284,10 @@
     </div>
 </div>
 
+<!-- TELA PRINCIPAL DO DASHBOARD -->
 <div id="telaDashboard" class="dashboard-screen">
     
+    <!-- BARRA SUPERIOR DINÂMICA -->
     <div class="topbar">
         <div class="topbar-left">
             <span>COPLAC — SISTEMA INTEGRADO</span>
@@ -302,6 +307,7 @@
         </div>
     </div>
 
+    <!-- CONTEÚDO PRINCIPAL -->
     <div class="dashboard-content">
         <h1 class="main-title" id="tituloDashboard">INDICADORES COPLAC CURITIBA</h1>
 
@@ -310,6 +316,7 @@
             <button class="btn-plano" id="btnPlanoAcaoView" onclick="abrirPlano()">PLANO DE AÇÃO</button>
         </div>
 
+        <!-- MODAL PLANO DE AÇÃO (EXCLUSIVO DA JANETE) -->
         <div id="areaPlanoAcao">
             <h2>NOVO PLANO DE AÇÃO</h2>
             <div class="input-campo"><label>Responsável:</label><input type="text" id="respPlano" style="width:100%; padding:8px; box-sizing:border-box;"></div>
@@ -321,6 +328,9 @@
             </div>
         </div>
 
+        <!-- ==========================================================================
+           1. GRÁFICOS DA JANETE (ANÁLISE DA QUALIDADE - ABA 'PPM INTERNO')
+           ========================================================================== -->
         <div class="dashboard" id="blocoJanete" style="display: none;">
             <div class="container full-width">
                 <h2 class="header">INDICADOR PPM INTERNO - ÚLTIMOS 12 MESES</h2>
@@ -340,6 +350,9 @@
             </div>
         </div>
 
+        <!-- ==========================================================================
+           2. GRÁFICOS DA WEMILLY (MONITORAMENTO DO SEU PRÓPRIO PPM - ABA 'WEMILLY')
+           ========================================================================== -->
         <div class="dashboard" id="blocoWemilly" style="display: none;">
             <div class="container full-width">
                 <h2 class="header">INDICADOR PPM INTERNO — WEMILLY</h2>
@@ -420,11 +433,14 @@
         Object.keys(charts).forEach(key => { if(charts[key]) charts[key].destroy(); });
 
         if(usuarioAtual.area === 'analise_qualidade') {
-            // ==========================================
-            // ALIMENTA GRÁFICOS DA JANETE (Aba: janete)
-            // ==========================================
-            const dJanete = dadosGlobais.janete;
-            if(!dJanete) return;
+            // =========================================================================
+            // ALIMENTA GRÁFICOS DA JANETE (Mapeado corretamente para a aba 'PPM Interno')
+            // =========================================================================
+            const dJanete = dadosGlobais["PPM Interno"] || dadosGlobais.janete;
+            if(!dJanete) {
+                alert("A aba 'PPM Interno' não foi encontrada nos dados enviados pelo App Script.");
+                return;
+            }
 
             charts.ppm = new Chart(document.getElementById('graficoPPM').getContext('2d'), {
                 type: 'bar',
@@ -449,11 +465,11 @@
 
         } else {
             // ==========================================
-            // ALIMENTA GRÁFICOS DA WEMILLY (Aba: wemilly)
+            // ALIMENTA GRÁFICOS DA WEMILLY (Aba: Wemilly)
             // ==========================================
-            const dWemilly = dadosGlobais.wemilly;
+            const dWemilly = dadosGlobais["Wemilly"] || dadosGlobais.wemilly;
             if(!dWemilly) {
-                alert("A aba da Wemilly está sem dados cadastrados na Planilha.");
+                alert("A aba da 'Wemilly' não foi encontrada nos dados enviados pelo App Script.");
                 return;
             }
 
