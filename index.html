@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Sistema Integrado - Coplac</title>
+    <title>Sistema Integrated - Coplac</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -76,7 +76,7 @@
         .header { text-align: center; color: var(--text-header); margin-bottom: 10px; text-transform: uppercase; font-weight: bold; font-size: 16px; }
         
         canvas { max-height: 280px !important; }
-        #displayPlano { background: var(--bg-body); border-left: 5px solid #27ae60; padding: 15px; font-size: 14px; color: var(--text-main); }
+        .display-plano-style { background: var(--bg-body); border-left: 5px solid #27ae60; padding: 15px; font-size: 14px; color: var(--text-main); }
         #areaPlanoAcao { display:none; position:fixed; top:20px; left:10%; width:80%; background:var(--bg-card); padding:20px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.5); z-index:1000; }
     </style>
 </head>
@@ -142,13 +142,15 @@
             <button onclick="salvarPlano()" style="padding:10px; background:#27ae60; color:white; border:none;">SALVAR</button>
         </div>
 
+        <!-- ABA DA JANETE -->
         <div class="dashboard" id="blocoJanete" style="display: none;">
             <div class="container full-width"><h2 class="header">INDICADOR PPM INTERNO - ÚLTIMOS 12 MESES</h2><canvas id="graficoPPM"></canvas></div>
             <div class="container"><h2 class="header">AS PEÇAS QUE APRESENTARAM MAIS DEFEITOS NO MÊS</h2><canvas id="graficoDefeitos"></canvas></div>
             <div class="container"><h2 class="header">PPM POR SETOR</h2><canvas id="graficoSetor"></canvas></div>
-            <div class="container full-width"><h2 class="header">RESUMO DO PLANO DE AÇÃO</h2><div id="displayPlano">Nenhuma análise salva.</div></div>
+            <div class="container full-width"><h2 class="header">RESUMO DO PLANO DE AÇÃO (JANETE)</h2><div id="displayPlanoJanete" class="display-plano-style">Nenhuma análise salva.</div></div>
         </div>
 
+        <!-- ABA DA WEMILLY -->
         <div class="dashboard" id="blocoWemilly" style="display: none;">
             <div class="container full-width">
                 <h2 class="header">RANKING DE MAIORES DEFEITOS DETECTADOS (QUANTIDADE TOTAL)</h2>
@@ -162,12 +164,16 @@
                 <h2 class="header">PRODUTOS MAIS AFETADOS COM REJEITO</h2>
                 <canvas id="graficoProdutosWemilly"></canvas>
             </div>
+            <!-- Novo campo de Plano de Ação exclusivo no layout da Wemilly -->
+            <div class="container full-width">
+                <h2 class="header">RESUMO DO PLANO DE AÇÃO (WEMILLY)</h2>
+                <div id="displayPlanoWemilly" class="display-plano-style">Nenhuma análise salva.</div>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    // URL ATUALIZADA EXECUTÁVEL
     const url = 'https://script.google.com/macros/s/AKfycbyx46Bv4xMLcmT1pSc35JxFrT1qDQoyRWoVcZB6lj9g1EdrhiCIWHM9ko5XeffklKjeJw/exec';
     Chart.register(ChartDataLabels);
     let charts = {}, dadosGlobais = null, usuarioAtual = { nome: '', cargo: '', area: '' };
@@ -178,18 +184,21 @@
         document.getElementById('labelCargoUsuario').innerText = cargo;
         document.getElementById('iconeAvatarUsuario').innerText = nome.charAt(0);
         
+        // Exibe o botão superior de plano de ação para ambas as abas agora
+        document.getElementById('btnPlanoAcaoView').style.display = 'inline-block';
+        
         if(area === 'analise_qualidade') {
             document.getElementById('tituloDashboard').innerText = `INDICADORES OPERACIONAIS — JANETE`;
             document.getElementById('blocoJanete').style.display = 'grid';
             document.getElementById('blocoWemilly').style.display = 'none';
-            document.getElementById('btnPlanoAcaoView').style.display = 'inline-block';
-            carregarDadosPlano();
         } else {
             document.getElementById('tituloDashboard').innerText = `APONTAMENTO DE DEFEITOS DA FÁBRICA — WEMILLY`;
             document.getElementById('blocoJanete').style.display = 'none';
             document.getElementById('blocoWemilly').style.display = 'grid';
-            document.getElementById('btnPlanoAcaoView').style.display = 'none';
         }
+
+        // Carrega o plano de ação correspondente ao usuário logado
+        carregarDadosPlano();
 
         document.getElementById('telaLogin').style.display = 'none';
         document.getElementById('telaDashboard').style.display = 'block';
@@ -247,7 +256,6 @@
             const dWemilly = dadosGlobais["Wemilly"];
             if(!dWemilly) return;
 
-            // 1. Maiores Defeitos
             charts.defeitosWemilly = new Chart(document.getElementById('graficoDefeitosWemilly').getContext('2d'), {
                 type: 'bar',
                 data: {
@@ -263,7 +271,6 @@
                 }
             });
 
-            // 2. Turnos
             charts.turnosWemilly = new Chart(document.getElementById('graficoTurnoWemilly').getContext('2d'), {
                 type: 'doughnut',
                 data: {
@@ -277,7 +284,6 @@
                 }
             });
 
-            // 3. Produtos Críticos
             charts.produtosWemilly = new Chart(document.getElementById('graficoProdutosWemilly').getContext('2d'), {
                 type: 'bar',
                 data: {
@@ -294,14 +300,54 @@
         }
     }
 
+    // Gerencia chaves separadas no LocalStorage para isolar os planos de ação
     function carregarDadosPlano() {
-        const planos = JSON.parse(localStorage.getItem('planoAcaoCoplac') || "[]");
-        const container = document.getElementById('displayPlano');
-        if (planos.length === 0) { container.innerHTML = "Nenhuma análise salva."; return; }
+        const sufixoKey = usuarioAtual.area === 'analise_qualidade' ? 'Janete' : 'Wemilly';
+        const planos = JSON.parse(localStorage.getItem('planoAcaoCoplac_' + sufixoKey) || "[]");
+        const idContainer = usuarioAtual.area === 'analise_qualidade' ? 'displayPlanoJanete' : 'displayPlanoWemilly';
+        const container = document.getElementById(idContainer);
+        
+        if (!container) return;
+        
+        if (planos.length === 0) { 
+            container.innerHTML = "Nenhuma análise salva."; 
+            return; 
+        }
         container.innerHTML = planos.map(item => `<div><strong>Resp:</strong> ${item.resp} | <strong>Ação:</strong> ${item.texto}</div>`).join('');
     }
-    function abrirPlano() { document.getElementById('areaPlanoAcao').style.display = 'block'; }
+
+    function abrirPlano() { 
+        // Pré-preenche o campo responsável com o nome de quem está logado
+        document.getElementById('respPlano').value = usuarioAtual.nome;
+        document.getElementById('areaPlanoAcao').style.display = 'block'; 
+    }
+    
     function fecharPlano() { document.getElementById('areaPlanoAcao').style.display = 'none'; }
+    
+    function salvarPlano() {
+        const resp = document.getElementById('respPlano').value;
+        const data = document.getElementById('dataPlano').value;
+        const texto = document.getElementById('textoPlano').value;
+        
+        if(!resp || !texto) {
+            alert("Preencha o responsável e a descrição da ação.");
+            return;
+        }
+
+        const sufixoKey = usuarioAtual.area === 'analise_qualidade' ? 'Janete' : 'Wemilly';
+        const storageKey = 'planoAcaoCoplac_' + sufixoKey;
+        
+        const planos = JSON.parse(localStorage.getItem(storageKey) || "[]");
+        planos.push({ resp, data, texto });
+        localStorage.setItem(storageKey, JSON.stringify(planos));
+        
+        carregarDadosPlano();
+        fecharPlano();
+        
+        // Limpa o campo de texto para o próximo uso
+        document.getElementById('textoPlano').value = '';
+    }
+
     function gerarPDF() { window.print(); }
 </script>
 </body>
