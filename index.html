@@ -314,7 +314,7 @@
             <h2>NOVO PLANO DE AÇÃO</h2>
             <div class="input-campo"><label>Responsável:</label><input type="text" id="respPlano" style="width:100%; padding:8px; box-sizing:border-box;"></div>
             <div class="input-campo"><label>Data Limite:</label><input type="date" id="dataPlano" style="width:100%; padding:8px; box-sizing:border-box;"></div>
-            <div class="input-campo"><label>Ação Corretiva:</label><textarea id="textoPlano" style="width:100%; height:100px; padding:10px; box-sizing:border-box("></textarea></div>
+            <div class="input-campo"><label>Ação Corretiva:</label><textarea id="textoPlano" style="width:100%; height:100px; padding:10px; box-sizing:border-box;"></textarea></div>
             <div style="margin-top:15px; text-align:right;">
                 <button onclick="fecharPlano()" style="padding:10px 20px; background:#95a5a6; color:white; border:none; cursor:pointer;">FECHAR</button>
                 <button onclick="salvarPlano()" style="padding:10px 20px; background:#27ae60; color:white; border:none; cursor:pointer;">SALVAR</button>
@@ -359,7 +359,7 @@
 </div>
 
 <script>
-    // URL Atualizada fornecida pelo usuário
+    // URL Atualizada da API do Apps Script
     const url = 'https://script.google.com/macros/s/AKfycbyIpThCGl47IF205UgXNoaLvSWkLUg0sU2ZWskYppi_XYOlCJOYkn9iJJ5zdq2k4OyGZw/exec';
     Chart.register(ChartDataLabels);
 
@@ -390,7 +390,7 @@
         document.getElementById('telaLogin').style.display = 'none';
         document.getElementById('telaDashboard').style.display = 'block';
         
-        // Chamada à API da Planilha
+        // Chamada de dados da planilha
         fetch(url).then(r => r.json()).then(data => {
             dadosGlobais = data;
             inicializarGraficos();
@@ -400,7 +400,8 @@
         });
     }
 
-    function volverParaLogin() {
+    // CORREÇÃO DO BOTÃO: Ajustado de volverParaLogin para voltarParaLogin
+    function voltarParaLogin() {
         document.getElementById('telaDashboard').style.display = 'none';
         document.getElementById('telaLogin').style.display = 'flex';
     }
@@ -431,7 +432,26 @@
                     { label: 'PPM', data: dJanete.ppm, backgroundColor: dJanete.ppm.map((v, i) => parseFloat(v) <= parseFloat(dJanete.meta[i]) ? '#27ae60' : '#e74c3c') },
                     { label: 'META', data: dJanete.meta, type: 'line', borderColor: '#c0392b', borderWidth: 2, datalabels: { display: false } }
                 ]},
-                options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { color: corGrid }, ticks: { color: corTexto } }, y: { grid: { color: corGrid }, ticks: { color: corTexto } } }, plugins: { datalabels: { anchor: 'end', align: 'top', color: corTexto, font: { size: 11, weight: 'bold' } }, legend: { labels: { color: corTexto } } } }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    scales: { 
+                        x: { grid: { color: corGrid }, ticks: { color: corTexto } }, 
+                        y: { grid: { color: corGrid }, ticks: { color: corTexto } } 
+                    }, 
+                    plugins: { 
+                        datalabels: { 
+                            anchor: 'end', 
+                            align: 'top', 
+                            color: corTexto, 
+                            font: { size: 11, weight: 'bold' },
+                            formatter: function(value) {
+                                return value ? Math.round(value) : value; // CORREÇÃO: Arredonda dízimas longas
+                            }
+                        }, 
+                        legend: { labels: { color: corTexto } } 
+                    } 
+                }
             });
 
             charts.defeitos = new Chart(document.getElementById('graficoDefeitos').getContext('2d'), {
@@ -459,7 +479,26 @@
                     { label: 'PPM', data: dWemilly.ppm, backgroundColor: dWemilly.ppm.map((v, i) => parseFloat(v) <= parseFloat(dWemilly.meta[i]) ? '#27ae60' : '#e74c3c') },
                     { label: 'META', data: dWemilly.meta, type: 'line', borderColor: '#c0392b', borderWidth: 2, datalabels: { display: false } }
                 ]},
-                options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { color: corGrid }, ticks: { color: corTexto } }, y: { grid: { color: corGrid }, ticks: { color: corTexto } } }, plugins: { datalabels: { anchor: 'end', align: 'top', color: corTexto, font: { size: 11, weight: 'bold' } }, legend: { labels: { color: corTexto } } } }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    scales: { 
+                        x: { grid: { color: corGrid }, ticks: { color: corTexto } }, 
+                        y: { grid: { color: corGrid }, ticks: { color: corTexto } } 
+                    }, 
+                    plugins: { 
+                        datalabels: { 
+                            anchor: 'end', 
+                            align: 'top', 
+                            color: corTexto, 
+                            font: { size: 11, weight: 'bold' },
+                            formatter: function(value) {
+                                return value ? Math.round(value) : value; // CORREÇÃO: Arredonda dízimas longas (Wemilly)
+                            }
+                        }, 
+                        legend: { labels: { color: corTexto } } 
+                    } 
+                }
             });
 
             charts.defeitosWemilly = new Chart(document.getElementById('graficoDefeitosWemilly').getContext('2d'), {
