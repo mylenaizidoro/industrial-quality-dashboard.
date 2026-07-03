@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Sistema Integrated - Coplac</title>
+    <title>Sistema Integrado - Coplac</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -76,7 +76,16 @@
         .header { text-align: center; color: var(--text-header); margin-bottom: 10px; text-transform: uppercase; font-weight: bold; font-size: 16px; }
         
         canvas { max-height: 280px !important; }
+        
+        /* Estilos atualizados da listagem de planos */
         .display-plano-style { background: var(--bg-body); border-left: 5px solid #27ae60; padding: 15px; font-size: 14px; color: var(--text-main); }
+        .plano-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px dashed rgba(0,0,0,0.1); }
+        body.dark-mode .plano-item { border-bottom: 1px dashed rgba(255,255,255,0.1); }
+        .plano-item:last-child { border-bottom: none; }
+        
+        .btn-excluir-plano { background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 14px; padding: 2px 6px; border-radius: 4px; transition: background 0.2s; }
+        .btn-excluir-plano:hover { background: rgba(231, 76, 60, 0.1); }
+
         #areaPlanoAcao { display:none; position:fixed; top:20px; left:10%; width:80%; background:var(--bg-card); padding:20px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.5); z-index:1000; }
     </style>
 </head>
@@ -142,7 +151,6 @@
             <button onclick="salvarPlano()" style="padding:10px; background:#27ae60; color:white; border:none;">SALVAR</button>
         </div>
 
-        <!-- ABA DA JANETE -->
         <div class="dashboard" id="blocoJanete" style="display: none;">
             <div class="container full-width"><h2 class="header">INDICADOR PPM INTERNO - ÚLTIMOS 12 MESES</h2><canvas id="graficoPPM"></canvas></div>
             <div class="container"><h2 class="header">AS PEÇAS QUE APRESENTARAM MAIS DEFEITOS NO MÊS</h2><canvas id="graficoDefeitos"></canvas></div>
@@ -150,7 +158,6 @@
             <div class="container full-width"><h2 class="header">RESUMO DO PLANO DE AÇÃO (JANETE)</h2><div id="displayPlanoJanete" class="display-plano-style">Nenhuma análise salva.</div></div>
         </div>
 
-        <!-- ABA DA WEMILLY -->
         <div class="dashboard" id="blocoWemilly" style="display: none;">
             <div class="container full-width">
                 <h2 class="header">RANKING DE MAIORES DEFEITOS DETECTADOS (QUANTIDADE TOTAL)</h2>
@@ -161,10 +168,9 @@
                 <canvas id="graficoTurnoWemilly"></canvas>
             </div>
             <div class="container">
-                <h2 class="header">PRODUTOS MAIS AFETADOS COM REJEITO</h2>
+                <h2 class="header">PRODUTOS MAIS AFETADOS WITH REJEITO</h2>
                 <canvas id="graficoProdutosWemilly"></canvas>
             </div>
-            <!-- Novo campo de Plano de Ação exclusivo no layout da Wemilly -->
             <div class="container full-width">
                 <h2 class="header">RESUMO DO PLANO DE AÇÃO (WEMILLY)</h2>
                 <div id="displayPlanoWemilly" class="display-plano-style">Nenhuma análise salva.</div>
@@ -184,7 +190,6 @@
         document.getElementById('labelCargoUsuario').innerText = cargo;
         document.getElementById('iconeAvatarUsuario').innerText = nome.charAt(0);
         
-        // Exibe o botão superior de plano de ação para ambas as abas agora
         document.getElementById('btnPlanoAcaoView').style.display = 'inline-block';
         
         if(area === 'analise_qualidade') {
@@ -197,7 +202,6 @@
             document.getElementById('blocoWemilly').style.display = 'grid';
         }
 
-        // Carrega o plano de ação correspondente ao usuário logado
         carregarDadosPlano();
 
         document.getElementById('telaLogin').style.display = 'none';
@@ -300,10 +304,12 @@
         }
     }
 
-    // Gerencia chaves separadas no LocalStorage para isolar os planos de ação
+    // LISTAR PLANOS COM O BOTÃO DE EXCLUSÃO EMBUTIDO
     function carregarDadosPlano() {
         const sufixoKey = usuarioAtual.area === 'analise_qualidade' ? 'Janete' : 'Wemilly';
-        const planos = JSON.parse(localStorage.getItem('planoAcaoCoplac_' + sufixoKey) || "[]");
+        const storageKey = 'planoAcaoCoplac_' + sufixoKey;
+        const planos = JSON.parse(localStorage.getItem(storageKey) || "[]");
+        
         const idContainer = usuarioAtual.area === 'analise_qualidade' ? 'displayPlanoJanete' : 'displayPlanoWemilly';
         const container = document.getElementById(idContainer);
         
@@ -313,11 +319,33 @@
             container.innerHTML = "Nenhuma análise salva."; 
             return; 
         }
-        container.innerHTML = planos.map(item => `<div><strong>Resp:</strong> ${item.resp} | <strong>Ação:</strong> ${item.texto}</div>`).join('');
+
+        // Mapeia adicionando uma estrutura flexbox e o botão de gatilho de exclusão por índice
+        container.innerHTML = planos.map((item, index) => `
+            <div class="plano-item">
+                <div><strong>Resp:</strong> ${item.resp} | <strong>Ação:</strong> ${item.texto}</div>
+                <button class="btn-excluir-plano" onclick="excluirPlano(${index})">❌</button>
+            </div>
+        `).join('');
+    }
+
+    // NOVA FUNÇÃO PARA DELETAR ITEM DO LOCALSTORAGE
+    function excluirPlano(index) {
+        if(!confirm("Deseja realmente excluir este plano de ação?")) return;
+
+        const sufixoKey = usuarioAtual.area === 'analise_qualidade' ? 'Janete' : 'Wemilly';
+        const storageKey = 'planoAcaoCoplac_' + sufixoKey;
+        
+        let planos = JSON.parse(localStorage.getItem(storageKey) || "[]");
+        
+        // Remove o elemento com base na sua posição de array
+        planos.splice(index, 1);
+        
+        localStorage.setItem(storageKey, JSON.stringify(planos));
+        carregarDadosPlano(); // Recarrega a interface
     }
 
     function abrirPlano() { 
-        // Pré-preenche o campo responsável com o nome de quem está logado
         document.getElementById('respPlano').value = usuarioAtual.nome;
         document.getElementById('areaPlanoAcao').style.display = 'block'; 
     }
@@ -344,7 +372,6 @@
         carregarDadosPlano();
         fecharPlano();
         
-        // Limpa o campo de texto para o próximo uso
         document.getElementById('textoPlano').value = '';
     }
 
