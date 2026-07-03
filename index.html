@@ -10,7 +10,7 @@
         body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; padding: 0; margin: 0; min-height: 100vh; }
         
         /* ==========================================================================
-           ESTILIZAÇÃO DA TELA DE SELEÇÃO (INSPIRADA NA IMAGEM DA POSIGRAF)
+           ESTILIZAÇÃO DA TELA DE SELEÇÃO (INSPIRADA NA IMAGEM DA POSIGRAF/COPLAC)
            ========================================================================== */
         .login-screen {
             background-color: #0b132b;
@@ -116,12 +116,13 @@
         }
         .profile-tag {
             font-size: 10px;
-            padding: 2px 6px;
+            padding: 2px 8px;
             border-radius: 20px;
             font-weight: bold;
             text-transform: uppercase;
         }
-        .tag-gestor { background-color: #00b4d8; color: #0b132b; }
+        /* Cor ajustada para o perfil técnico de Analista */
+        .tag-analista { background-color: #00b4d8; color: #0b132b; }
         .profile-desc {
             font-size: 12px;
             color: #a2a8d3;
@@ -158,7 +159,6 @@
 </head>
 <body>
 
-<!-- 1. TELA DE SELEÇÃO DE PERFIL (ESTILO POSIGRAF) -->
 <div id="telaLogin" class="login-screen">
     <div class="login-logo">RC</div>
     <p class="login-company">Coplac - Curitiba</p>
@@ -170,16 +170,15 @@
             <span>👥</span> Usuários de demonstração
         </div>
 
-        <!-- Perfil focado unicamente na Janete -->
         <div class="profile-card" onclick="entrarNoDashboard()">
             <div class="profile-left">
                 <div class="profile-avatar">J</div>
                 <div class="profile-info">
                     <div class="profile-name-row">
                         <span class="profile-name">Janete Qualidade</span>
-                        <span class="profile-tag tag-gestor">Gestor</span>
+                        <span class="profile-tag tag-analista">Analista</span>
                     </div>
-                    <span class="profile-desc">Visão estratégica — Indicadores de Qualidade</span>
+                    <span class="profile-desc">Visão operacional — Indicadores de Qualidade</span>
                 </div>
             </div>
             <div class="profile-arrow">➔</div>
@@ -188,7 +187,6 @@
 </div>
 
 
-<!-- 2. SEU DASHBOARD ORIGINAL DA QUALIDADE -->
 <div id="telaDashboard" class="dashboard-screen">
     <h1 class="main-title">INDICADORES DE QUALIDADE COPLAC CURITIBA</h1>
 
@@ -241,7 +239,6 @@
     const url = 'https://script.google.com/macros/s/AKfycbx5eihq6v75T79HB7HWhGfK23f4WSTsiE8cksqTlPCyuqLcFd88_KhYkvbBa5p7VCjLbA/exec';
     Chart.register(ChartDataLabels);
 
-    // Função de transição de tela executada ao clicar no card da Janete
     function entrarNoDashboard() {
         document.getElementById('telaLogin').style.display = 'none';
         document.getElementById('telaDashboard').style.display = 'block';
