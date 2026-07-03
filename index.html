@@ -149,7 +149,7 @@
             text-transform: uppercase;
         }
         .tag-analista { background-color: #00b4d8; color: #0b132b; }
-        .tag-inspetora { background-color: #e2b13c; color: #0b132b; }
+        .tag-inspetora { background-color: #27ae60; color: #0b132b; }
         .profile-desc {
             font-size: 12px;
             color: #a2a8d3;
@@ -240,7 +240,6 @@
 </head>
 <body>
 
-<!-- TELA DE LOGIN -->
 <div id="telaLogin" class="login-screen">
     <div class="login-logo">RC</div>
     <p class="login-company">Coplac - Curitiba</p>
@@ -252,7 +251,6 @@
             <span>👥</span> Usuários da Qualidade
         </div>
 
-        <!-- PERFIL 1: JANETE -->
         <div class="profile-card" onclick="entrarNoDashboard('Janete Qualidade', 'Analista', 'analise_qualidade')">
             <div class="profile-left">
                 <div class="profile-avatar" style="background-color: #0077b6;">J</div>
@@ -267,7 +265,6 @@
             <div class="profile-arrow">➔</div>
         </div>
 
-        <!-- PERFIL 2: WEMILLY -->
         <div class="profile-card" onclick="entrarNoDashboard('Wemilly', 'Inspetora', 'inspecao_qualidade')">
             <div class="profile-left">
                 <div class="profile-avatar" style="background-color: #27ae60;">W</div>
@@ -284,10 +281,8 @@
     </div>
 </div>
 
-<!-- TELA PRINCIPAL DO DASHBOARD -->
 <div id="telaDashboard" class="dashboard-screen">
     
-    <!-- BARRA SUPERIOR DINÂMICA -->
     <div class="topbar">
         <div class="topbar-left">
             <span>COPLAC — SISTEMA INTEGRADO</span>
@@ -307,7 +302,6 @@
         </div>
     </div>
 
-    <!-- CONTEÚDO PRINCIPAL -->
     <div class="dashboard-content">
         <h1 class="main-title" id="tituloDashboard">INDICADORES COPLAC CURITIBA</h1>
 
@@ -316,21 +310,17 @@
             <button class="btn-plano" id="btnPlanoAcaoView" onclick="abrirPlano()">PLANO DE AÇÃO</button>
         </div>
 
-        <!-- MODAL PLANO DE AÇÃO (EXCLUSIVO DA JANETE) -->
         <div id="areaPlanoAcao">
             <h2>NOVO PLANO DE AÇÃO</h2>
             <div class="input-campo"><label>Responsável:</label><input type="text" id="respPlano" style="width:100%; padding:8px; box-sizing:border-box;"></div>
             <div class="input-campo"><label>Data Limite:</label><input type="date" id="dataPlano" style="width:100%; padding:8px; box-sizing:border-box;"></div>
-            <div class="input-campo"><label>Ação Corretiva:</label><textarea id="textoPlano" style="width:100%; height:100px; padding:10px; box-sizing:border-box;"></textarea></div>
+            <div class="input-campo"><label>Ação Corretiva:</label><textarea id="textoPlano" style="width:100%; height:100px; padding:10px; box-sizing:border-box("></textarea></div>
             <div style="margin-top:15px; text-align:right;">
                 <button onclick="fecharPlano()" style="padding:10px 20px; background:#95a5a6; color:white; border:none; cursor:pointer;">FECHAR</button>
                 <button onclick="salvarPlano()" style="padding:10px 20px; background:#27ae60; color:white; border:none; cursor:pointer;">SALVAR</button>
             </div>
         </div>
 
-        <!-- ==========================================================================
-           1. GRÁFICOS DA JANETE (ANÁLISE DA QUALIDADE - ABA 'PPM INTERNO')
-           ========================================================================== -->
         <div class="dashboard" id="blocoJanete" style="display: none;">
             <div class="container full-width">
                 <h2 class="header">INDICADOR PPM INTERNO - ÚLTIMOS 12 MESES</h2>
@@ -350,9 +340,6 @@
             </div>
         </div>
 
-        <!-- ==========================================================================
-           2. GRÁFICOS DA WEMILLY (MONITORAMENTO DO SEU PRÓPRIO PPM - ABA 'WEMILLY')
-           ========================================================================== -->
         <div class="dashboard" id="blocoWemilly" style="display: none;">
             <div class="container full-width">
                 <h2 class="header">INDICADOR PPM INTERNO — WEMILLY</h2>
@@ -372,7 +359,8 @@
 </div>
 
 <script>
-    const url = 'https://script.google.com/macros/s/AKfycbx5eihq6v75T79HB7HWhGfK23f4WSTsiE8cksqTlPCyuqLcFd88_KhYkvbBa5p7VCjLbA/exec';
+    // URL Atualizada fornecida pelo usuário
+    const url = 'https://script.google.com/macros/s/AKfycbyIpThCGl47IF205UgXNoaLvSWkLUg0sU2ZWskYppi_XYOlCJOYkn9iJJ5zdq2k4OyGZw/exec';
     Chart.register(ChartDataLabels);
 
     let charts = {};
@@ -386,7 +374,6 @@
         document.getElementById('labelCargoUsuario').innerText = cargo;
         document.getElementById('iconeAvatarUsuario').innerText = nome.charAt(0);
         
-        // Chaveamento dinâmico de blocos na tela
         if(area === 'analise_qualidade') {
             document.getElementById('tituloDashboard').innerText = `INDICADORES OPERACIONAIS — JANETE`;
             document.getElementById('blocoJanete').style.display = 'grid';
@@ -403,17 +390,17 @@
         document.getElementById('telaLogin').style.display = 'none';
         document.getElementById('telaDashboard').style.display = 'block';
         
-        // Requisição para buscar os dados unificados do Google Sheets
+        // Chamada à API da Planilha
         fetch(url).then(r => r.json()).then(data => {
             dadosGlobais = data;
             inicializarGraficos();
         }).catch(err => {
-            alert("Erro ao ler dados da Planilha. Certifique-se de que fez a nova Implantação no Apps Script.");
+            alert("Erro ao ler dados da Planilha. Verifique a nova implantação.");
             console.error(err);
         });
     }
 
-    function voltarParaLogin() {
+    function volverParaLogin() {
         document.getElementById('telaDashboard').style.display = 'none';
         document.getElementById('telaLogin').style.display = 'flex';
     }
@@ -429,16 +416,12 @@
         const corTexto = isDarkMode ? '#ffffff' : '#333333';
         const corGrid = isDarkMode ? '#444444' : '#eeeeee';
 
-        // Reseta as instâncias antigas de gráficos
         Object.keys(charts).forEach(key => { if(charts[key]) charts[key].destroy(); });
 
         if(usuarioAtual.area === 'analise_qualidade') {
-            // =========================================================================
-            // ALIMENTA GRÁFICOS DA JANETE (Mapeado corretamente para a aba 'PPM Interno')
-            // =========================================================================
             const dJanete = dadosGlobais["PPM Interno"] || dadosGlobais.janete;
             if(!dJanete) {
-                alert("A aba 'PPM Interno' não foi encontrada nos dados enviados pelo App Script.");
+                alert("A aba 'PPM Interno' não foi mapeada corretamente pelo Apps Script.");
                 return;
             }
 
@@ -464,12 +447,9 @@
             });
 
         } else {
-            // ==========================================
-            // ALIMENTA GRÁFICOS DA WEMILLY (Aba: Wemilly)
-            // ==========================================
             const dWemilly = dadosGlobais["Wemilly"] || dadosGlobais.wemilly;
             if(!dWemilly) {
-                alert("A aba da 'Wemilly' não foi encontrada nos dados enviados pelo App Script.");
+                alert("A aba 'Wemilly' não foi encontrada.");
                 return;
             }
 
@@ -496,9 +476,6 @@
         }
     }
 
-    // ==========================================
-    // FUNÇÕES DO PLANO DE AÇÃO (LOCALSTORAGE)
-    // ==========================================
     function carregarDadosPlano() {
         const planos = JSON.parse(localStorage.getItem('planoAcaoCoplac') || "[]");
         const container = document.getElementById('displayPlano');
