@@ -7,81 +7,198 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; padding: 0; margin: 0; min-height: 100vh; }
         
-        /* Layout estrutural baseado no Portal da imagem */
-        .sidebar { width: 280px; background-color: #111d31; color: white; display: flex; flex-direction: column; padding: 20px 0; box-sizing: border-box; }
-        .main-content { flex: 1; padding: 20px; overflow-y: auto; box-sizing: border-box; background-color: #f4f7f6; }
-        
-        /* Identidade visual da Barra Lateral */
-        .sidebar-header { text-align: center; padding: 0 20px 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .sidebar-title { font-size: 22px; font-weight: bold; color: #00a2ff; margin: 0; text-transform: uppercase; }
-        .sidebar-subtitle { font-size: 11px; color: #a0aec0; margin: 5px 0 0 0; letter-spacing: 1px; }
-        
-        .sidebar-menu { display: flex; flex-direction: column; gap: 5px; padding: 20px 15px; }
-        .menu-item { display: flex; align-items: center; padding: 12px 15px; color: #a0aec0; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px; transition: all 0.3s; background: transparent; border: none; width: 100%; text-align: left; cursor: pointer; }
-        .menu-item:hover { color: white; background-color: rgba(255,255,255,0.05); }
-        .menu-item.active { background-color: #0080cc; color: white; }
-        .menu-icon { margin-right: 12px; font-size: 16px; }
+        /* ==========================================================================
+           ESTILIZAÇÃO DA TELA DE SELEÇÃO (INSPIRADA NA IMAGEM DA POSIGRAF)
+           ========================================================================== */
+        .login-screen {
+            background-color: #0b132b;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .login-logo {
+            background: #1c2541;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+            color: #00b4d8;
+        }
+        .login-company {
+            font-size: 18px;
+            color: #00b4d8;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 0;
+        }
+        .login-title {
+            font-size: 36px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .login-subtitle {
+            color: #6c757d;
+            font-size: 14px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .profile-container {
+            background-color: #1c2541;
+            border-radius: 16px;
+            padding: 25px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .profile-section-title {
+            font-size: 14px;
+            color: #a2a8d3;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .profile-card {
+            background-color: #232c4e;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            border: 1px solid transparent;
+        }
+        .profile-card:hover {
+            transform: translateY(-2px);
+            background-color: #2a355c;
+            border-color: #00b4d8;
+        }
+        .profile-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .profile-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            background-color: #0077b6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            color: white;
+        }
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .profile-name-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .profile-name {
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .profile-tag {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .tag-gestor { background-color: #00b4d8; color: #0b132b; }
+        .profile-desc {
+            font-size: 12px;
+            color: #a2a8d3;
+        }
+        .profile-arrow {
+            color: #6c757d;
+            font-size: 18px;
+        }
 
-        /* Estilização do Conteúdo Principal */
-        .main-title { color: #2c3e50; margin: 0 0 20px 0; text-transform: uppercase; font-size: 24px; font-weight: bold; }
-        
-        @media print { .sidebar, .btn-group, .btn-limpar, .btn-excluir { display: none !important; } .main-content { padding: 0; overflow: visible; } }
-        
-        .btn-group { display: flex; gap: 10px; margin-bottom: 20px; }
-        .btn-export { padding: 10px 20px; font-size: 14px; font-weight: bold; background-color: #2c3e50; color: white; border: none; border-radius: 5px; cursor: pointer; display: flex; align-items: center; }
-        .btn-plano { padding: 10px 20px; font-size: 14px; font-weight: bold; background-color: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; display: flex; align-items: center; }
-        
-        /* Grid dos Gráficos */
-        .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; max-width: 1200px; }
-        .container { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: center; }
+        /* ==========================================================================
+           ESTILIZAÇÃO DO DASHBOARD ORIGINAL (MANTIDO IDÊNTICO)
+           ========================================================================== */
+        .dashboard-screen {
+            display: none; /* Inicia oculto até selecionar a Janete */
+            padding: 10px;
+        }
+        .main-title { text-align: center; color: #2c3e50; margin: 10px 0; text-transform: uppercase; font-size: 24px; font-weight: bold; }
+        @media print { .btn-export, .btn-plano, .btn-limpar, .btn-excluir { display: none; } }
+        .btn-group { text-align: center; margin-bottom: 15px; }
+        .btn-export { padding: 10px 20px; font-size: 16px; font-weight: bold; background-color: #2c3e50; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .btn-plano { padding: 10px 20px; font-size: 16px; font-weight: bold; background-color: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px; }
+        .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; max-width: 1200px; margin: auto; }
+        .container { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; justify-content: center; }
         .full-width { grid-column: span 2; }
-        .header { text-align: center; color: #2c3e50; margin-top: 0; margin-bottom: 15px; text-transform: uppercase; font-weight: bold; font-size: 15px; letter-spacing: 0.5px; }
-        
+        .header { text-align: center; color: #2c3e50; margin-bottom: 10px; text-transform: uppercase; font-weight: bold; font-size: 16px; }
         #graficoPPM { max-height: 250px !important; }
         #graficoDefeitos, #graficoSetor { max-height: 300px !important; }
-        
-        #displayPlano { background: #f9f9f9; border-left: 5px solid #27ae60; padding: 15px; font-size: 14px; color: #333; min-height: 50px; border-radius: 0 4px 4px 0; }
-        #areaPlanoAcao { display:none; position:fixed; top:20px; left:25%; width:50%; background:white; padding:20px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.3); z-index:1000; }
+        #displayPlano { background: #f9f9f9; border-left: 5px solid #27ae60; padding: 15px; font-size: 14px; color: #333; min-height: 50px; }
+        #areaPlanoAcao { display:none; position:fixed; top:20px; left:10%; width:80%; background:white; padding:20px; border-radius:10px; box-shadow:0 0 20px rgba(0,0,0,0.5); z-index:1000; }
         .input-campo { margin-bottom: 10px; }
-        .input-campo label { display: block; font-weight: bold; font-size: 14px; margin-bottom: 5px; }
+        .input-campo label { display: block; font-weight: bold; font-size: 14px; }
         .btn-limpar { padding: 5px 10px; font-size: 12px; background-color: #e74c3c; color: white; border: none; border-radius: 3px; cursor: pointer; margin-left: 10px; }
     </style>
 </head>
 <body>
 
-<div class="sidebar">
-    <div class="sidebar-header">
-        <h2 class="sidebar-title">Portal GQ</h2>
-        <p class="sidebar-subtitle">GESTÃO DA QUALIDADE - CURITIBA</p>
-    </div>
-    <div class="sidebar-menu">
-        <button class="menu-item active">
-            <span class="menu-icon">📊</span> Indicadores & BI
-        </button>
-        <button class="menu-item" onclick="abrirPlano()">
-            <span class="menu-icon">📋</span> Planos de Ação
-        </button>
-        <button class="menu-item">
-            <span class="menu-icon">📝</span> Rotinas & Checklists
-        </button>
-        <button class="menu-item">
-            <span class="menu-icon">🔗</span> Links Úteis
-        </button>
+<!-- 1. TELA DE SELEÇÃO DE PERFIL (ESTILO POSIGRAF) -->
+<div id="telaLogin" class="login-screen">
+    <div class="login-logo">RC</div>
+    <p class="login-company">Coplac - Curitiba</p>
+    <h1 class="login-title">Sistema integrado</h1>
+    <p class="login-subtitle">Qualidade e Operações — selecione seu perfil para continuar</p>
+
+    <div class="profile-container">
+        <div class="profile-section-title">
+            <span>👥</span> Usuários de demonstração
+        </div>
+
+        <!-- Perfil focado unicamente na Janete -->
+        <div class="profile-card" onclick="entrarNoDashboard()">
+            <div class="profile-left">
+                <div class="profile-avatar">J</div>
+                <div class="profile-info">
+                    <div class="profile-name-row">
+                        <span class="profile-name">Janete Qualidade</span>
+                        <span class="profile-tag tag-gestor">Gestor</span>
+                    </div>
+                    <span class="profile-desc">Visão estratégica — Indicadores de Qualidade</span>
+                </div>
+            </div>
+            <div class="profile-arrow">➔</div>
+        </div>
     </div>
 </div>
 
-<div class="main-content">
+
+<!-- 2. SEU DASHBOARD ORIGINAL DA QUALIDADE -->
+<div id="telaDashboard" class="dashboard-screen">
     <h1 class="main-title">INDICADORES DE QUALIDADE COPLAC CURITIBA</h1>
 
     <div class="btn-group">
-        <button class="btn-export" onclick="gerarPDF()">📄 EXPORTAR PDF</button>
-        <button class="btn-plano" onclick="abrirPlano()">➕ NOVO PLANO DE AÇÃO</button>
+        <button class="btn-export" onclick="gerarPDF()">EXPORTAR PDF</button>
+        <button class="btn-plano" onclick="abrirPlano()">PLANO DE AÇÃO</button>
     </div>
 
     <div id="areaPlanoAcao">
-        <h2 style="color: #2c3e50; margin-top: 0;">NOVO PLANO DE AÇÃO</h2>
+        <h2 style="color: #2c3e50;">NOVO PLANO DE AÇÃO</h2>
         <div class="input-campo">
             <label>Responsável:</label>
             <input type="text" id="respPlano" style="width:100%; padding:8px; box-sizing:border-box;">
@@ -95,8 +212,8 @@
             <textarea id="textoPlano" style="width:100%; height:100px; padding:10px; box-sizing:border-box;"></textarea>
         </div>
         <div style="margin-top:15px; text-align:right;">
-            <button onclick="fecharPlano()" style="padding:10px 20px; background:#95a5a6; color:white; border:none; cursor:pointer; border-radius:4px;">FECHAR</button>
-            <button onclick="salvarPlano()" style="padding:10px 20px; background:#27ae60; color:white; border:none; cursor:pointer; border-radius:4px;">SALVAR</button>
+            <button onclick="fecharPlano()" style="padding:10px 20px; background:#95a5a6; color:white; border:none; cursor:pointer;">FECHAR</button>
+            <button onclick="salvarPlano()" style="padding:10px 20px; background:#27ae60; color:white; border:none; cursor:pointer;">SALVAR</button>
         </div>
     </div>
 
@@ -124,24 +241,32 @@
     const url = 'https://script.google.com/macros/s/AKfycbx5eihq6v75T79HB7HWhGfK23f4WSTsiE8cksqTlPCyuqLcFd88_KhYkvbBa5p7VCjLbA/exec';
     Chart.register(ChartDataLabels);
 
-    window.onload = () => { carregarDados(); };
+    // Função de transição de tela executada ao clicar no card da Janete
+    function entrarNoDashboard() {
+        document.getElementById('telaLogin').style.display = 'none';
+        document.getElementById('telaDashboard').style.display = 'block';
+        carregarDados();
+        inicializarGraficos();
+    }
 
-    fetch(url).then(r => r.json()).then(data => {
-        new Chart(document.getElementById('graficoPPM').getContext('2d'), {
-            type: 'bar', data: { labels: data.meses, datasets: [
-                { label: 'PPM', data: data.ppm, backgroundColor: data.ppm.map((v, i) => v <= data.meta[i] ? '#27ae60' : '#e74c3c') },
-                { label: 'META', data: data.meta, type: 'line', borderColor: '#c0392b', borderWidth: 2, datalabels: { display: false } }
-            ]}, options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { anchor: 'end', align: 'top', color: '#333', font: { size: 14, weight: 'bold' } } } }
+    function inicializarGraficos() {
+        fetch(url).then(r => r.json()).then(data => {
+            new Chart(document.getElementById('graficoPPM').getContext('2d'), {
+                type: 'bar', data: { labels: data.meses, datasets: [
+                    { label: 'PPM', data: data.ppm, backgroundColor: data.ppm.map((v, i) => v <= data.meta[i] ? '#27ae60' : '#e74c3c') },
+                    { label: 'META', data: data.meta, type: 'line', borderColor: '#c0392b', borderWidth: 2, datalabels: { display: false } }
+                ]}, options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { anchor: 'end', align: 'top', color: '#333', font: { size: 14, weight: 'bold' } } } }
+            });
+            new Chart(document.getElementById('graficoDefeitos').getContext('2d'), {
+                type: 'bar', data: { labels: data.defeitos.map(d => d[0]), datasets: [{ label: 'Quantidade', data: data.defeitos.map(d => d[1]), backgroundColor: '#3498db' }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { anchor: 'end', align: 'top', color: '#333', font: { size: 14, weight: 'bold' } } } }
+            });
+            new Chart(document.getElementById('graficoSetor').getContext('2d'), {
+                type: 'doughnut', data: { labels: data.ppmPorSetor.map(d => d[0]), datasets: [{ data: data.ppmPorSetor.map(d => d[1]), backgroundColor: ['#3498db', '#e74c3c', '#27ae60', '#f1c40f', '#9b59b6', '#34495e', '#e67e22', '#1abc9c', '#7f8c8d', '#2ecc71', '#d35400'] }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { color: '#000000', font: { size: 14, weight: 'bold' } } } }
+            });
         });
-        new Chart(document.getElementById('graficoDefeitos').getContext('2d'), {
-            type: 'bar', data: { labels: data.defeitos.map(d => d[0]), datasets: [{ label: 'Quantidade', data: data.defeitos.map(d => d[1]), backgroundColor: '#3498db' }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { anchor: 'end', align: 'top', color: '#333', font: { size: 14, weight: 'bold' } } } }
-        });
-        new Chart(document.getElementById('graficoSetor').getContext('2d'), {
-            type: 'doughnut', data: { labels: data.ppmPorSetor.map(d => d[0]), datasets: [{ data: data.ppmPorSetor.map(d => d[1]), backgroundColor: ['#3498db', '#e74c3c', '#27ae60', '#f1c40f', '#9b59b6', '#34495e', '#e67e22', '#1abc9c', '#7f8c8d', '#2ecc71', '#d35400'] }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { color: '#000000', font: { size: 14, weight: 'bold' } } } }
-        });
-    });
+    }
 
     function carregarDados() {
         const planos = JSON.parse(localStorage.getItem('planoAcaoCoplac') || "[]");
@@ -198,8 +323,11 @@
     function abrirPlano() { document.getElementById('areaPlanoAcao').style.display = 'block'; }
     function fecharPlano() { document.getElementById('areaPlanoAcao').style.display = 'none'; }
     function gerarPDF() {
-        const content = document.querySelector('.main-content');
-        html2pdf().set({ margin: 2, filename: 'Indicadores_Qualidade_Coplac.pdf', html2canvas: { scale: 1.8 }, jsPDF: { orientation: 'landscape' } }).from(content).save();
+        const btns = document.querySelectorAll('.btn-export, .btn-plano, .btn-limpar, .btn-excluir');
+        btns.forEach(b => b.style.display = 'none');
+        html2pdf().set({ margin: 2, filename: 'Indicadores_Qualidade_Coplac.pdf', html2canvas: { scale: 1.8 }, jsPDF: { orientation: 'landscape' } }).from(document.getElementById('telaDashboard')).save().then(() => {
+            btns.forEach(b => b.style.display = 'inline-block');
+        });
     }
 </script>
 </body>
